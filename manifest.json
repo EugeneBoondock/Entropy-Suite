@@ -1,0 +1,18 @@
+{
+  "short_name": "Entropy Tools",
+  "name": "Entropy Tools - AI Powered Presentations",
+  "description": "An AI-powered platform to effortlessly generate and design presentations from your ideas using Gemini API.",
+  "icons": [
+    {
+      "src": "/images/entropy_tools.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#f7f0e4",
+  "background_color": "#f7f0e4",
+  "scope": "/"
+}

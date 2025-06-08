@@ -1,0 +1,177 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Entropy Tools</title>
+    <meta name="theme-color" content="#f7f0e4" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" type="image/png" href="/images/entropy_tools.png" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/heroicons/2.1.0/outline/style.min.css" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        darkMode: 'class', // Enable dark mode using a class
+        theme: {
+          extend: {
+            colors: {
+              primary: {"50":"#eff6ff","100":"#dbeafe","200":"#bfdbfe","300":"#93c5fd","400":"#60a5fa","500":"#3b82f6","600":"#2563eb","700":"#1d4ed8","800":"#1e40af","900":"#1e3a8a","950":"#172554"}
+            },
+            aspectRatio: {
+              '16/9': '16 / 9',
+            },
+          }
+        }
+      }
+    </script>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.1.0/",
+    "react": "https://esm.sh/react@^19.1.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.4.0",
+    "pptxgenjs": "https://esm.sh/pptxgenjs@3.12.0",
+    "jspdf": "https://esm.sh/jspdf@2.5.1",
+    "html2canvas": "https://esm.sh/html2canvas@1.4.1"
+  }
+}
+</script>
+<style>
+  body {
+    overscroll-behavior-y: contain; /* Prevents pull-to-refresh on mobile when scrolling body */
+    background-color: #f7f0e4;
+  }
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #93c5fd; /* primary-300 */
+    border-radius: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #60a5fa; /* primary-400 */
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #dbeafe; /* primary-100 */
+    border-radius: 4px;
+  }
+
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #1e40af; /* primary-800 */
+  }
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #1d4ed8; /* primary-700 */
+  }
+  .dark .custom-scrollbar::-webkit-scrollbar-track {
+    background: #1e3a8a; /* primary-900 */
+  }
+
+  #pdf-render-container {
+    position: absolute;
+    left: -9999px; 
+    top: auto;
+    width: 1280px; 
+    height: 720px; 
+    overflow: hidden;
+  }
+
+  /* Slide Transitions */
+  .slide-container {
+    transition-property: opacity, transform;
+    transition-duration: 0.5s; /* Matches JS transitionDuration */
+    transition-timing-function: ease-in-out;
+  }
+
+  /* Fade Transition */
+  .fade-enter, .fade-exit-active {
+    opacity: 0;
+  }
+  .fade-enter-active, .fade-exit {
+    opacity: 1;
+  }
+  
+  /* Slide Left Transition (New slide comes from right) */
+  .slide-left-enter {
+    transform: translateX(100%);
+    opacity: 0.8;
+  }
+  .slide-left-enter-active {
+    transform: translateX(0%);
+    opacity: 1;
+  }
+  .slide-left-exit {
+    transform: translateX(0%);
+    opacity: 1;
+  }
+  .slide-left-exit-active {
+    transform: translateX(-100%);
+    opacity: 0.8;
+  }
+
+  /* Slide Right Transition (New slide comes from left) */
+  .slide-right-enter {
+    transform: translateX(-100%);
+    opacity: 0.8;
+  }
+  .slide-right-enter-active {
+    transform: translateX(0%);
+    opacity: 1;
+  }
+  .slide-right-exit {
+    transform: translateX(0%);
+    opacity: 1;
+  }
+  .slide-right-exit-active {
+    transform: translateX(100%);
+    opacity: 0.8;
+  }
+
+  /* Zoom Transition */
+  .zoom-enter {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+  .zoom-enter-active {
+    transform: scale(1);
+    opacity: 1;
+  }
+  .zoom-exit {
+    transform: scale(1);
+    opacity: 1;
+  }
+  .zoom-exit-active {
+    transform: scale(1.3);
+    opacity: 0;
+  }
+  
+  .none-enter, .none-exit-active, .none-enter-active, .none-exit {
+    opacity: 1;
+    transform: none;
+  }
+
+
+</style>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-slate-200 transition-colors duration-300">
+    <div id="root"></div>
+    <div id="pdf-render-container"></div>
+    <script type="module" src="/index.tsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(registration => {
+              console.log('ServiceWorker registration successful with scope: ', registration.scope);
+            })
+            .catch(error => {
+              console.log('ServiceWorker registration failed: ', error);
+            });
+        });
+      }
+    </script>
+  </body>
+</html>

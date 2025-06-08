@@ -1,0 +1,6 @@
+{
+  "name": "Entropy Tools",
+  "description": "An AI-powered platform to effortlessly generate and design presentations from your ideas using Gemini API.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}
