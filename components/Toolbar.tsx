@@ -16,6 +16,7 @@ interface ToolbarProps {
   onToggleTheme: () => void;
   onExportPPTX: () => void;
   onExportPDF: () => void;
+  onExportVideo: () => void;
   onToggleSidebar: () => void;
   isSidebarVisible: boolean;
   initialPrompt?: string;
@@ -36,6 +37,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onToggleTheme,
   onExportPPTX,
   onExportPDF,
+  onExportVideo,
   onToggleSidebar,
   isSidebarVisible,
   initialPrompt
@@ -217,6 +219,17 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                   <path d="M11.25 12.375V15a.75.75 0 0 0 .75.75h1.5a.75.75 0 0 0 .75-.75V12a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 0 .75-.75V9a.75.75 0 0 1 .75-.75h.75a.75.75 0 0 0 0-1.5h-.75a.75.75 0 0 1-.75-.75V6a.75.75 0 0 0-.75-.75h-1.5a.75.75 0 0 0-.75.75v.375a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 0-.75.75v3.375c0 .414.336.75.75.75Z" />
                 </svg>
                 Export as .PDF
+              </button>
+              <button
+                onClick={() => { onExportVideo(); setShowExportMenu(false); }}
+                className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600 flex items-center"
+                disabled={isLoading || !hasSlides}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 mr-2 text-blue-500">
+                  <path d="M4.5 4.5a3 3 0 0 0-3 3v9a3 3 0 0 0 3 3h8.25a3 3 0 0 0 3-3v-9a3 3 0 0 0-3-3H4.5ZM19.94 18.75l-2.69-2.69V19.5a3 3 0 0 1-3 3H4.5a3 3 0 0 1-3-3v-9a3 3 0 0 1 3-3h2.25v2.25a.75.75 0 0 0 1.5 0V5.25h5.25v2.25a.75.75 0 0 0 1.5 0V5.25h2.25a3 3 0 0 1 3 3v9a3 3 0 0 1-1.06 2.25Z" />
+                  <path d="M15.75 12a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0v-3.75a.75.75 0 0 1 .75-.75Zm-3.75 0a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0v-3.75a.75.75 0 0 1 .75-.75Zm-3.75 0a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0v-3.75a.75.75 0 0 1 .75-.75Z" clip-rule="evenodd" />
+                </svg>
+                Export as Video
               </button>
             </div>
           )}

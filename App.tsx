@@ -8,6 +8,7 @@ import { SlidePreview } from './components/SlidePreview';
 import { SlideEditor } from './components/SlideEditor';
 import { PresentationView } from './components/PresentationView';
 import { generateSlidesFromAI, generateMoreSlidesFromAI } from './services/geminiService';
+import { videoExportService } from './services/videoExportService';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { renderSlideForExport } from './utils/renderSlideForExport';
 
@@ -47,6 +48,7 @@ const App: React.FC = () => {
   const [isPresenting, setIsPresenting] = useState<boolean>(false);
   const [theme, setTheme] = useState<Theme>('light');
   const [isSidebarVisible, setIsSidebarVisible] = useState<boolean>(true);
+  const [exportProgress, setExportProgress] = useState<number>(0);
   const [lastUsedTopic, setLastUsedTopic] = useState<string>(() => {
     return localStorage.getItem(LOCAL_STORAGE_TOPIC_KEY) || '';
   });
@@ -314,6 +316,103 @@ const App: React.FC = () => {
     }
   }, [slides, theme]);
 
+  const handleExportToVideo = useCallback(async () => {
+    if (slides.length === 0) {
+      setError("No slides to export. Please generate or add some slides.");
+      return;
+    }
+    
+    setIsLoading(true);
+    setError(null);
+    setExportProgress(0);
+    
+    try {
+      // Create a temporary container for rendering slides
+      const container = document.createElement('div');
+      container.style.position = 'fixed';
+      container.style.top = '-9999px';
+      container.style.left = '-9999px';
+      container.style.width = '1280px';
+      container.style.height = '720px';
+      document.body.appendChild(container);
+      
+      // Render each slide and collect the elements
+      const slideElements: HTMLElement[] = [];
+      
+      for (const slide of slides) {
+        const slideElement = document.createElement('div');
+        slideElement.style.width = '100%';
+        slideElement.style.height = '100%';
+        slideElement.style.backgroundColor = slide.backgroundColor || (theme === 'dark' ? '#1e293b' : '#ffffff');
+        slideElement.style.color = slide.textColor || (theme === 'dark' ? '#ffffff' : '#000000');
+        slideElement.style.padding = '40px';
+        slideElement.style.boxSizing = 'border-box';
+        slideElement.style.display = 'flex';
+        slideElement.style.flexDirection = 'column';
+        slideElement.style.justifyContent = 'center';
+        slideElement.style.alignItems = 'center';
+        slideElement.style.textAlign = 'center';
+        
+        // Add title
+        const titleElement = document.createElement('h1');
+        titleElement.textContent = slide.title;
+        titleElement.style.fontSize = '48px';
+        titleElement.style.marginBottom = '20px';
+        titleElement.style.maxWidth = '100%';
+        titleElement.style.overflow = 'hidden';
+        titleElement.style.textOverflow = 'ellipsis';
+        titleElement.style.color = 'inherit';
+        
+        // Add content
+        const contentElement = document.createElement('div');
+        contentElement.innerHTML = slide.content;
+        contentElement.style.fontSize = '32px';
+        contentElement.style.maxWidth = '100%';
+        contentElement.style.overflow = 'hidden';
+        contentElement.style.color = 'inherit';
+        
+        slideElement.appendChild(titleElement);
+        slideElement.appendChild(contentElement);
+        
+        container.appendChild(slideElement);
+        slideElements.push(slideElement);
+      }
+      
+      // Export to video
+      const progressCallback = (progress: number) => {
+        setExportProgress(Math.round(progress));
+      };
+      
+      const videoBlob = await videoExportService.exportAsVideo(slideElements, 5, progressCallback);
+      
+      // Create download link
+      const url = URL.createObjectURL(videoBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'presentation.mp4';
+      document.body.appendChild(a);
+      a.click();
+      
+      // Clean up
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 100);
+      
+    } catch (error) {
+      console.error('Error exporting video:', error);
+      setError('Failed to export video. Please try again.');
+    } finally {
+      // Clean up temporary elements
+      const tempContainer = document.querySelector('div[style*="position: fixed; top: -9999px"]');
+      if (tempContainer) {
+        document.body.removeChild(tempContainer);
+      }
+      setIsLoading(false);
+      setExportProgress(0);
+    }
+  }, [slides, theme]);
+
   const handleExportToPDF = useCallback(async () => {
     if (slides.length === 0) {
       setError("No slides to export. Please generate or add some slides.");
@@ -420,6 +519,22 @@ const App: React.FC = () => {
 
   return (
     <div className="flex flex-col h-screen font-sans antialiased overflow-hidden">
+      {isLoading && exportProgress > 0 && exportProgress < 100 && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+            <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-4">Exporting Video</h3>
+            <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5">
+              <div 
+                className="bg-blue-600 h-2.5 rounded-full transition-all duration-300 ease-out"
+                style={{ width: `${exportProgress}%` }}
+              ></div>
+            </div>
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 text-center">
+              {exportProgress}% complete
+            </p>
+          </div>
+        </div>
+      )}
       <Toolbar
         onGenerateSlides={handleGenerateSlides}
         onGenerateMoreSlides={handleGenerateMoreSlides}
@@ -435,6 +550,7 @@ const App: React.FC = () => {
         onToggleTheme={toggleTheme}
         onExportPPTX={handleExportToPPTX}
         onExportPDF={handleExportToPDF}
+        onExportVideo={handleExportToVideo}
         onToggleSidebar={() => setIsSidebarVisible(!isSidebarVisible)}
         isSidebarVisible={isSidebarVisible}
         initialPrompt={lastUsedTopic}

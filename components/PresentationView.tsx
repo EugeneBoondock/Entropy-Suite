@@ -22,17 +22,20 @@ export const PresentationView = ({ slides, currentSlideIndex, onExit, onNavigate
   const autoplayTimerRef = React.useRef<number | null>(null);
 
   useEffect(() => {
-    setTransitionState('exiting');
-    const timeoutId = setTimeout(() => {
-      setSlideToShow(slides[currentSlideIndex]);
-      setTransitionState('entering');
-      const enterTimeout = setTimeout(() => setTransitionState('idle'), transitionDuration);
-      return () => clearTimeout(enterTimeout);
-    }, transitionDuration / 2); 
+    if (slides[currentSlideIndex] !== slideToShow) {
+      setTransitionState('exiting');
+      const timeoutId = setTimeout(() => {
+        setSlideToShow(slides[currentSlideIndex]);
+        setTransitionState('entering');
+        const enterTimeout = setTimeout(() => {
+          setTransitionState('idle');
+        }, transitionDuration);
+        return () => clearTimeout(enterTimeout);
+      }, transitionDuration);
 
-    return () => clearTimeout(timeoutId);
-  }, [currentSlideIndex, slides]);
-
+      return () => clearTimeout(timeoutId);
+    }
+  }, [currentSlideIndex, slides, slideToShow]);
 
   const startAutoplay = useCallback(() => {
     if (autoplayTimerRef.current) {
@@ -64,7 +67,6 @@ export const PresentationView = ({ slides, currentSlideIndex, onExit, onNavigate
     };
   }, [isPlaying, currentSlideIndex, startAutoplay]);
 
-
   const handlePlayPause = () => setIsPlaying(prev => !prev);
   const handleStop = () => {
     setIsPlaying(false);
@@ -72,7 +74,6 @@ export const PresentationView = ({ slides, currentSlideIndex, onExit, onNavigate
   const handleSpeedChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setAutoplaySpeed(parseFloat(e.target.value));
   };
-
 
   const currentSlide = slideToShow;
   if (!currentSlide) return null;
@@ -95,9 +96,9 @@ export const PresentationView = ({ slides, currentSlideIndex, onExit, onNavigate
   
   const getTransitionClasses = () => {
     const tType = currentSlide.transition || 'fade';
-    if (transitionState === 'entering') return `${tType}-enter-active`;
-    if (transitionState === 'exiting') return `${tType}-exit-active`;
-    return `${tType}-enter`; 
+    if (transitionState === 'entering') return `${tType}-enter ${tType}-enter-active`;
+    if (transitionState === 'exiting') return `${tType}-exit ${tType}-exit-active`;
+    return '';
   };
 
   const renderSlideContent = () => {
