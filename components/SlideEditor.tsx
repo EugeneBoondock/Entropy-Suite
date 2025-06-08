@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Slide } from '../types';
 import { Theme } from '../App';
 
@@ -48,15 +48,71 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({ slide, slideNumber, to
   const renderFormattedContent = (text: string, slideTextColor?: string) => {
     const defaultColor = theme === 'dark' ? 'text-slate-300' : 'text-slate-700';
     const textColorStyle = slideTextColor ? { color: slideTextColor } : {};
+    const textClass = `text-sm md:text-base lg:text-lg leading-relaxed mb-2 ${!slideTextColor ? defaultColor : ''}`;
 
-    return text.split('\n').map((line, index) => {
-      const trimmedLine = line.trim();
-      if (trimmedLine.startsWith('- ')) {
-        return <li key={index} className={`ml-5 list-disc text-sm md:text-base lg:text-lg leading-relaxed ${!slideTextColor ? defaultColor : ''}`} style={textColorStyle}>{trimmedLine.substring(2)}</li>;
-      } else if (trimmedLine) {
-        return <p key={index} className={`text-sm md:text-base lg:text-lg leading-relaxed mb-2 ${!slideTextColor ? defaultColor : ''}`} style={textColorStyle}>{trimmedLine}</p>;
+    // Process markdown-like formatting
+    const processMarkdown = (content: string) => {
+      // Handle **bold**, *italic*, and `code`
+      let processed = content
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')  // **bold**
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')                 // *italic*
+        .replace(/`(.*?)`/g, '<code class="bg-slate-100 dark:bg-slate-800 px-1 rounded">$1</code>') // `code`
+        .replace(/~~(.*?)~~/g, '<s>$1</s>')                    // ~~strikethrough~~
+        .replace(/__(.*?)__/g, '<u>$1</u>');                   // __underline__
+
+      return processed;
+    };
+
+    // Split by double newlines first to handle paragraphs
+    const paragraphs = text.split(/\n\s*\n/);
+    
+    return paragraphs.map((paragraph, pIndex) => {
+      if (!paragraph.trim()) return null;
+      
+      // Handle bullet points
+      if (paragraph.trim().startsWith('- ')) {
+        const items = paragraph.split('\n').filter(line => line.trim().startsWith('- '));
+        return (
+          <ul key={`p-${pIndex}`} className={`mb-2 ${!slideTextColor ? defaultColor : ''}`} style={textColorStyle}>
+            {items.map((item, i) => (
+              <li 
+                key={`${pIndex}-${i}`} 
+                className="ml-5 list-disc"
+                dangerouslySetInnerHTML={{ 
+                  __html: processMarkdown(item.substring(2).trim()) 
+                }} 
+              />
+            ))}
+          </ul>
+        );
       }
-      return null;
+      
+      // Handle numbered lists (1. 2. etc.)
+      if (/^\d+\.\s+/.test(paragraph.trim())) {
+        const items = paragraph.split('\n').filter(line => /^\d+\.\s+/.test(line.trim()));
+        return (
+          <ol key={`p-${pIndex}`} className={`list-decimal ml-5 mb-2 ${!slideTextColor ? defaultColor : ''}`} style={textColorStyle}>
+            {items.map((item, i) => (
+              <li 
+                key={`${pIndex}-${i}`}
+                dangerouslySetInnerHTML={{ 
+                  __html: processMarkdown(item.replace(/^\d+\.\s+/, '').trim()) 
+                }} 
+              />
+            ))}
+          </ol>
+        );
+      }
+      
+      // Handle regular paragraphs with markdown
+      return (
+        <p 
+          key={`p-${pIndex}`} 
+          className={textClass} 
+          style={textColorStyle}
+          dangerouslySetInnerHTML={{ __html: processMarkdown(paragraph) }}
+        />
+      );
     });
   };
 

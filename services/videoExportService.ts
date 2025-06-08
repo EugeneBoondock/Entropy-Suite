@@ -2,6 +2,25 @@ import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile as _fetchFile } from '@ffmpeg/util';
 import { toPng } from 'html-to-image';
 
+// Get the base URL for FFmpeg files
+const getFFmpegCorePath = (filename: string) => {
+  return new URL(`/node_modules/@ffmpeg/core/dist/${filename}`, import.meta.url).href;
+};
+
+const JAMENDO_CLIENT_ID = import.meta.env.VITE_JAMENDO_CLIENT_ID || '';
+const JAMENDO_API_URL = import.meta.env.VITE_JAMENDO_API_URL || 'https://api.jamendo.com/v3.0';
+
+interface JamendoTrack {
+  id: string;
+  name: string;
+  audio: string;
+  audiodownload: string;
+  duration: number;
+  artist_name: string;
+  album_name: string;
+  audio_download_allowed: boolean;
+}
+
 type ProgressCallback = (progress: number) => void;
 
 export class VideoExportService {
@@ -17,32 +36,85 @@ export class VideoExportService {
 
   private async ensureFFmpegLoaded() {
     if (!this.isFFmpegLoaded) {
-      await this.ffmpeg.load({
-        coreURL: 'https://unpkg.com/@ffmpeg/core@0.12.4/dist/ffmpeg-core.js',
-        wasmURL: 'https://unpkg.com/@ffmpeg/core@0.12.4/dist/ffmpeg-core.wasm',
-        workerURL: 'https://unpkg.com/@ffmpeg/core@0.12.4/dist/ffmpeg-core.worker.js'
-      });
-      this.isFFmpegLoaded = true;
+      try {
+        const corePath = getFFmpegCorePath('ffmpeg-core.js');
+        const wasmPath = getFFmpegCorePath('ffmpeg-core.wasm');
+        const workerPath = getFFmpegCorePath('ffmpeg-core.worker.js');
+        
+        console.log('Loading FFmpeg with paths:', { corePath, wasmPath, workerPath });
+        
+        await this.ffmpeg.load({
+          coreURL: corePath,
+          wasmURL: wasmPath,
+          workerURL: workerPath,
+        });
+        
+        this.isFFmpegLoaded = true;
+        console.log('FFmpeg loaded successfully');
+      } catch (error) {
+        console.error('Failed to load FFmpeg:', error);
+        throw new Error(`Failed to load FFmpeg: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
     }
   }
 
   private async fetchRandomBackgroundMusic(): Promise<ArrayBuffer> {
     try {
-      // Using Free Music Archive API to get a random track
-      const response = await fetch('https://freemusicarchive.org/api/get/tracks.json?api_key=YOUR_FMA_API_KEY&limit=1&page=' + Math.floor(Math.random() * 100));
+      if (!JAMENDO_CLIENT_ID) {
+        throw new Error('Jamendo client ID not configured');
+      }
+
+      // Fetch a random track from Jamendo
+      const response = await fetch(
+        `${JAMENDO_API_URL}/tracks/?client_id=${JAMENDO_CLIENT_ID}` +
+        '&format=json' +
+        '&limit=1' +
+        '&audioformat=mp32' +
+        '&groupby=artist_id' +
+        '&order=popularity_total' +
+        `&offset=${Math.floor(Math.random() * 100)}`
+      );
+
+      if (!response.ok) {
+        throw new Error(`Jamendo API error: ${response.statusText}`);
+      }
+
       const data = await response.json();
       
-      if (data.dataset && data.dataset.length > 0) {
-        const trackUrl = data.dataset[0].track_url;
-        const audioResponse = await fetch(trackUrl);
+      if (data.results && data.results.length > 0) {
+        const track: JamendoTrack = data.results[0];
+        
+        if (!track.audio_download_allowed) {
+          throw new Error('Track download not allowed');
+        }
+
+        // Use the download URL if available, otherwise fall back to streaming URL
+        const audioUrl = track.audiodownload || track.audio;
+        console.log(`Using track: ${track.name} by ${track.artist_name}`);
+        
+        const audioResponse = await fetch(audioUrl);
+        if (!audioResponse.ok) {
+          throw new Error(`Failed to fetch audio: ${audioResponse.statusText}`);
+        }
+        
         return await audioResponse.arrayBuffer();
       }
-      throw new Error('No tracks found');
+      
+      throw new Error('No tracks found in Jamendo response');
     } catch (error) {
-      console.warn('Failed to fetch random music, using fallback:', error);
+      console.warn('Failed to fetch music from Jamendo, using fallback:', error);
       // Fallback: Use a public domain music file
-      const fallbackResponse = await fetch('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3');
-      return await fallbackResponse.arrayBuffer();
+      try {
+        const fallbackResponse = await fetch('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3');
+        if (!fallbackResponse.ok) {
+          throw new Error('Failed to load fallback music');
+        }
+        return await fallbackResponse.arrayBuffer();
+      } catch (fallbackError) {
+        console.error('Failed to load fallback music:', fallbackError);
+        // Return empty array buffer as last resort
+        return new ArrayBuffer(0);
+      }
     }
   }
 
@@ -123,12 +195,18 @@ export class VideoExportService {
     durationPerSlide: number = 5,
     progressCallback: ProgressCallback = () => {}
   ): Promise<Blob> {
+    console.log('Starting video export with', slideElements.length, 'slides');
     try {
+      await this.ensureFFmpegLoaded();
       const videoData = await this.createVideoFromSlides(slideElements, durationPerSlide, progressCallback);
+      console.log('Video export completed successfully');
       return new Blob([videoData.buffer], { type: 'video/mp4' });
     } catch (error) {
-      console.error('Error exporting video:', error);
-      throw new Error('Failed to export video. Please try again.');
+      console.error('Error in exportAsVideo:', error);
+      if (error instanceof Error) {
+        throw new Error(`Failed to export video: ${error.message}`);
+      }
+      throw new Error('Failed to export video. Please check the console for details.');
     }
   }
 }
