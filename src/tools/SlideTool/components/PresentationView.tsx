@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import type { JSX } from 'react';
-import { Slide } from '../types';
-import { Theme } from '../App';
+import { Slide, Theme } from '../types';
 
 interface PresentationViewProps {
   slides: Slide[];
@@ -102,9 +101,9 @@ export const PresentationView = ({ slides, currentSlideIndex, onExit, onNavigate
   };
 
   const renderSlideContent = () => {
-    const titleElement = <h1 className="font-bold text-3xl md:text-5xl lg:text-6xl break-words p-4 text-center">{currentSlide.title}</h1>;
+    const titleElement = <h1 className="font-bold text-2xl sm:text-3xl md:text-5xl lg:text-6xl break-words p-2 sm:p-4 text-center">{currentSlide.title}</h1>;
     const contentElement = (
-      <ul className="text-xl md:text-2xl lg:text-3xl space-y-3 md:space-y-4 max-w-prose text-left p-4 overflow-y-auto custom-scrollbar max-h-[60vh]">
+      <ul className="text-base sm:text-xl md:text-2xl lg:text-3xl space-y-2 sm:space-y-3 md:space-y-4 max-w-prose text-left p-2 sm:p-4 overflow-y-auto custom-scrollbar max-h-[50vh] sm:max-h-[60vh]">
         {currentSlide.content.split('\n').map((line, index) => {
           const trimmedLine = line.trim();
           if (trimmedLine.startsWith('- ')) {
@@ -128,22 +127,22 @@ export const PresentationView = ({ slides, currentSlideIndex, onExit, onNavigate
     switch (currentSlide.layout) {
       case 'text-image-right':
         return <div className="flex flex-row w-full h-full items-center">
-                 <div className="w-1/2 flex flex-col justify-center p-4 md:p-8">{titleElement}{contentElement}</div>
-                 <div className="w-1/2 flex items-center justify-center p-4 md:p-8 h-full">{imageElement}</div>
+                 <div className="w-full sm:w-1/2 flex flex-col justify-center p-2 sm:p-4 md:p-8">{titleElement}{contentElement}</div>
+                 <div className="w-full sm:w-1/2 flex items-center justify-center p-2 sm:p-4 md:p-8 h-full">{imageElement}</div>
                </div>;
       case 'text-image-left':
         return <div className="flex flex-row w-full h-full items-center">
-                 <div className="w-1/2 flex items-center justify-center p-4 md:p-8 h-full">{imageElement}</div>
-                 <div className="w-1/2 flex flex-col justify-center p-4 md:p-8">{titleElement}{contentElement}</div>
+                 <div className="w-full sm:w-1/2 flex items-center justify-center p-2 sm:p-4 md:p-8 h-full">{imageElement}</div>
+                 <div className="w-full sm:w-1/2 flex flex-col justify-center p-2 sm:p-4 md:p-8">{titleElement}{contentElement}</div>
                </div>;
       case 'image-only':
-        return <div className="w-full h-full flex items-center justify-center p-4 md:p-8">{imageElement}</div>;
+        return <div className="w-full h-full flex items-center justify-center p-2 sm:p-4 md:p-8">{imageElement}</div>;
       case 'title-only':
-        return <div className="w-full h-full flex flex-col items-center justify-center p-4 md:p-8">{titleElement}</div>;
+        return <div className="w-full h-full flex flex-col items-center justify-center p-2 sm:p-4 md:p-8">{titleElement}</div>;
       case 'image-title-overlay':
         return <div className="relative w-full h-full">
                 {imageElement && React.cloneElement(imageElement, { className: "absolute inset-0 w-full h-full object-cover" })}
-                <div className="absolute inset-x-0 bottom-10 p-4 bg-black bg-opacity-40 text-center">{titleElement}</div>
+                <div className="absolute inset-x-0 bottom-4 sm:bottom-10 p-2 sm:p-4 bg-black bg-opacity-40 text-center">{titleElement}</div>
                </div>;
       case 'text-only':
       default:
@@ -151,12 +150,33 @@ export const PresentationView = ({ slides, currentSlideIndex, onExit, onNavigate
     }
   };
 
-  const controlButtonClass = `p-2.5 sm:p-3 rounded-full transition-all transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-opacity-75 ${theme === 'dark' ? 'bg-slate-700 text-slate-200 hover:bg-slate-600 focus:ring-slate-500' : 'bg-slate-200 text-slate-700 hover:bg-slate-300 focus:ring-slate-400'} disabled:opacity-50 disabled:cursor-not-allowed`;
+  const controlButtonClass = `p-3 sm:p-3.5 rounded-full transition-all transform active:scale-95 focus:outline-none focus:ring-2 focus:ring-opacity-75 ${theme === 'dark' ? 'bg-slate-700 text-slate-200 hover:bg-slate-600 focus:ring-slate-500' : 'bg-slate-200 text-slate-700 hover:bg-slate-300 focus:ring-slate-400'} disabled:opacity-50 disabled:cursor-not-allowed`;
   
   const hasPexelsImage = useMemo(() => slides.some(s => s.imageUrl && s.imageUrl.includes('pexels.com')), [slides]);
 
+  // Landscape detection hook
+  const [isLandscape, setIsLandscape] = useState(window.innerWidth > window.innerHeight);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsLandscape(window.innerWidth > window.innerHeight);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
     <div className={`fixed inset-0 z-[100] overflow-hidden ${theme === 'dark' ? 'bg-black' : 'bg-slate-300'}`}>
+      {/* Portrait mode warning for mobile */}
+      {!isLandscape && window.innerWidth < 640 && (
+        <div className="fixed inset-0 z-[120] flex flex-col items-center justify-center p-6 bg-black text-white text-center">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-16 h-16 mb-4 animate-bounce">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+          </svg>
+          <h2 className="text-xl font-bold mb-2">Please Rotate Your Device</h2>
+          <p className="text-slate-300">For the best presentation experience, please turn your phone sideways (landscape mode).</p>
+        </div>
+      )}
       <div className={`slide-container relative w-full h-full ${getTransitionClasses()}`} style={slideStyles}>
         {renderSlideContent()}
       </div>
@@ -168,7 +188,7 @@ export const PresentationView = ({ slides, currentSlideIndex, onExit, onNavigate
       )}
 
       {/* Navigation & Autoplay Controls */}
-      <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 flex items-center space-x-2 sm:space-x-3 z-[110] p-2 bg-opacity-50 rounded-lg backdrop-blur-sm ${theme === 'dark' ? 'bg-slate-800' : 'bg-slate-100'} shadow-xl">
+      <div className="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 flex items-center space-x-3 sm:space-x-4 z-[110] p-2.5 sm:p-3 bg-opacity-50 rounded-lg backdrop-blur-sm ${theme === 'dark' ? 'bg-slate-800' : 'bg-slate-100'} shadow-xl">
         <button onClick={() => onNavigate('prev')} disabled={currentSlideIndex === 0} className={controlButtonClass} aria-label="Previous slide">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 sm:w-6 sm:h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
         </button>

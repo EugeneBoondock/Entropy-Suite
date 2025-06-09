@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
-import { Slide } from '../types';
+import { Slide } from '../types.ts';
 import { fetchImageFromPexels } from './imageService';
 
 declare const console: Console;

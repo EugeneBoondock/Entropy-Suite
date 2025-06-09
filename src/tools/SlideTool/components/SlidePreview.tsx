@@ -1,6 +1,5 @@
 import React from 'react';
-import { Slide } from '../types';
-import { Theme } from '../App';
+import { Slide, Theme } from '../types';
 
 interface SlidePreviewProps {
   slide: Slide;
@@ -12,10 +11,11 @@ interface SlidePreviewProps {
 }
 
 export const SlidePreview: React.FC<SlidePreviewProps> = ({ slide, isActive, onClick, onDelete, index }) => {
-  const handleDelete = (e: React.MouseEvent) => {
+  const handleDelete = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation(); // Prevent onClick for the preview itself
     onDelete();
   };
+
   
   return (
     <div
@@ -28,7 +28,7 @@ export const SlidePreview: React.FC<SlidePreviewProps> = ({ slide, isActive, onC
       role="button"
       aria-pressed={isActive}
       tabIndex={0}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick(); }}
+      onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => { if (e.key === 'Enter' || e.key === ' ') onClick(); }}
       title={`Slide ${index + 1}: ${slide.title || "Untitled Slide"}`}
     >
       <div className="flex justify-between items-start">

@@ -1,4 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import LandingPage from '../../pages/LandingPage';
+import Pricing from '../../pages/Pricing';
 import PptxGenJS from 'pptxgenjs';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -16,7 +19,7 @@ export type Theme = 'light' | 'dark';
 const LOCAL_STORAGE_SLIDES_KEY = 'entropy-tools-slides';
 const LOCAL_STORAGE_TOPIC_KEY = 'entropy-tools-last-topic';
 
-const App: React.FC = () => {
+const EditorApp: React.FC = () => {
   const [slides, setSlides] = useState<Slide[]>(() => {
     try {
       const storedSlides = localStorage.getItem(LOCAL_STORAGE_SLIDES_KEY);
@@ -641,5 +644,15 @@ const App: React.FC = () => {
     </div>
   );
 };
+
+const App: React.FC = () => (
+  <BrowserRouter>
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/editor" element={<EditorApp />} />
+      <Route path="/pricing" element={<Pricing />} />
+    </Routes>
+  </BrowserRouter>
+);
 
 export default App;
