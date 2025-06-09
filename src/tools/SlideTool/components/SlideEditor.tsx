@@ -123,20 +123,20 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({ slide, slideNumber, to
   const slidePreviewTextColor = localSlide.textColor || (theme === 'dark' ? '#F1F5F9' : '#1E293B'); // slate-100 or slate-800
 
   const renderLayoutPreview = () => {
-    const titleElement = <h3 className="font-bold text-sm sm:text-base md:text-lg break-words p-1 sm:p-2" style={{ color: slidePreviewTextColor }}>{localSlide.title || "Slide Title"}</h3>;
-    const contentElement = <div className="text-[10px] sm:text-xs md:text-sm p-1 sm:p-2 overflow-y-auto max-h-24 sm:max-h-32 md:max-h-48 custom-scrollbar" style={{ color: slidePreviewTextColor }}>{renderFormattedContent(localSlide.content || "- Point 1\n- Point 2", slidePreviewTextColor)}</div>;
+    const titleElement = <h3 className="font-bold text-sm sm:text-lg md:text-xl break-words p-1 sm:p-2" style={{ color: slidePreviewTextColor }}>{localSlide.title || "Slide Title"}</h3>;
+    const contentElement = <div className="text-[10px] sm:text-xs md:text-sm p-1 sm:p-2 overflow-y-auto max-h-20 sm:max-h-32 md:max-h-48 custom-scrollbar" style={{ color: slidePreviewTextColor }}>{renderFormattedContent(localSlide.content || "- Point 1\n- Point 2", slidePreviewTextColor)}</div>;
     const imageElement = localSlide.imageUrl ? 
         <img src={localSlide.imageUrl} alt={localSlide.imageDescription || localSlide.title || "Slide image"} className="object-contain w-full h-full max-h-full" onError={(e) => (e.currentTarget.style.display = 'none')} /> : 
         <div className="w-full h-full bg-slate-300 dark:bg-slate-600 flex items-center justify-center text-slate-500 dark:text-slate-400 text-xs">No Image URL / Error loading</div>;
 
     switch (localSlide.layout) {
       case 'text-image-right':
-        return <div className="flex flex-col w-full h-full gap-1 sm:gap-2">
+        return <div className="flex flex-col sm:flex-row w-full h-full gap-1 sm:gap-2">
                  <div className="w-full sm:w-1/2 flex flex-col justify-center">{titleElement}{contentElement}</div>
                  <div className="w-full sm:w-1/2 flex items-center justify-center">{imageElement}</div>
                </div>;
       case 'text-image-left':
-        return <div className="flex flex-col-reverse w-full h-full gap-1 sm:gap-2">
+        return <div className="flex flex-col-reverse sm:flex-row w-full h-full gap-1 sm:gap-2">
                  <div className="w-full sm:w-1/2 flex items-center justify-center">{imageElement}</div>
                  <div className="w-full sm:w-1/2 flex flex-col justify-center">{titleElement}{contentElement}</div>
                </div>;
@@ -290,12 +290,10 @@ export const SlideEditor: React.FC<SlideEditorProps> = ({ slide, slideNumber, to
       </div>
 
       {/* Live Preview Panel */}
-      <div className="w-full xl:w-2/3 flex flex-col rounded-lg shadow-lg bg-[#f7f0e4] dark:bg-slate-800 transition-colors duration-300 overflow-hidden">
-        <div className="p-2 border-b border-slate-200 dark:border-slate-700">
-        <h3 className={`text-sm font-semibold ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>Live Preview</h3>
-        </div>
+      <div className="w-full xl:w-2/3 flex flex-col p-2 sm:p-3 md:p-4 rounded-lg shadow-lg bg-[#f7f0e4] dark:bg-slate-800 transition-colors duration-300 overflow-hidden">
+        <h3 className={`text-sm sm:text-md font-semibold mb-2 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>Live Preview</h3>
         <div 
-          className="aspect-video w-full overflow-hidden flex items-center justify-center relative transition-colors duration-300"
+          className="aspect-[4/3] sm:aspect-16/9 w-full rounded-md shadow-inner overflow-hidden flex items-center justify-center relative transition-colors duration-300"
           style={{ backgroundColor: slidePreviewBgColor }}
           aria-label="Slide live preview"
         >
