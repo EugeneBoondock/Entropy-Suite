@@ -4,6 +4,7 @@ import LandingPage from '../../pages/LandingPage';
 import Pricing from '../../pages/Pricing';
 import ToolsPage from '../../pages/ToolsPage';
 import SummarizerPage from '../../pages/SummarizerPage';
+import DocumentConverterPage from '../../pages/DocumentConverterPage';
 import PptxGenJS from 'pptxgenjs';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -655,6 +656,7 @@ const App: React.FC = () => (
       <Route path="/pricing" element={<Pricing />} />
       <Route path="/tools" element={<ToolsPage />} />
       <Route path="/summarizer" element={<SummarizerPage />} />
+      <Route path="/converter" element={<DocumentConverterPage />} />
     </Routes>
   </BrowserRouter>
 );

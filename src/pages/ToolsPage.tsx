@@ -19,10 +19,10 @@ const ToolsPage: React.FC = () => {
       category: 'Text'
     },
     {
-        title: 'Document Converter',
-        description: 'Convert documents between different formats.',
+        title: 'File Converter',
+        description: 'Convert documents, images, and other files between different formats.',
         imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB6t8eqIpmlWubaRzfTarfdEWvXm81nvovUc8pF6ew1PZflGw8ju6Jfn50Vg_mRnfAvDV51B5z-PsUm0dSFv6PTTEaK2ea8H1y6K6y_Pajr6XWXYpxzJTWcBuAs42glKaiq5Fba6IKiUDrnI2I9PP5X2FPK1QJFtUcEBwwjrapVESixw__ujLoCJ_2KWo_GiOD3gh1bUhAHi_wBLnYXaumuiin6nGqryNRz2QbXzd0YC0c0kovFSOuTKus-LNcGtqSaYDjQLV7rJekR',
-        link: '#',
+        link: '/converter',
         category: 'Documents'
     },
     {
