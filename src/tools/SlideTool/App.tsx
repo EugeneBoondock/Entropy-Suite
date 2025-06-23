@@ -5,6 +5,21 @@ import Pricing from '../../pages/Pricing';
 import ToolsPage from '../../pages/ToolsPage';
 import SummarizerPage from '../../pages/SummarizerPage';
 import DocumentConverterPage from '../../pages/DocumentConverterPage';
+import ChatbotPage from '../../pages/ChatbotPage';
+import ProductivityPlannerPage from '../../pages/ProductivityPlannerPage';
+import ImageResizerPage from '../../pages/ImageResizerPage';
+import VideoTrimmerPage from '../../pages/VideoTrimmerPage';
+import AudioTranscriberPage from '../../pages/AudioTranscriberPage';
+import DataAnalysisPage from '../../pages/DataAnalysisPage';
+import ColorPickerPage from '../../pages/ColorPickerPage';
+import PDFReaderPage from '../../pages/PDFReaderPage';
+import PDFEditorPage from '../../pages/PDFEditorPage';
+import DOCReaderPage from '../../pages/DOCReaderPage';
+import FileCompressorPage from '../../pages/FileCompressorPage';
+import QRCodeGeneratorPage from '../../pages/QRCodeGeneratorPage';
+import UnitConverterPage from '../../pages/UnitConverterPage';
+import DocumentTranslatorPage from '../../pages/DocumentTranslatorPage';
+import PDFMergerPage from '../../pages/PDFMergerPage';
 import PptxGenJS from 'pptxgenjs';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -657,6 +672,21 @@ const App: React.FC = () => (
       <Route path="/tools" element={<ToolsPage />} />
       <Route path="/summarizer" element={<SummarizerPage />} />
       <Route path="/converter" element={<DocumentConverterPage />} />
+      <Route path="/chatbot" element={<ChatbotPage />} />
+      <Route path="/productivity-planner" element={<ProductivityPlannerPage />} />
+      <Route path="/image-resizer" element={<ImageResizerPage />} />
+      <Route path="/video-trimmer" element={<VideoTrimmerPage />} />
+      <Route path="/audio-transcriber" element={<AudioTranscriberPage />} />
+      <Route path="/data-analysis" element={<DataAnalysisPage />} />
+      <Route path="/color-picker" element={<ColorPickerPage />} />
+      <Route path="/pdf-reader" element={<PDFReaderPage />} />
+      <Route path="/pdf-editor" element={<PDFEditorPage />} />
+      <Route path="/doc-reader" element={<DOCReaderPage />} />
+      <Route path="/file-compressor" element={<FileCompressorPage />} />
+      <Route path="/qr-generator" element={<QRCodeGeneratorPage />} />
+      <Route path="/unit-converter" element={<UnitConverterPage />} />
+      <Route path="/document-translator" element={<DocumentTranslatorPage />} />
+      <Route path="/pdf-merger" element={<PDFMergerPage />} />
     </Routes>
   </BrowserRouter>
 );

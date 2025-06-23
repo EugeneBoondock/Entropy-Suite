@@ -225,85 +225,252 @@ const convertDocx = async (buffer: ArrayBuffer, format: string, name: string) =>
         };
 
         // Process elements in document order
-        const processElements = (element: Element) => {
+        const processElements = (element: Element, indentLevel: number = 0) => {
             for (const child of Array.from(element.children)) {
                 const tagName = child.tagName.toLowerCase();
-                const textContent = child.textContent?.trim();
                 
                 if (tagName === 'table') {
                     renderTable(child as HTMLTableElement);
                     continue;
                 }
                 
-                if (!textContent) {
-                    processElements(child); // Recurse for nested elements
+                if (tagName === 'ul' || tagName === 'ol') {
+                    // Process list with increased indentation
+                    processElements(child, indentLevel + 1);
                     continue;
                 }
                 
-                // Set formatting based on element type
+                if (tagName === 'li') {
+                    addPageIfNeeded(baseLineHeight);
+                    
+                    const indent = 10 + (indentLevel * 15); // 15mm indent per level
+                    const bulletSymbol = indentLevel === 1 ? '• ' : '◦ '; // Different bullet for sub-levels
+                    
+                    // Process mixed content (text + formatting)
+                    const processedText = processInlineFormatting(child, indent, bulletSymbol);
+                    continue;
+                }
+                
+                const textContent = child.textContent?.trim();
+                if (!textContent) {
+                    processElements(child, indentLevel); // Recurse for nested elements
+                    continue;
+                }
+                
+                // Set base formatting based on element type
+                let fontSize = 12;
+                let fontStyle = 'normal';
+                let extraSpacing = 0;
+                
                 switch (tagName) {
                     case 'h1':
                         addPageIfNeeded(12);
-                        pdf.setFontSize(18);
-                        pdf.setFont('helvetica', 'bold');
+                        fontSize = 18;
+                        fontStyle = 'bold';
+                        extraSpacing = 4;
                         break;
                     case 'h2':
                         addPageIfNeeded(10);
-                        pdf.setFontSize(16);
-                        pdf.setFont('helvetica', 'bold');
+                        fontSize = 16;
+                        fontStyle = 'bold';
+                        extraSpacing = 3;
                         break;
                     case 'h3':
                         addPageIfNeeded(8);
-                        pdf.setFontSize(14);
-                        pdf.setFont('helvetica', 'bold');
+                        fontSize = 14;
+                        fontStyle = 'bold';
+                        extraSpacing = 2;
                         break;
                     case 'p':
                         addPageIfNeeded(baseLineHeight * 2);
-                        pdf.setFontSize(12);
-                        pdf.setFont('helvetica', 'normal');
+                        fontSize = 12;
+                        fontStyle = 'normal';
+                        extraSpacing = 3;
                         break;
                     case 'strong':
                     case 'b':
-                        addPageIfNeeded(baseLineHeight);
-                        pdf.setFontSize(12);
-                        pdf.setFont('helvetica', 'bold');
+                        fontSize = 12;
+                        fontStyle = 'bold';
                         break;
                     case 'em':
                     case 'i':
-                        addPageIfNeeded(baseLineHeight);
-                        pdf.setFontSize(12);
-                        pdf.setFont('helvetica', 'italic');
+                        fontSize = 12;
+                        fontStyle = 'italic';
                         break;
-                    case 'li':
-                        addPageIfNeeded(baseLineHeight);
-                        pdf.setFontSize(12);
-                        pdf.setFont('helvetica', 'normal');
-                        const bulletText = '• ' + textContent; // Add bullet point
-                        // Render the text
-                        const lines = pdf.splitTextToSize(bulletText, pageWidth);
-                        for (const line of lines) {
-                            addPageIfNeeded(baseLineHeight);
-                            pdf.text(line, 10, yPosition);
-                            yPosition += baseLineHeight;
+                    case 'a':
+                        const href = (child as HTMLAnchorElement).href;
+                        const linkText = textContent;
+                        if (linkText && href) {
+                            pdf.setFontSize(12);
+                            pdf.setFont('helvetica', 'normal');
+                            pdf.setTextColor(0, 0, 255);
+                            const linkLines = pdf.splitTextToSize(linkText, pageWidth);
+                            for (const line of linkLines) {
+                                addPageIfNeeded(baseLineHeight);
+                                pdf.setTextColor(0, 0, 255);
+                                pdf.textWithLink(line, 10, yPosition, { url: href });
+                                pdf.setTextColor(0, 0, 0);
+                                yPosition += baseLineHeight;
+                            }
+                            yPosition += 2;
                         }
                         continue;
                     default:
-                        // For other elements, recurse to find text content
-                        processElements(child);
+                        processElements(child, indentLevel);
                         continue;
                 }
                 
-                // Render the text
-                const lines = pdf.splitTextToSize(textContent, pageWidth);
-                for (const line of lines) {
-                    addPageIfNeeded(baseLineHeight);
-                    pdf.text(line, 10, yPosition);
-                    yPosition += baseLineHeight;
+                // For paragraphs and headings, process inline formatting
+                if (tagName === 'p' || tagName.startsWith('h')) {
+                    processInlineFormatting(child, 10);
+                } else {
+                    // For simple elements, render as before
+                    pdf.setFontSize(fontSize);
+                    pdf.setFont('helvetica', fontStyle);
+                    const lines = pdf.splitTextToSize(textContent, pageWidth);
+                    for (const line of lines) {
+                        addPageIfNeeded(baseLineHeight);
+                        pdf.text(line, 10, yPosition);
+                        yPosition += baseLineHeight;
+                    }
                 }
                 
-                // Add spacing after headings and paragraphs
-                if (tagName.startsWith('h') || tagName === 'p') {
-                    yPosition += 3;
+                yPosition += extraSpacing;
+            }
+        };
+
+        const processInlineFormatting = (element: Element, leftMargin: number = 10, prefix: string = '') => {
+            let currentX = leftMargin;
+            let lineText = prefix;
+            let currentFont = 'normal';
+            let currentSize = 12;
+            
+            // Set base font based on parent element
+            const parentTag = element.tagName.toLowerCase();
+            if (parentTag === 'h1') {
+                currentSize = 18;
+                currentFont = 'bold';
+            } else if (parentTag === 'h2') {
+                currentSize = 16;
+                currentFont = 'bold';
+            } else if (parentTag === 'h3') {
+                currentSize = 14;
+                currentFont = 'bold';
+            }
+            
+            const processNode = (node: Node) => {
+                if (node.nodeType === Node.TEXT_NODE) {
+                    const text = node.textContent?.trim();
+                    if (text) {
+                        lineText += text + ' ';
+                    }
+                } else if (node.nodeType === Node.ELEMENT_NODE) {
+                    const elem = node as Element;
+                    const tag = elem.tagName.toLowerCase();
+                    
+                    // Handle formatting elements
+                    if (tag === 'strong' || tag === 'b') {
+                        const boldText = elem.textContent?.trim();
+                        if (boldText) {
+                            // Render previous normal text
+                            if (lineText.trim()) {
+                                pdf.setFontSize(currentSize);
+                                pdf.setFont('helvetica', currentFont);
+                                const lines = pdf.splitTextToSize(lineText.trim(), pageWidth - leftMargin);
+                                for (const line of lines) {
+                                    addPageIfNeeded(baseLineHeight);
+                                    pdf.text(line, leftMargin, yPosition);
+                                    yPosition += baseLineHeight;
+                                }
+                                lineText = '';
+                            }
+                            
+                            // Render bold text
+                            pdf.setFontSize(currentSize);
+                            pdf.setFont('helvetica', 'bold');
+                            const boldLines = pdf.splitTextToSize(boldText, pageWidth - leftMargin);
+                            for (const line of boldLines) {
+                                addPageIfNeeded(baseLineHeight);
+                                pdf.text(line, leftMargin, yPosition);
+                                yPosition += baseLineHeight;
+                            }
+                        }
+                    } else if (tag === 'em' || tag === 'i') {
+                        const italicText = elem.textContent?.trim();
+                        if (italicText) {
+                            // Render previous normal text
+                            if (lineText.trim()) {
+                                pdf.setFontSize(currentSize);
+                                pdf.setFont('helvetica', currentFont);
+                                const lines = pdf.splitTextToSize(lineText.trim(), pageWidth - leftMargin);
+                                for (const line of lines) {
+                                    addPageIfNeeded(baseLineHeight);
+                                    pdf.text(line, leftMargin, yPosition);
+                                    yPosition += baseLineHeight;
+                                }
+                                lineText = '';
+                            }
+                            
+                            // Render italic text
+                            pdf.setFontSize(currentSize);
+                            pdf.setFont('helvetica', 'italic');
+                            const italicLines = pdf.splitTextToSize(italicText, pageWidth - leftMargin);
+                            for (const line of italicLines) {
+                                addPageIfNeeded(baseLineHeight);
+                                pdf.text(line, leftMargin, yPosition);
+                                yPosition += baseLineHeight;
+                            }
+                        }
+                    } else if (tag === 'a') {
+                        const href = (elem as HTMLAnchorElement).href;
+                        const linkTxt = elem.textContent?.trim();
+                        if (linkTxt && href) {
+                            if (lineText.trim()) {
+                                pdf.setFontSize(currentSize);
+                                pdf.setFont('helvetica', currentFont);
+                                const lines = pdf.splitTextToSize(lineText.trim(), pageWidth - leftMargin);
+                                for (const line of lines) {
+                                    addPageIfNeeded(baseLineHeight);
+                                    pdf.text(line, leftMargin, yPosition);
+                                    yPosition += baseLineHeight;
+                                }
+                                lineText = '';
+                            }
+                            pdf.setFontSize(currentSize);
+                            pdf.setFont('helvetica', 'normal');
+                            pdf.setTextColor(0, 0, 255);
+                            const lLines = pdf.splitTextToSize(linkTxt, pageWidth - leftMargin);
+                            for (const l of lLines) {
+                                addPageIfNeeded(baseLineHeight);
+                                pdf.setTextColor(0, 0, 255);
+                                pdf.textWithLink(l, leftMargin, yPosition, { url: href });
+                                pdf.setTextColor(0, 0, 0);
+                                yPosition += baseLineHeight;
+                            }
+                        }
+                    } else {
+                        // For other elements, process their children
+                        for (const childNode of Array.from(elem.childNodes)) {
+                            processNode(childNode);
+                        }
+                    }
+                }
+            };
+            
+            // Process all child nodes
+            for (const childNode of Array.from(element.childNodes)) {
+                processNode(childNode);
+            }
+            
+            // Render any remaining normal text
+            if (lineText.trim()) {
+                pdf.setFontSize(currentSize);
+                pdf.setFont('helvetica', currentFont);
+                const lines = pdf.splitTextToSize(lineText.trim(), pageWidth - leftMargin);
+                for (const line of lines) {
+                    addPageIfNeeded(baseLineHeight);
+                    pdf.text(line, leftMargin, yPosition);
+                    yPosition += baseLineHeight;
                 }
             }
         };
