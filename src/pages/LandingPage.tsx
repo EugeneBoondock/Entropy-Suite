@@ -1,68 +1,15 @@
-import React, { useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
+import { default as Navbar } from "../components/Navbar";
 
 const LandingPage: React.FC = () => {
-  const [navOpen, setNavOpen] = useState(false);
   return (
     <div
       className="relative flex size-full min-h-screen flex-col bg-[#f6f0e4] group/design-root overflow-x-hidden"
       style={{ fontFamily: '"Space Grotesk", "Noto Sans", sans-serif' }}
     >
       <div className="layout-container flex h-full grow flex-col">
-        <header className="flex flex-col sm:flex-row items-center sm:items-stretch justify-between whitespace-nowrap border-b border-solid border-b-[#382f29] px-4 sm:px-10 py-3 gap-3 sm:gap-0 relative">
-  {/* Mobile Hamburger */}
-  <button
-    className="sm:hidden absolute right-4 top-4 z-20 p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-[#e67722]"
-    aria-label="Open navigation menu"
-    onClick={() => setNavOpen((v) => !v)}
-  >
-    <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#382f29" strokeWidth="2">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-    </svg>
-  </button>
-          <div className="flex items-center gap-2 sm:gap-4 text-[#382f29] self-start sm:self-auto">
-            <div className="size-10 sm:size-12 flex items-center"><img src="/images/entropy_tools.png" alt="Entropy Tools Logo" className="h-10 w-10 sm:h-12 sm:w-12 object-contain" /></div>
-            <h2 className="text-[#382f29] text-base sm:text-lg font-bold leading-tight tracking-[-0.015em]">Entropy Tools</h2>
-          </div>
-          {/* Desktop Nav */}
-<div className="hidden sm:flex flex-1 justify-end gap-4 sm:gap-8 w-full sm:w-auto">
-            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-9">
-              <a className="text-[#382f29] text-sm font-medium leading-normal" href="#">Tools</a>
-              <Link className="text-[#382f29] text-sm font-medium leading-normal" to="/pricing">Pricing</Link>
-              <a className="text-[#382f29] text-sm font-medium leading-normal" href="#">Blog</a>
-            </div>
-            <div className="flex gap-2 mt-2 sm:mt-0">
-              <button
-                className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#e67722] text-[#382f29] text-sm font-bold leading-normal tracking-[0.015em]"
-              >
-                <span className="truncate">Get started</span>
-              </button>
-              <button
-                className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#382f29] text-[#e6c8b1] text-sm font-bold leading-normal tracking-[0.015em]"
-              >
-                <span className="truncate">Log in</span>
-              </button>
-            </div>
-          </div>
-        {/* Mobile Dropdown Nav */}
-{navOpen && (
-  <div className="sm:hidden absolute left-0 top-full w-full bg-[#f6f0e4] shadow-lg border-b border-[#382f29] z-10 animate-fade-in">
-    <nav className="flex flex-col items-center gap-2 py-4">
-      <a className="text-[#382f29] text-base font-medium py-2 w-full text-center hover:bg-[#e6c8b1]" href="#">Tools</a>
-      <Link className="text-[#382f29] text-base font-medium py-2 w-full text-center hover:bg-[#e6c8b1]" to="/pricing">Pricing</Link>
-      <a className="text-[#382f29] text-base font-medium py-2 w-full text-center hover:bg-[#e6c8b1]" href="#">Blog</a>
-      <div className="flex gap-2 mt-2">
-        <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#e67722] text-[#382f29] text-sm font-bold leading-normal tracking-[0.015em]">
-          <span className="truncate">Get started</span>
-        </button>
-        <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#382f29] text-[#e6c8b1] text-sm font-bold leading-normal tracking-[0.015em]">
-          <span className="truncate">Log in</span>
-        </button>
-      </div>
-    </nav>
-  </div>
-)}
-</header>
+        <Navbar />
         <div className="px-2 sm:px-4 md:px-10 lg:px-20 flex flex-1 justify-center py-2 sm:py-5">
           <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
             <div className="@container">
@@ -73,12 +20,16 @@ const LandingPage: React.FC = () => {
                 >
                   <div className="flex flex-col gap-2 text-center">
                     <h1
-                      className="text-[#5d4633] text-2xl font-black leading-tight tracking-[-0.02em] sm:text-3xl md:text-4xl lg:text-5xl sm:tracking-[-0.033em]"
+                      className="text-[#2F4F4F] text-2xl font-black leading-tight tracking-[-0.02em] sm:text-3xl md:text-4xl lg:text-5xl sm:tracking-[-0.033em]"
+                      style={{ textShadow: '0px 0px 5px white, 0px 0px 5px white' }}
                     >
                       Unleash the Power of Randomness with Entropy Tools
                     </h1>
-                    <h2 className="text-[#5d4633] text-base font-normal leading-normal sm:text-lg md:text-xl lg:text-2xl max-w-xl mx-auto">
-                      Discover a diverse collection of AI-powered tools designed for everyday use. From converting documents to generating presentations, Entropy Tools offers a unique blend of functionality and creativity.
+                    <h2 
+                      className="text-[#2F4F4F] text-base font-normal leading-normal sm:text-lg md:text-xl lg:text-2xl max-w-xl mx-auto"
+                      style={{ textShadow: '0px 0px 5px white, 0px 0px 10px white' }}
+                    >
+                      Real life cheat codes or scripts...
                     </h2>
                   </div>
                   <button

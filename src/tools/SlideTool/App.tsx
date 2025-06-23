@@ -2,6 +2,8 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import LandingPage from '../../pages/LandingPage';
 import Pricing from '../../pages/Pricing';
+import ToolsPage from '../../pages/ToolsPage';
+import SummarizerPage from '../../pages/SummarizerPage';
 import PptxGenJS from 'pptxgenjs';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -651,6 +653,8 @@ const App: React.FC = () => (
       <Route path="/" element={<LandingPage />} />
       <Route path="/editor" element={<EditorApp />} />
       <Route path="/pricing" element={<Pricing />} />
+      <Route path="/tools" element={<ToolsPage />} />
+      <Route path="/summarizer" element={<SummarizerPage />} />
     </Routes>
   </BrowserRouter>
 );

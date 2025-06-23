@@ -1,0 +1,1 @@
+declare module 'html-docx-fixed/dist/html-docx'; 
