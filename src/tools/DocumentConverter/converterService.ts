@@ -136,30 +136,179 @@ const convertDocx = async (buffer: ArrayBuffer, format: string, name: string) =>
         const blob = new Blob([value], { type: 'text/html' });
         saveAs(blob, `${name}.html`);
     } else if (format === 'pdf') {
-        // Use a reliable text-based approach instead of HTML rendering
-        const { value: rawText } = await mammoth.extractRawText({ arrayBuffer: buffer });
-        if (!rawText.trim()) throw new Error("Failed to extract text from DOCX for PDF generation. The document might be empty or unsupported.");
-        
-        const pdf = new jsPDF();
-        pdf.setFontSize(12);
-        
-        // Split text into lines that fit the page width
-        const pageWidth = pdf.internal.pageSize.getWidth() - 20; // 10mm margin on each side
-        const lines = pdf.splitTextToSize(rawText, pageWidth);
-        
-        let yPosition = 20; // Start 20mm from top
-        const lineHeight = 6; // 6mm between lines
-        const pageHeight = pdf.internal.pageSize.getHeight() - 20; // Leave 20mm margin at bottom
-        
-        for (const line of lines) {
-            if (yPosition + lineHeight > pageHeight) {
-                pdf.addPage();
-                yPosition = 20; // Reset to top of new page
-            }
+        // Extract HTML with formatting preserved
+        const { value: htmlValue } = await mammoth.convertToHtml({ arrayBuffer: buffer });
+        if (!htmlValue.trim()) {
+            // Fallback to plain text if HTML conversion fails
+            const { value: rawText } = await mammoth.extractRawText({ arrayBuffer: buffer });
+            if (!rawText.trim()) throw new Error("Failed to extract text from DOCX for PDF generation. The document might be empty or unsupported.");
             
-            pdf.text(line, 10, yPosition);
-            yPosition += lineHeight;
+            const pdf = new jsPDF();
+            pdf.setFontSize(12);
+            const lines = pdf.splitTextToSize(rawText, pdf.internal.pageSize.getWidth() - 20);
+            let yPosition = 20;
+            const lineHeight = 6;
+            const pageHeight = pdf.internal.pageSize.getHeight() - 20;
+            
+            for (const line of lines) {
+                if (yPosition + lineHeight > pageHeight) {
+                    pdf.addPage();
+                    yPosition = 20;
+                }
+                pdf.text(line, 10, yPosition);
+                yPosition += lineHeight;
+            }
+            pdf.save(`${name}.pdf`);
+            return;
         }
+
+        // Parse HTML and render directly with jsPDF (no HTML rendering)
+        const pdf = new jsPDF();
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = htmlValue;
+        
+        let yPosition = 20;
+        const pageWidth = pdf.internal.pageSize.getWidth() - 20;
+        const pageHeight = pdf.internal.pageSize.getHeight() - 20;
+        const baseLineHeight = 6;
+        
+        const addPageIfNeeded = (requiredHeight: number) => {
+            if (yPosition + requiredHeight > pageHeight) {
+                pdf.addPage();
+                yPosition = 20;
+            }
+        };
+
+        const renderTable = (table: HTMLTableElement) => {
+            const rows = Array.from(table.querySelectorAll('tr'));
+            if (rows.length === 0) return;
+            
+            // Calculate column count
+            const maxCols = Math.max(...rows.map(row => row.children.length));
+            const colWidth = pageWidth / maxCols;
+            const rowHeight = 8;
+            
+            addPageIfNeeded(rows.length * rowHeight + 10);
+            
+            rows.forEach((row, rowIndex) => {
+                const cells = Array.from(row.children);
+                
+                cells.forEach((cell, colIndex) => {
+                    const cellX = 10 + (colIndex * colWidth);
+                    const cellY = yPosition;
+                    const cellText = cell.textContent?.trim() || '';
+                    
+                    // Draw cell border
+                    pdf.rect(cellX, cellY, colWidth, rowHeight);
+                    
+                    // Set font based on cell type
+                    if (cell.tagName.toLowerCase() === 'th') {
+                        pdf.setFontSize(10);
+                        pdf.setFont('helvetica', 'bold');
+                    } else {
+                        pdf.setFontSize(9);
+                        pdf.setFont('helvetica', 'normal');
+                    }
+                    
+                    // Add text (truncate if too long)
+                    const maxWidth = colWidth - 4;
+                    const lines = pdf.splitTextToSize(cellText, maxWidth);
+                    if (lines.length > 0) {
+                        pdf.text(lines[0], cellX + 2, cellY + 5);
+                    }
+                });
+                
+                yPosition += rowHeight;
+            });
+            
+            yPosition += 5; // Add space after table
+        };
+
+        // Process elements in document order
+        const processElements = (element: Element) => {
+            for (const child of Array.from(element.children)) {
+                const tagName = child.tagName.toLowerCase();
+                const textContent = child.textContent?.trim();
+                
+                if (tagName === 'table') {
+                    renderTable(child as HTMLTableElement);
+                    continue;
+                }
+                
+                if (!textContent) {
+                    processElements(child); // Recurse for nested elements
+                    continue;
+                }
+                
+                // Set formatting based on element type
+                switch (tagName) {
+                    case 'h1':
+                        addPageIfNeeded(12);
+                        pdf.setFontSize(18);
+                        pdf.setFont('helvetica', 'bold');
+                        break;
+                    case 'h2':
+                        addPageIfNeeded(10);
+                        pdf.setFontSize(16);
+                        pdf.setFont('helvetica', 'bold');
+                        break;
+                    case 'h3':
+                        addPageIfNeeded(8);
+                        pdf.setFontSize(14);
+                        pdf.setFont('helvetica', 'bold');
+                        break;
+                    case 'p':
+                        addPageIfNeeded(baseLineHeight * 2);
+                        pdf.setFontSize(12);
+                        pdf.setFont('helvetica', 'normal');
+                        break;
+                    case 'strong':
+                    case 'b':
+                        addPageIfNeeded(baseLineHeight);
+                        pdf.setFontSize(12);
+                        pdf.setFont('helvetica', 'bold');
+                        break;
+                    case 'em':
+                    case 'i':
+                        addPageIfNeeded(baseLineHeight);
+                        pdf.setFontSize(12);
+                        pdf.setFont('helvetica', 'italic');
+                        break;
+                    case 'li':
+                        addPageIfNeeded(baseLineHeight);
+                        pdf.setFontSize(12);
+                        pdf.setFont('helvetica', 'normal');
+                        const bulletText = '• ' + textContent; // Add bullet point
+                        // Render the text
+                        const lines = pdf.splitTextToSize(bulletText, pageWidth);
+                        for (const line of lines) {
+                            addPageIfNeeded(baseLineHeight);
+                            pdf.text(line, 10, yPosition);
+                            yPosition += baseLineHeight;
+                        }
+                        continue;
+                    default:
+                        // For other elements, recurse to find text content
+                        processElements(child);
+                        continue;
+                }
+                
+                // Render the text
+                const lines = pdf.splitTextToSize(textContent, pageWidth);
+                for (const line of lines) {
+                    addPageIfNeeded(baseLineHeight);
+                    pdf.text(line, 10, yPosition);
+                    yPosition += baseLineHeight;
+                }
+                
+                // Add spacing after headings and paragraphs
+                if (tagName.startsWith('h') || tagName === 'p') {
+                    yPosition += 3;
+                }
+            }
+        };
+        
+        processElements(tempDiv);
         
         pdf.save(`${name}.pdf`);
     } else if (format === 'pptx') {
