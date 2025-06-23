@@ -1,6 +1,12 @@
 import React, { useState, useRef, useCallback } from 'react';
 import Navbar from '../components/Navbar';
 import { translateText as translateTextWithGemini } from '../tools/SummarizerTool/translationService';
+import mammoth from 'mammoth';
+import * as pdfjsLib from 'pdfjs-dist/build/pdf.mjs';
+import pdfWorkerSrc from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+
+// Configure worker source for pdfjs
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerSrc;
 
 interface TranslationJob {
   id: string;
@@ -19,6 +25,7 @@ const DocumentTranslatorPage: React.FC = () => {
   const [targetLanguage, setTargetLanguage] = useState('en');
   const [isTranslating, setIsTranslating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [dragActive, setDragActive] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -37,25 +44,76 @@ const DocumentTranslatorPage: React.FC = () => {
     { code: 'ar', name: 'Arabic' },
   ];
 
+  const extractTextFromPDF = async (file: File): Promise<string> => {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer, disableWorker: true }).promise;
+    let fullText = '';
+    
+    // Extract text from all pages
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items
+        .map((item: any) => item.str)
+        .join(' ');
+      fullText += pageText + '\n';
+    }
+    
+    return fullText.trim();
+  };
+
+  const extractTextFromDOCX = async (file: File): Promise<string> => {
+    const arrayBuffer = await file.arrayBuffer();
+    const result = await mammoth.extractRawText({ arrayBuffer });
+    return result.value;
+  };
+
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
+    setIsTranslating(true);
+    setError(null);
+    
     const newJobs: TranslationJob[] = [];
     
     for (const file of Array.from(files)) {
-      if (!file.type.includes('text') && !file.name.match(/\.(txt|doc|docx|pdf)$/i)) {
-        setError(`Unsupported file type: ${file.name}`);
+      // Check if file type is supported
+      const fileName = file.name.toLowerCase();
+      const isSupported = fileName.endsWith('.txt') || 
+                         fileName.endsWith('.pdf') || 
+                         fileName.endsWith('.doc') || 
+                         fileName.endsWith('.docx') ||
+                         file.type === 'text/plain' ||
+                         file.type === 'application/pdf' ||
+                         file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+
+      if (!isSupported) {
+        setError(`Unsupported file type: ${file.name}. Please upload TXT, PDF, DOC, or DOCX files.`);
         continue;
       }
 
       try {
         let text = '';
-        if (file.type === 'text/plain') {
+        
+        console.log(`Processing file: ${file.name}, type: ${file.type}, size: ${file.size}`);
+        
+        if (file.type === 'text/plain' || fileName.endsWith('.txt')) {
           text = await file.text();
-        } else {
-          // For other file types, simulate text extraction
-          text = `Sample text extracted from ${file.name}. Lorem ipsum dolor sit amet, consectetur adipiscing elit.`;
+        } else if (file.type === 'application/pdf' || fileName.endsWith('.pdf')) {
+          console.log('Extracting text from PDF...');
+          text = await extractTextFromPDF(file);
+          console.log(`PDF text extracted: ${text.length} characters`);
+        } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || fileName.endsWith('.docx')) {
+          console.log('Extracting text from DOCX...');
+          text = await extractTextFromDOCX(file);
+          console.log(`DOCX text extracted: ${text.length} characters`);
+        } else if (fileName.endsWith('.doc')) {
+          text = 'Note: .doc files are not fully supported. Please convert to .docx or .txt format for better results.';
+        }
+
+        if (!text.trim()) {
+          text = 'No readable text found in this file.';
         }
 
         const job: TranslationJob = {
@@ -69,14 +127,43 @@ const DocumentTranslatorPage: React.FC = () => {
         };
 
         newJobs.push(job);
+        console.log(`Job created for ${file.name}: ${text.substring(0, 100)}...`);
       } catch (err) {
-        setError(`Failed to read file: ${file.name}`);
+        console.error(`Error processing file ${file.name}:`, err);
+        setError(`Failed to read file: ${file.name} - ${err instanceof Error ? err.message : 'Unknown error'}`);
       }
     }
 
     setJobs(prev => [...prev, ...newJobs]);
-    setError(null);
+    setIsTranslating(false);
+    
+    if (newJobs.length === 0) {
+      setError('No files were successfully processed. Please check your files and try again.');
+    }
   }, [sourceLanguage, targetLanguage]);
+
+  const handleDrag = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const fakeEvent = {
+        target: { files: e.dataTransfer.files }
+      } as React.ChangeEvent<HTMLInputElement>;
+      handleFileUpload(fakeEvent);
+    }
+  }, [handleFileUpload]);
 
   const translateText = useCallback(async (text: string, sourceLang: string, targetLang: string): Promise<string> => {
     return await translateTextWithGemini(text, sourceLang, targetLang);
@@ -185,16 +272,28 @@ const DocumentTranslatorPage: React.FC = () => {
           {/* Upload Area */}
           <div className="bg-white rounded-xl shadow-lg p-6 mb-6 border border-[#e5dcc9]">
             <div 
-              className="border-2 border-dashed border-[#8b7355] rounded-xl p-8 text-center cursor-pointer hover:border-[#6b5635] transition-colors"
+              className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
+                dragActive 
+                  ? 'border-[#382f29] bg-[#f6f0e4]' 
+                  : 'border-[#8b7355] hover:border-[#6b5635]'
+              }`}
               onClick={() => fileInputRef.current?.click()}
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
             >
               <div className="text-6xl mb-4">🌐</div>
               <h3 className="text-xl font-semibold text-[#382f29] mb-2">Upload Documents</h3>
               <p className="text-[#5c5349] mb-4">
+                Drag and drop files here, or click to browse<br/>
                 Supported formats: TXT, DOC, DOCX, PDF
               </p>
-              <button className="bg-[#382f29] text-white px-6 py-3 rounded-lg hover:bg-[#2a211c] transition-colors">
-                Choose Files
+              <button 
+                className="bg-[#382f29] text-white px-6 py-3 rounded-lg hover:bg-[#2a211c] transition-colors"
+                disabled={isTranslating}
+              >
+                {isTranslating ? 'Processing...' : 'Choose Files'}
               </button>
             </div>
             <input
