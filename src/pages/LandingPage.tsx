@@ -29,7 +29,7 @@ const LandingPage: React.FC = () => {
                       className="text-[#2F4F4F] text-base font-normal leading-normal sm:text-lg md:text-xl lg:text-2xl max-w-xl mx-auto"
                       style={{ textShadow: '0px 0px 5px white, 0px 0px 10px white' }}
                     >
-                      Real life cheat codes or scripts...
+                      Real life Cheat codes...
                     </h2>
                   </div>
                   <button
