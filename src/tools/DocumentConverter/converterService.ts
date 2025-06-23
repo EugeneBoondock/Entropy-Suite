@@ -2,7 +2,6 @@ import mammoth from 'mammoth';
 import jsPDF from 'jspdf';
 import { saveAs } from 'file-saver';
 import htmlDocx from 'html-docx-fixed/dist/html-docx';
-import html2canvas from 'html2canvas';
 import PptxGenJS from 'pptxgenjs';
 import { md5 } from 'js-md5';
 import * as Papa from 'papaparse';
@@ -10,6 +9,7 @@ import { marked } from 'marked';
 import * as XLSX from 'xlsx';
 import * as pdfjsLib from 'pdfjs-dist/build/pdf';
 import { XMLParser } from 'fast-xml-parser';
+import { PDFDocument } from 'pdf-lib';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   'pdfjs-dist/build/pdf.worker.js',
@@ -136,45 +136,65 @@ const convertDocx = async (buffer: ArrayBuffer, format: string, name: string) =>
         const blob = new Blob([value], { type: 'text/html' });
         saveAs(blob, `${name}.html`);
     } else if (format === 'pdf') {
-        const { value: htmlValue, messages } = await mammoth.convertToHtml({ arrayBuffer: buffer });
+        // Use a reliable text-based approach instead of HTML rendering
+        const { value: rawText } = await mammoth.extractRawText({ arrayBuffer: buffer });
+        if (!rawText.trim()) throw new Error("Failed to extract text from DOCX for PDF generation. The document might be empty or unsupported.");
         
-        if (messages && messages.length > 0) {
-            console.warn("Mammoth.js messages:", messages);
-            const errorMessages = messages.filter((msg: { type: string; }) => msg.type === "error");
-            if (errorMessages.length > 0) {
-                throw new Error(`Error during DOCX to HTML conversion: ${errorMessages.map((msg: { message: string; }) => msg.message).join(", ")}`);
+        const pdf = new jsPDF();
+        pdf.setFontSize(12);
+        
+        // Split text into lines that fit the page width
+        const pageWidth = pdf.internal.pageSize.getWidth() - 20; // 10mm margin on each side
+        const lines = pdf.splitTextToSize(rawText, pageWidth);
+        
+        let yPosition = 20; // Start 20mm from top
+        const lineHeight = 6; // 6mm between lines
+        const pageHeight = pdf.internal.pageSize.getHeight() - 20; // Leave 20mm margin at bottom
+        
+        for (const line of lines) {
+            if (yPosition + lineHeight > pageHeight) {
+                pdf.addPage();
+                yPosition = 20; // Reset to top of new page
             }
-        }
-
-        if (!htmlValue.trim()) {
-            console.warn("DOCX to HTML conversion resulted in empty content. Falling back to raw text extraction to ensure conversion success.");
-            const { value: rawText } = await mammoth.extractRawText({ arrayBuffer: buffer });
-            if(!rawText.trim()) throw new Error("Failed to extract any text from DOCX, even with fallback. The document might be empty or corrupted.");
             
-            const pdf = new jsPDF();
-            const lines = pdf.splitTextToSize(rawText, pdf.internal.pageSize.getWidth() - 20);
-            pdf.text(lines, 10, 10);
-            pdf.save(`${name}.pdf`);
-            return;
+            pdf.text(line, 10, yPosition);
+            yPosition += lineHeight;
         }
         
-        const container = document.createElement('div');
-        container.innerHTML = htmlValue;
-        
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        await pdf.html(container, {
-            autoPaging: 'text',
-            width: pdf.internal.pageSize.getWidth(),
-            windowWidth: pdf.internal.pageSize.getWidth()
-        });
         pdf.save(`${name}.pdf`);
     } else if (format === 'pptx') {
         const { value } = await mammoth.convertToHtml({ arrayBuffer: buffer });
         if (!value.trim()) throw new Error("Failed to convert DOCX for PPTX generation. The document might be empty or unsupported.");
+        
         const pptx = new PptxGenJS();
         pptx.addSection({ title: 'Converted Document' });
-        const textContent = value.replace(/<[^>]*>/g, ' '); 
-        pptx.addSlide().addText(textContent, { x: 0.5, y: 0.5, w: '90%', h: '90%', fontSize: 10 });
+
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = value;
+        const elements = Array.from(tempDiv.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li'));
+
+        const CHAR_LIMIT_PER_SLIDE = 750;
+        let currentSlideText: string[] = [];
+        let currentSlideCharCount = 0;
+
+        for (const p of elements) {
+            const text = p.textContent?.trim();
+            if (!text) continue;
+
+            if (currentSlideCharCount + text.length > CHAR_LIMIT_PER_SLIDE && currentSlideCharCount > 0) {
+                pptx.addSlide().addText(currentSlideText.join('\n\n'), { x: 0.5, y: 0.5, w: '90%', h: '90%', fontSize: 14 });
+                currentSlideText = [];
+                currentSlideCharCount = 0;
+            }
+
+            currentSlideText.push(text);
+            currentSlideCharCount += text.length;
+        }
+
+        if (currentSlideText.length > 0) {
+            pptx.addSlide().addText(currentSlideText.join('\n\n'), { x: 0.5, y: 0.5, w: '90%', h: '90%', fontSize: 14 });
+        }
+
         pptx.writeFile({ fileName: `${name}.pptx` });
     } else {
         throw new Error('DOCX can only be converted to TXT, HTML, PDF, or PPTX.');
