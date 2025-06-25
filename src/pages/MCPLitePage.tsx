@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../utils/supabaseClient';
+import { generateInputSchema } from '../services/geminiMcp';
 import Navbar from '../components/Navbar';
 
 interface Tool {
@@ -35,6 +36,7 @@ const MCPLitePage: React.FC = () => {
     description: '',
     inputSchema: '',
   });
+  const [schemaLoading, setSchemaLoading] = useState(false);
 
   /* ----------------------------- helpers ----------------------------- */
   const next = () => setStep((prev) => Math.min(prev + 1, 3));
@@ -45,6 +47,22 @@ const MCPLitePage: React.FC = () => {
 
   const addTool = () => {
     if (!toolDraft.name.trim()) return;
+    
+    // Validate the input schema is valid JSON
+    if (toolDraft.inputSchema.trim()) {
+      try {
+        const parsed = JSON.parse(toolDraft.inputSchema);
+        // Basic JSON Schema validation
+        if (typeof parsed !== 'object' || parsed === null) {
+          alert('Input schema must be a valid JSON object');
+          return;
+        }
+      } catch (e) {
+        alert('Input schema must be valid JSON');
+        return;
+      }
+    }
+    
     setTools((prev) => [
       ...prev,
       { id: Date.now().toString(), ...toolDraft },
@@ -176,15 +194,48 @@ const MCPLitePage: React.FC = () => {
                   <label className="block text-sm font-medium text-[#382f29] mb-1">
                     Input Schema (JSON)
                   </label>
-                  <input
-                    type="text"
+                  <textarea
                     value={toolDraft.inputSchema}
                     onChange={(e) =>
                       setToolDraft((d) => ({ ...d, inputSchema: e.target.value }))
                     }
-                    className="w-full p-2 border border-[#382f29] rounded-md bg-white"
-                    placeholder='{ "owner": "string", "repo": "string" }'
+                    className="w-full p-2 border border-[#382f29] rounded-md bg-white resize-none h-24 font-mono text-sm"
+                    placeholder={`{
+  "type": "object",
+  "properties": {
+    "input": {
+      "type": "string",
+      "description": "Input parameter"
+    }
+  },
+  "required": ["input"]
+}`}
                   />
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!toolDraft.name.trim()) {
+                        alert('Please enter a function name first');
+                        return;
+                      }
+                      setSchemaLoading(true);
+                      try {
+                        const toolDesc = toolDraft.description.trim() || 
+                          `${toolDraft.name} function for ${mcpName}`;
+                        const schema = await generateInputSchema(toolDraft.name, toolDesc);
+                        setToolDraft((d) => ({ ...d, inputSchema: schema }));
+                      } catch (e) {
+                        console.error('Schema generation error:', e);
+                        alert('AI generation failed. Please try again or enter schema manually.');
+                      } finally {
+                        setSchemaLoading(false);
+                      }
+                    }}
+                    className="mt-2 bg-[#e67722] text-[#382f29] px-3 py-1 rounded-md text-sm disabled:opacity-50"
+                    disabled={schemaLoading || !toolDraft.name.trim()}
+                  >
+                    {schemaLoading ? 'Generating…' : 'AI Generate'}
+                  </button>
                 </div>
                 <div className="sm:col-span-2">
                   <label className="block text-sm font-medium text-[#382f29] mb-1">
@@ -219,9 +270,19 @@ const MCPLitePage: React.FC = () => {
                       key={t.id}
                       className="flex justify-between items-start bg-white border border-[#382f29] rounded-md p-3"
                     >
-                      <div>
+                      <div className="flex-1">
                         <p className="font-medium text-[#382f29]">{t.name}</p>
                         <p className="text-sm text-[#5d4633]">{t.description}</p>
+                        {t.inputSchema && (
+                          <details className="mt-2">
+                            <summary className="text-xs text-[#8b7355] cursor-pointer">
+                              View Schema
+                            </summary>
+                            <pre className="text-xs mt-1 bg-gray-50 p-2 rounded border font-mono overflow-x-auto max-w-md">
+                              {t.inputSchema}
+                            </pre>
+                          </details>
+                        )}
                       </div>
                       <button
                         onClick={() => removeTool(t.id)}
