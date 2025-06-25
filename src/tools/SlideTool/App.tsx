@@ -20,6 +20,9 @@ import QRCodeGeneratorPage from '../../pages/QRCodeGeneratorPage';
 import UnitConverterPage from '../../pages/UnitConverterPage';
 import DocumentTranslatorPage from '../../pages/DocumentTranslatorPage';
 import PDFMergerPage from '../../pages/PDFMergerPage';
+import MCPLitePage from '../../pages/MCPLitePage';
+import MCPGalleryPage from '../../pages/MCPGalleryPage';
+import LoginPage from '../../pages/LoginPage';
 import PptxGenJS from 'pptxgenjs';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -687,6 +690,9 @@ const App: React.FC = () => (
       <Route path="/unit-converter" element={<UnitConverterPage />} />
       <Route path="/document-translator" element={<DocumentTranslatorPage />} />
       <Route path="/pdf-merger" element={<PDFMergerPage />} />
+      <Route path="/mcp-lite" element={<MCPLitePage />} />
+      <Route path="/mcp-gallery" element={<MCPGalleryPage />} />
+      <Route path="/login" element={<LoginPage />} />
     </Routes>
   </BrowserRouter>
 );

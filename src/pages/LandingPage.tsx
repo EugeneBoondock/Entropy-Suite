@@ -23,7 +23,7 @@ const LandingPage: React.FC = () => {
                       className="text-[#2F4F4F] text-2xl font-black leading-tight tracking-[-0.02em] sm:text-3xl md:text-4xl lg:text-5xl sm:tracking-[-0.033em]"
                       style={{ textShadow: '0px 0px 5px white, 0px 0px 5px white' }}
                     >
-                      Unleash the Power of Randomness with Entropy Tools
+                      Unleash the Power of Randomness with Entropy Suite
                     </h1>
                     <h2 
                       className="text-[#2F4F4F] text-base font-normal leading-normal sm:text-lg md:text-xl lg:text-2xl max-w-xl mx-auto"
@@ -35,7 +35,7 @@ const LandingPage: React.FC = () => {
                   <button
                     className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 @[480px]:h-12 @[480px]:px-5 bg-[#e67722] text-[#382f29] text-sm font-bold leading-normal tracking-[0.015em] @[480px]:text-base @[480px]:font-bold @[480px]:leading-normal @[480px]:tracking-[0.015em]"
                   >
-                    <span className="truncate">Explore Tools</span>
+                    <span className="truncate">Explore our suite</span>
                   </button>
                 </div>
               </div>
@@ -48,7 +48,7 @@ const LandingPage: React.FC = () => {
                   Your Daily Dose of Useful Randomness
                 </h1>
                 <p className="text-[#382f29] text-base font-normal leading-normal max-w-[720px]">
-                  Entropy Tools provides a wide array of AI-driven utilities to simplify your daily tasks and spark creativity.
+                  Entropy Suite provides a wide array of AI-driven utilities to simplify your daily tasks and spark creativity.
                 </p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 p-0">
@@ -160,7 +160,7 @@ const LandingPage: React.FC = () => {
                   >
                     Ready to Embrace the Randomness?
                   </h1>
-                  <p className="text-[#382f29] text-base font-normal leading-normal max-w-[720px]">Sign up today and unlock the full potential of Entropy Tools.</p>
+                  <p className="text-[#382f29] text-base font-normal leading-normal max-w-[720px]">Sign up today and unlock the full potential of Entropy Suite.</p>
                 </div>
                 <div className="flex flex-1 justify-center">
                   <div className="flex justify-center">
@@ -184,7 +184,7 @@ const LandingPage: React.FC = () => {
                 <a className="text-[#b8a99d] text-base font-normal leading-normal min-w-40" href="#">Privacy Policy</a>
                 <a className="text-[#b8a99d] text-base font-normal leading-normal min-w-40" href="#">Terms of Service</a>
               </div>
-              <p className="text-[#b8a99d] text-base font-normal leading-normal">© 2024 Entropy Tools. All rights reserved.</p>
+              <p className="text-[#b8a99d] text-base font-normal leading-normal">© 2025 Entropy Suite. All rights reserved.</p>
             </footer>
           </div>
         </footer>

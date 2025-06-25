@@ -129,6 +129,13 @@ const ToolsPage: React.FC = () => {
       imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBgRPVp5d2qWk2Qf0zGY_H55dMnziI9ah7d31W-0XzeLogjhuQuWY8dgjrSb_wFFVbRg80L3kkyVVJMX61vQ5LojFWQN2jok9mu8ZIF9Xj3-kiWGlWjlXB2Lan10sU6VtpuO58RrS3nC8ALJVSjwmphd60T6MCTZ9NohKYOsoAiw2IlahXC9M9QjzTCqf13PXeccHNq3EacpTHr0619xrJBRDeiF7U30zdz-V0Qci0sC8qcs7kNPIQAEVlVPA5eFBLpN-QEColA8cM_',
       link: '/pdf-merger',
       category: 'Documents'
+    },
+    {
+      title: 'MCP Lite',
+      description: 'Build and deploy Model Context Protocols quickly.',
+      imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuChtsJoh6mWfORQgwUKcajnhfFf5Wan7nfEKLpw8XmuXMbq17DHgRPS-P5WSMrVpTqifW-HrEAGwRfClecZ09k3vZAa1LjxRbp8kdJqvAKPC0SueaBouUc8GGqO0oQ-CElMPL7tg8wjGSqElL_AV2bbgZBhlVQpgGo9w_5F0tWI66xbNoEUxzG9re1b29p4iunA-7b6u6fd-bSEPTk9uwL7iaew_ChRqHgrezuuPLMnR2OgmoT1hM6fbnMX6ljOiE_Pnc3eM6kFWP9Y',
+      link: '/mcp-lite',
+      category: 'AI'
     }
   ];
 

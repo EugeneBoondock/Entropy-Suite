@@ -11,7 +11,7 @@ const Pricing: React.FC = () => {
         <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#35302c] px-10 py-3">
           <div className="flex items-center gap-4 text-white">
             <div className="size-12 flex items-center">
-              <img src="/images/entropy_tools.png" alt="Entropy Tools Logo" className="h-12 w-12 object-contain" />
+              <img src="/images/entropy_tools.png" alt="Entropy Suite Logo" className="h-12 w-12 object-contain" />
             </div>
             <h2 className="text-white text-lg font-bold leading-tight tracking-[-0.015em]">Entropy Tools</h2>
           </div>

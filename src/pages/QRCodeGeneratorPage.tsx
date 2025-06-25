@@ -154,7 +154,7 @@ const QRCodeGeneratorPage: React.FC = () => {
         return `BEGIN:VCARD
 VERSION:3.0
 FN:John Doe
-ORG:Entropy Tools
+ORG:Entropy Suite
 TEL:+1234567890
 EMAIL:john@entropy-tools.com
 URL:https://entropy-tools.com

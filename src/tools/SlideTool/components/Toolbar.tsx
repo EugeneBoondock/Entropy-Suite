@@ -106,10 +106,10 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         </button>
         <img 
           src="/images/entropy_tools.png" 
-          alt="Entropy Tools Logo" 
+          alt="Entropy Suite Logo" 
           className="w-7 h-7 md:w-8 md:h-8 mr-1 md:mr-2 object-contain"
         />
-        <h1 className="text-xl md:text-2xl font-bold text-primary-700 dark:text-primary-400 hidden sm:block">Entropy Tools</h1>
+        <h1 className="text-xl md:text-2xl font-bold text-primary-700 dark:text-primary-400 hidden sm:block">Entropy Suite</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="flex-grow flex items-center space-x-1 md:space-x-2 max-w-sm md:max-w-md xl:max-w-lg">
