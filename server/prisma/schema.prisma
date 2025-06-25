@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model MCP {
+  id          String   @id @default(uuid())
+  userId      String
+  name        String
+  description String?
+  tools       Json
+  status      MCPStatus @default(PENDING)
+  endpointUrl String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("mcps")
+}
+
+enum MCPStatus {
+  PENDING
+  BUILDING
+  READY
+  ERROR
+}
+
+model ToolRun {
+  id        String   @id @default(uuid())
+  mcpId     String
+  userId    String
+  input     Json
+  output    Json?
+  status    RunStatus @default(RUNNING)
+  startedAt DateTime  @default(now())
+  finishedAt DateTime?
+
+  @@map("tool_runs")
+}
+
+enum RunStatus {
+  RUNNING
+  COMPLETED
+  FAILED
+} 

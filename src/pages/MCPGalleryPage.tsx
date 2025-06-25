@@ -11,28 +11,33 @@ interface MCPDefinition {
   createdAt: string;
 }
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const MCPGalleryPage: React.FC = () => {
   const [definitions, setDefinitions] = useState<MCPDefinition[]>([]);
 
+  const loadList = async () => {
+    try {
+      const session = (await supabase.auth.getSession()).data.session;
+      if (!session) return;
+
+      const res = await fetch(`${API_URL}/v1/mcps`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (!res.ok) throw new Error('api');
+      const data = await res.json();
+      setDefinitions(data);
+    } catch (e) {
+      console.error('API load failed, falling back to localStorage', e);
+      const stored = JSON.parse(localStorage.getItem('mcp-lite-definitions') || '[]');
+      setDefinitions(stored);
+    }
+  };
+
   useEffect(() => {
-    const load = async () => {
-      try {
-        const session = (await supabase.auth.getSession()).data.session;
-        if (session) {
-          const { data, error } = await supabase.from('mcps').select('*').order('created_at', { ascending: false });
-          if (error) throw error;
-          setDefinitions(data as any);
-        } else {
-          const stored = JSON.parse(localStorage.getItem('mcp-lite-definitions') || '[]');
-          setDefinitions(stored);
-        }
-      } catch (e) {
-        console.error('Failed to load definitions, falling back to localStorage', e);
-        const stored = JSON.parse(localStorage.getItem('mcp-lite-definitions') || '[]');
-        setDefinitions(stored);
-      }
-    };
-    load();
+    loadList();
+    const timer = setInterval(loadList, 4000);
+    return () => clearInterval(timer);
   }, []);
 
   const remove = async (id: string) => {
@@ -41,7 +46,10 @@ const MCPGalleryPage: React.FC = () => {
     try {
       const session = (await supabase.auth.getSession()).data.session;
       if (session) {
-        await supabase.from('mcps').delete().eq('id', id);
+        await fetch(`${API_URL}/v1/mcps/${id}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
       } else {
         const updated = definitions.filter((d) => d.id !== id);
         localStorage.setItem('mcp-lite-definitions', JSON.stringify(updated));

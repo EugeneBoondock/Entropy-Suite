@@ -10,6 +10,8 @@ interface Tool {
   inputSchema: string;
 }
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const MCPLitePage: React.FC = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState<number>(1);
@@ -65,33 +67,37 @@ const MCPLitePage: React.FC = () => {
   };
 
   const saveDefinition = async () => {
-    const def = {
-      name: mcpName,
-      description: mcpDescription,
-      tools: tools.map(({ id, ...rest }) => rest),
-    };
-
-    // Try Supabase first (needs auth)
-    try {
-      if (supabase && (await supabase.auth.getSession()).data.session) {
-        const { error } = await supabase.from('mcps').insert([{ ...def }]);
-        if (error) throw error;
-        navigate('/mcp-gallery');
-        return;
-      }
-    } catch (e) {
-      console.error('Supabase save failed, falling back to localStorage', e);
+    const sessionRes = await supabase.auth.getSession();
+    const session = sessionRes.data.session;
+    if (!session) {
+      alert('Please log in first.');
+      return;
     }
 
-    // Fallback localStorage
     try {
-      const withId = { ...def, id: Date.now().toString(), createdAt: new Date().toISOString() };
-      const existing = JSON.parse(localStorage.getItem('mcp-lite-definitions') || '[]');
-      existing.push(withId);
-      localStorage.setItem('mcp-lite-definitions', JSON.stringify(existing));
-      navigate('/mcp-gallery');
+      const res = await fetch(`${API_URL}/v1/mcps`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          name: mcpName,
+          description: mcpDescription,
+          tools: tools.map(({ id, ...rest }) => rest),
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'API error');
+      }
+
+      const data = await res.json();
+      navigate(`/mcp-gallery#${data.id}`);
     } catch (e) {
-      alert('Failed to save definition');
+      console.error(e);
+      alert('Failed to save MCP');
     }
   };
 
