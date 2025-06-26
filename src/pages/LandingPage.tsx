@@ -15,9 +15,25 @@ const LandingPage: React.FC = () => {
             <div className="@container">
               <div className="p-2 sm:p-4">
                 <div
-                  className="flex min-h-[320px] sm:min-h-[400px] md:min-h-[480px] flex-col gap-4 sm:gap-6 md:gap-8 bg-cover bg-center bg-no-repeat sm:rounded-xl items-center justify-center p-2 sm:p-4"
-                  style={{ backgroundImage: 'linear-gradient(rgba(0, 0, 0, 0.03) 0%, rgba(0, 0, 0, 0.12) 100%), url("https://lh3.googleusercontent.com/aida-public/AB6AXuAXqCZwuBEvenkYPSTmcUG59eeZcteFTB-ngU3R68hqeEyYY7Urtcu-PO5viIp9O--8Isj6qF3Meps9f4NQrQ4iiW22Js-yc13zkXwpm2sz5YLgmevw6mCYWwJTXn0Nvsoh3DGoL0BEfEL13wB4m1qy3xbNr4mn9Tl25phsVqQsJG4VpCWF6HqnteUi6wBL3wv1kLzS1dY6WUiLWeo18YRBDi6rcENzKGJDRuFDpOLrWFIH0MCYNOYiTkMPPC8NlYCeZV9mtQsy61LW")' }}
+                  className="relative flex min-h-[320px] sm:min-h-[400px] md:min-h-[480px] flex-col gap-4 sm:gap-6 md:gap-8 sm:rounded-xl items-center justify-center p-2 sm:p-4 overflow-hidden bg-[#f6f0e4]"
                 >
+                  {/* Video Background */}
+                  <video 
+                    autoPlay 
+                    muted 
+                    loop 
+                    playsInline
+                    className="absolute inset-0 w-full h-full object-contain sm:rounded-xl"
+                    poster=""
+                  >
+                    <source src="/videos/bg_video.mp4" type="video/mp4" />
+                  </video>
+                  
+                  {/* Overlay for better text readability */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/5 to-black/20 sm:rounded-xl"></div>
+                  
+                  {/* Content */}
+                  <div className="relative z-10 flex flex-col gap-4 sm:gap-6 md:gap-8 items-center justify-center">
                   <div className="flex flex-col gap-2 text-center">
                     <h1
                       className="text-[#2F4F4F] text-2xl font-black leading-tight tracking-[-0.02em] sm:text-3xl md:text-4xl lg:text-5xl sm:tracking-[-0.033em]"
@@ -32,11 +48,12 @@ const LandingPage: React.FC = () => {
                       Real life Cheat codes...
                     </h2>
                   </div>
-                  <button
-                    className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 @[480px]:h-12 @[480px]:px-5 bg-[#e67722] text-[#382f29] text-sm font-bold leading-normal tracking-[0.015em] @[480px]:text-base @[480px]:font-bold @[480px]:leading-normal @[480px]:tracking-[0.015em]"
-                  >
-                    <span className="truncate">Explore our suite</span>
-                  </button>
+                    <button
+                      className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 @[480px]:h-12 @[480px]:px-5 bg-[#e67722] text-[#382f29] text-sm font-bold leading-normal tracking-[0.015em] @[480px]:text-base @[480px]:font-bold @[480px]:leading-normal @[480px]:tracking-[0.015em]"
+                    >
+                      <span className="truncate">Explore our suite</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

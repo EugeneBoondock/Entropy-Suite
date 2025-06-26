@@ -1,78 +1,98 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import { useDropzone } from 'react-dropzone';
-import { convertFile } from '../tools/DocumentConverter/converterService';
+import { convertFile, convertMultipleFiles } from '../tools/DocumentConverter/converterService';
 import { LoadingSpinner } from '../tools/SlideTool/components/LoadingSpinner';
 
 const DocumentConverterPage: React.FC = () => {
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [outputFormat, setOutputFormat] = useState<string>('');
   const [availableFormats, setAvailableFormats] = useState<string[]>([]);
   const [isConverting, setIsConverting] = useState<boolean>(false);
+  const [conversionProgress, setConversionProgress] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (file) {
-      const extension = file.name.split('.').pop()?.toLowerCase();
+    if (files.length > 0) {
+      // Get all unique file extensions
+      const extensions = files.map(file => file.name.split('.').pop()?.toLowerCase()).filter(Boolean);
+      const uniqueExtensions = [...new Set(extensions)];
+      
       setOutputFormat('');
       setError(null);
 
-      switch(extension) {
-        case 'docx':
-          setAvailableFormats(['txt', 'html', 'pdf', 'pptx']);
-          break;
-        case 'png':
-        case 'jpg':
-        case 'jpeg':
-        case 'webp':
-          setAvailableFormats(['pdf', 'docx', 'png', 'jpg', 'webp']);
-          break;
-        case 'txt':
-          setAvailableFormats(['pdf', 'docx', 'html']);
-          break;
-        case 'json':
-          setAvailableFormats(['csv']);
-          break;
-        case 'csv':
-          setAvailableFormats(['json', 'xlsx']);
-          break;
-        case 'md':
-          setAvailableFormats(['html', 'pdf']);
-          break;
-        case 'pdf':
-          setAvailableFormats(['jpg', 'png']);
-          break;
-        case 'xlsx':
-          setAvailableFormats(['csv']);
-          break;
-        case 'svg':
-          setAvailableFormats(['png']);
-          break;
-        case 'xml':
-          setAvailableFormats(['json']);
-          break;
-        default:
-          setAvailableFormats([]);
-          setError(`File type ".${extension}" is not supported.`);
-          break;
+      // Find common formats that all file types can convert to
+      let commonFormats: string[] = [];
+      
+      if (uniqueExtensions.length === 1) {
+        // Single file type - use original logic
+        const extension = uniqueExtensions[0];
+        switch(extension) {
+          case 'docx':
+            commonFormats = ['txt', 'html', 'pdf', 'pptx'];
+            break;
+          case 'png':
+          case 'jpg':
+          case 'jpeg':
+          case 'webp':
+            commonFormats = ['pdf', 'docx', 'png', 'jpg', 'webp'];
+            break;
+          case 'txt':
+            commonFormats = ['pdf', 'docx', 'html'];
+            break;
+          case 'json':
+            commonFormats = ['csv'];
+            break;
+          case 'csv':
+            commonFormats = ['json', 'xlsx'];
+            break;
+          case 'md':
+            commonFormats = ['html', 'pdf'];
+            break;
+          case 'pdf':
+            commonFormats = ['jpg', 'png'];
+            break;
+          case 'xlsx':
+            commonFormats = ['csv'];
+            break;
+          case 'svg':
+            commonFormats = ['png'];
+            break;
+          case 'xml':
+            commonFormats = ['json'];
+            break;
+          case 'mov':
+            commonFormats = ['mp4'];
+            break;
+          default:
+            commonFormats = [];
+            setError(`File type ".${extension}" is not supported.`);
+            break;
+        }
+      } else {
+        // Multiple file types - for now, we'll convert each to its most common format
+        commonFormats = ['pdf', 'png', 'jpg', 'html', 'txt'];
+        setError('Mixed file types detected. Each file will be converted to the target format if supported.');
       }
+      
+      setAvailableFormats(commonFormats);
     } else {
       setAvailableFormats([]);
     }
-  }, [file]);
+  }, [files]);
 
   const onDrop = useCallback((acceptedFiles: File[], fileRejections: any[]) => {
     setError(null);
     if (fileRejections.length > 0) {
-        setError("File type not supported. Please upload a DOCX, TXT, PNG, or JPG file.");
+        setError("File type not supported. Please upload supported file types.");
     } else if (acceptedFiles.length > 0) {
-      setFile(acceptedFiles[0]);
+      setFiles(acceptedFiles);
     }
   }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    multiple: false,
+    multiple: true,
     accept: {
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
         'application/vnd.ms-excel': ['.xlsx'],
@@ -86,26 +106,57 @@ const DocumentConverterPage: React.FC = () => {
         'image/png': ['.png'],
         'image/jpeg': ['.jpg', '.jpeg'],
         'image/webp': ['.webp'],
+        'video/quicktime': ['.mov'],
     }
   });
 
   const handleConvert = async () => {
-    if (!file || !outputFormat) return;
+    if (!files.length || !outputFormat) return;
     
     setIsConverting(true);
     setError(null);
+    setConversionProgress(0);
     try {
-        await convertFile(file, outputFormat);
+        if (files.length === 1) {
+          await convertFile(files[0], outputFormat);
+        } else {
+          await convertMultipleFiles(files, outputFormat, (progress) => {
+            setConversionProgress(progress);
+          });
+        }
     } catch(err) {
         setError(err instanceof Error ? err.message : 'An unknown error occurred during conversion.');
     } finally {
         setIsConverting(false);
+        setConversionProgress(0);
     }
   };
 
-  const renderFileIcon = () => {
-    if (!file) return null;
-    const extension = file.name.split('.').pop()?.toLowerCase();
+  const renderFileIcons = () => {
+    if (!files.length) return null;
+    
+    return (
+      <div className="space-y-2">
+        {files.map((file, index) => {
+          const extension = file.name.split('.').pop()?.toLowerCase();
+          return (
+            <div key={index} className="flex items-center gap-4 p-3 bg-gray-50 rounded-md">
+              {renderFileIcon(extension)}
+              <span className="font-medium text-gray-700">{file.name}</span>
+              <button
+                onClick={() => setFiles(files.filter((_, i) => i !== index))}
+                className="ml-auto text-red-500 hover:text-red-700"
+              >
+                ✕
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const renderFileIcon = (extension?: string) => {
     
     switch (extension) {
       case 'pdf':
@@ -124,6 +175,12 @@ const DocumentConverterPage: React.FC = () => {
         return <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuC7PYGw1dKaYf1pnZqAOGHzg9KYlzRwNeujczoHadgmQ6woOe5PfOMbvCAlHkdh3pvEyCiZgG_nLI-blrVgZ_AUbqg53I5sPpX3T8IY956O5KtEXDxlKfrmSIlUFEchldwXMYKoqz8E7TfEmER1SoiF8GfVb42ScvgIh6ESThpOCRNut_UEYZcjcaL_cFkRYETIgLAWWYQBnXqeV8s5B2zy6mCJcs5Kxwn-7Kg-jhAvrWBIHZX3fhuLqWIgLhWg6UeSqyrZKJWHjl5n" alt="MD" className="w-12 h-12" />;
       case 'txt':
          return <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuC7PYGw1dKaYf1pnZqAOGHzg9KYlzRwNeujczoHadgmQ6woOe5PfOMbvCAlHkdh3pvEyCiZgG_nLI-blrVgZ_AUbqg53I5sPpX3T8IY956O5KtEXDxlKfrmSIlUFEchldwXMYKoqz8E7TfEmER1SoiF8GfVb42ScvgIh6ESThpOCRNut_UEYZcjcaL_cFkRYETIgLAWWYQBnXqeV8s5B2zy6mCJcs5Kxwn-7Kg-jhAvrWBIHZX3fhuLqWIgLhWg6UeSqyrZKJWHjl5n" alt="TXT" className="w-12 h-12" />;
+      case 'mov':
+        return (
+          <svg className="w-12 h-12 text-[#382f29]" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/>
+          </svg>
+        );
       default:
         return <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAymCQ1q-8yTgnWif-z1dKx8fWjB1sM_jT1hN2hT73fCj1gH7Rce8a7zC3h8F2t8K9a7zJ4bYx9gJzDkYn6vX5f8W1iW9gQhB9" alt="File" className="w-12 h-12" />;
     }
@@ -146,17 +203,18 @@ const DocumentConverterPage: React.FC = () => {
           <div {...getRootProps()} className={`border-2 border-dashed rounded-md p-10 text-center cursor-pointer transition-all ${isDragActive ? 'border-[#e67722] bg-[#f6f0e4]' : 'border-gray-300'}`}>
             <input {...getInputProps()} />
             {isDragActive ?
-              <p className="text-[#e67722]">Drop the file here ...</p> :
-              <p className="text-gray-500">Drag & drop a file here, or click to select a file</p>
+              <p className="text-[#e67722]">Drop files here ...</p> :
+              <p className="text-gray-500">Drag & drop files here, or click to select files</p>
             }
           </div>
 
-          {file && (
+          {files.length > 0 && (
             <div className="mt-6">
-              <h3 className="text-lg font-semibold text-[#382f29]">Your File:</h3>
-              <div className="flex items-center gap-4 p-4 mt-2 bg-gray-50 rounded-md">
-                {renderFileIcon()}
-                <span className="font-medium text-gray-700">{file.name}</span>
+              <h3 className="text-lg font-semibold text-[#382f29]">
+                Your Files ({files.length}):
+              </h3>
+              <div className="mt-2">
+                {renderFileIcons()}
               </div>
             </div>
           )}
@@ -168,7 +226,7 @@ const DocumentConverterPage: React.FC = () => {
               className="w-full p-2 mt-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#e67722] focus:outline-none"
               value={outputFormat}
               onChange={(e) => setOutputFormat(e.target.value)}
-              disabled={!file || availableFormats.length === 0}
+              disabled={!files.length || availableFormats.length === 0}
             >
               <option value="">Select format...</option>
               {availableFormats.map(format => (
@@ -177,13 +235,34 @@ const DocumentConverterPage: React.FC = () => {
             </select>
           </div>
 
+          {isConverting && files.length > 1 && (
+            <div className="mt-4">
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-[#e67722] h-2 rounded-full transition-all duration-300" 
+                  style={{ width: `${conversionProgress}%` }}
+                ></div>
+              </div>
+              <p className="text-sm text-gray-600 mt-1 text-center">
+                Converting files... {Math.round(conversionProgress)}%
+              </p>
+            </div>
+          )}
+
           <div className="mt-8 text-center">
             <button
               onClick={handleConvert}
-              disabled={!file || !outputFormat || isConverting}
+              disabled={!files.length || !outputFormat || isConverting}
               className="px-8 py-3 bg-[#e67722] text-[#382f29] font-bold rounded-md hover:bg-opacity-90 transition-all disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
-              {isConverting ? <LoadingSpinner /> : 'Convert File'}
+              {isConverting ? (
+                <div className="flex items-center gap-2">
+                  <LoadingSpinner />
+                  {files.length > 1 ? 'Converting to ZIP...' : 'Converting...'}
+                </div>
+              ) : (
+                files.length > 1 ? 'Convert Files to ZIP' : 'Convert File'
+              )}
             </button>
           </div>
         </div>

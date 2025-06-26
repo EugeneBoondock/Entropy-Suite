@@ -23,6 +23,10 @@ import PDFMergerPage from '../../pages/PDFMergerPage';
 import MCPLitePage from '../../pages/MCPLitePage';
 import MCPGalleryPage from '../../pages/MCPGalleryPage';
 import LoginPage from '../../pages/LoginPage';
+import TerminalPage from '../../pages/TerminalPage';
+import BasicAgentPage from '../../pages/BasicAgentPage';
+import TherapyAgentPage from '../../pages/TherapyAgentPage';
+import RealTerminalPage from '../../pages/RealTerminalPage';
 import PptxGenJS from 'pptxgenjs';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -692,6 +696,10 @@ const App: React.FC = () => (
       <Route path="/pdf-merger" element={<PDFMergerPage />} />
       <Route path="/mcp-lite" element={<MCPLitePage />} />
       <Route path="/mcp-gallery" element={<MCPGalleryPage />} />
+      <Route path="/terminal" element={<TerminalPage />} />
+      <Route path="/basic-agent" element={<BasicAgentPage />} />
+                <Route path="/therapy-agent" element={<TherapyAgentPage />} />
+          <Route path="/real-terminal" element={<RealTerminalPage />} />
       <Route path="/login" element={<LoginPage />} />
     </Routes>
   </BrowserRouter>

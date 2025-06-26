@@ -10,11 +10,148 @@ import * as XLSX from 'xlsx';
 import * as pdfjsLib from 'pdfjs-dist/build/pdf';
 import { XMLParser } from 'fast-xml-parser';
 import { PDFDocument } from 'pdf-lib';
+import JSZip from 'jszip';
+import { FFmpeg } from '@ffmpeg/ffmpeg';
+import { fetchFile } from '@ffmpeg/util';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   'pdfjs-dist/build/pdf.worker.js',
   import.meta.url,
 ).toString();
+
+// FFmpeg setup for video conversion
+const getFFmpegCorePath = (filename: string) => {
+  return new URL(`/node_modules/@ffmpeg/core/dist/${filename}`, import.meta.url).href;
+};
+
+let ffmpegInstance: FFmpeg | null = null;
+let isFFmpegLoaded = false;
+
+const ensureFFmpegLoaded = async () => {
+  if (!isFFmpegLoaded) {
+    try {
+      ffmpegInstance = new FFmpeg();
+      ffmpegInstance.on('log', ({ message }) => {
+        console.log('[FFmpeg]', message);
+      });
+
+      const corePath = getFFmpegCorePath('ffmpeg-core.js');
+      const wasmPath = getFFmpegCorePath('ffmpeg-core.wasm');
+      const workerPath = getFFmpegCorePath('ffmpeg-core.worker.js');
+      
+      console.log('Loading FFmpeg for video conversion...');
+      
+      await ffmpegInstance.load({
+        coreURL: corePath,
+        wasmURL: wasmPath,
+        workerURL: workerPath,
+      });
+      
+      isFFmpegLoaded = true;
+      console.log('FFmpeg loaded successfully');
+    } catch (error) {
+      console.error('Failed to load FFmpeg:', error);
+      throw new Error(`Failed to load FFmpeg: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+};
+
+// Convert multiple files and return them as a ZIP
+export const convertMultipleFiles = async (files: File[], outputFormat: string, progressCallback?: (progress: number) => void) => {
+  const zip = new JSZip();
+  const totalFiles = files.length;
+  
+  for (let i = 0; i < totalFiles; i++) {
+    const file = files[i];
+    const originalFileName = file.name.substring(0, file.name.lastIndexOf('.'));
+    
+    try {
+      // Convert each file and get the blob
+      const convertedBlob = await convertFileToBlob(file, outputFormat);
+      
+      // Add to ZIP with appropriate filename
+      const extension = getOutputExtension(outputFormat);
+      zip.file(`${originalFileName}.${extension}`, convertedBlob);
+      
+      // Update progress
+      if (progressCallback) {
+        progressCallback(((i + 1) / totalFiles) * 100);
+      }
+    } catch (error) {
+      console.error(`Failed to convert ${file.name}:`, error);
+      // Add error file to indicate failure
+      zip.file(`ERROR_${file.name}.txt`, `Failed to convert: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+  
+  // Generate ZIP and download
+  const zipBlob = await zip.generateAsync({ type: 'blob' });
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
+  saveAs(zipBlob, `converted_files_${timestamp}.zip`);
+};
+
+// Helper function to get output file extension
+const getOutputExtension = (format: string): string => {
+  return format.toLowerCase();
+};
+
+// Modified version of convertFile that returns a blob instead of downloading
+export const convertFileToBlob = async (file: File, outputFormat: string): Promise<Blob> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = async (event) => {
+      if (!event.target?.result) {
+        reject(new Error('Failed to read file'));
+        return;
+      }
+
+      const arrayBuffer = event.target.result as ArrayBuffer;
+      const originalFileName = file.name.substring(0, file.name.lastIndexOf('.'));
+      
+      try {
+        const extension = file.name.split('.').pop()?.toLowerCase() || '';
+        let blob: Blob;
+
+        if (extension === 'docx') {
+          blob = await convertDocxToBlob(arrayBuffer, outputFormat, originalFileName);
+        } else if (['png', 'jpg', 'jpeg', 'webp'].includes(extension)) {
+          blob = await convertImageToBlob(arrayBuffer, file.type, outputFormat, originalFileName);
+        } else if (extension === 'txt') {
+          blob = await convertTextToBlob(arrayBuffer, outputFormat, originalFileName);
+        } else if (extension === 'json') {
+          blob = await convertJsonToBlob(arrayBuffer, outputFormat, originalFileName);
+        } else if (extension === 'csv') {
+          blob = await convertCsvToBlob(arrayBuffer, outputFormat, originalFileName);
+        } else if (extension === 'md') {
+          blob = await convertMarkdownToBlob(arrayBuffer, outputFormat, originalFileName);
+        } else if (extension === 'pdf') {
+          blob = await convertPdfToBlob(arrayBuffer, outputFormat, originalFileName);
+        } else if (extension === 'xlsx') {
+          blob = await convertXlsxToBlob(arrayBuffer, outputFormat, originalFileName);
+        } else if (extension === 'svg') {
+          blob = await convertSvgToBlob(file, outputFormat, originalFileName);
+        } else if (extension === 'xml') {
+          blob = await convertXmlToBlob(arrayBuffer, outputFormat, originalFileName);
+        } else if (extension === 'mov') {
+          blob = await convertMovToBlob(file, outputFormat, originalFileName);
+        } else {
+          throw new Error(`Unsupported file type: ".${extension}"`);
+        }
+        
+        resolve(blob);
+      } catch (error) {
+        reject(error);
+      }
+    };
+
+    reader.onerror = () => {
+      reject(new Error('Failed to read file'));
+    };
+
+    reader.readAsArrayBuffer(file);
+  });
+};
 
 export const convertFile = async (file: File, outputFormat: string) => {
   const reader = new FileReader();
@@ -50,6 +187,8 @@ export const convertFile = async (file: File, outputFormat: string) => {
           await convertSvg(file, outputFormat, originalFileName);
       } else if (extension === 'xml') {
         await convertXml(arrayBuffer, outputFormat, originalFileName);
+      } else if (extension === 'mov') {
+        await convertMov(file, outputFormat, originalFileName);
       } else {
         throw new Error(`Unsupported file type: ".${extension}"`);
       }
@@ -637,4 +776,246 @@ const convertXml = async (buffer: ArrayBuffer, format: string, name: string) => 
     const jsonString = JSON.stringify(jsonObj, null, 2);
     const blob = new Blob([jsonString], { type: 'application/json' });
     saveAs(blob, `${name}.json`);
+};
+
+const convertMov = async (file: File, format: string, name: string) => {
+    if (format !== 'mp4') throw new Error('MOV can only be converted to MP4.');
+    
+    await ensureFFmpegLoaded();
+    if (!ffmpegInstance) throw new Error('FFmpeg not initialized');
+    
+    try {
+        // Load the MOV file into FFmpeg's virtual filesystem
+        const inputData = await fetchFile(file);
+        await ffmpegInstance.writeFile('input.mov', inputData);
+        
+        // Convert MOV to MP4 with high quality settings
+        await ffmpegInstance.exec([
+            '-i', 'input.mov',           // Input file
+            '-c:v', 'libx264',           // Use H.264 video codec
+            '-c:a', 'aac',               // Use AAC audio codec
+            '-preset', 'medium',         // Balanced speed/quality
+            '-crf', '18',                // High quality (lower = better quality)
+            '-movflags', '+faststart',   // Web optimization
+            '-y',                        // Overwrite output file
+            'output.mp4'                 // Output file
+        ]);
+        
+        // Read the converted file
+        const outputData = await ffmpegInstance.readFile('output.mp4');
+        const blob = new Blob([outputData], { type: 'video/mp4' });
+        
+        // Clean up FFmpeg filesystem
+        await ffmpegInstance.deleteFile('input.mov');
+        await ffmpegInstance.deleteFile('output.mp4');
+        
+        // Download the file
+        saveAs(blob, `${name}.mp4`);
+        
+    } catch (error) {
+        console.error('FFmpeg conversion error:', error);
+        throw new Error(`Failed to convert MOV to MP4: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+};
+
+// Blob-returning versions of all converter functions
+const convertDocxToBlob = async (buffer: ArrayBuffer, format: string, name: string): Promise<Blob> => {
+    if (format === 'txt') {
+        const { value } = await mammoth.extractRawText({ arrayBuffer: buffer });
+        if (!value.trim()) throw new Error("Failed to extract text from DOCX.");
+        return new Blob([value], { type: 'text/plain' });
+    } else if (format === 'html') {
+        const { value } = await mammoth.convertToHtml({ arrayBuffer: buffer });
+        if (!value.trim()) throw new Error("Failed to convert DOCX to HTML.");
+        return new Blob([value], { type: 'text/html' });
+    }
+    throw new Error(`Unsupported conversion from DOCX to ${format}`);
+};
+
+const convertImageToBlob = async (buffer: ArrayBuffer, inputType: string, format: string, name: string): Promise<Blob> => {
+    const blob = new Blob([buffer], { type: inputType });
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.src = url;
+    await new Promise(resolve => { img.onload = resolve; });
+
+    return new Promise((resolve, reject) => {
+        if (format === 'png' || format === 'jpg' || format === 'webp') {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) throw new Error('Could not get canvas context');
+            ctx.drawImage(img, 0, 0);
+            canvas.toBlob((resultBlob) => {
+                URL.revokeObjectURL(url);
+                if (resultBlob) {
+                    resolve(resultBlob);
+                } else {
+                    reject(new Error('Failed to convert image'));
+                }
+            }, `image/${format}`);
+        } else {
+            URL.revokeObjectURL(url);
+            reject(new Error(`Unsupported output format for images: ${format}`));
+        }
+    });
+};
+
+const convertTextToBlob = async (buffer: ArrayBuffer, format: string, name: string): Promise<Blob> => {
+    const text = new TextDecoder().decode(buffer);
+    if (format === 'html') {
+        return new Blob([`<p>${text.replace(/\n/g, '<br/>')}</p>`], { type: 'text/html' });
+    }
+    throw new Error('Text can only be converted to HTML in blob mode.');
+};
+
+const convertJsonToBlob = async (buffer: ArrayBuffer, format: string, name: string): Promise<Blob> => {
+    if (format !== 'csv') throw new Error('JSON can only be converted to CSV.');
+    const text = new TextDecoder().decode(buffer);
+    const json = JSON.parse(text);
+    const csv = Papa.unparse(json);
+    return new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+};
+
+const convertCsvToBlob = async (buffer: ArrayBuffer, format: string, name: string): Promise<Blob> => {
+    const text = new TextDecoder().decode(buffer);
+    if (format === 'json') {
+        return new Promise<Blob>((resolve, reject) => {
+            Papa.parse(text, {
+                header: true,
+                complete: (results) => {
+                    const jsonString = JSON.stringify(results.data, null, 2);
+                    resolve(new Blob([jsonString], { type: 'application/json;charset=utf-8;' }));
+                },
+                error: (error: Error) => {
+                    reject(new Error(`CSV to JSON conversion failed: ${error.message}`));
+                }
+            });
+        });
+    }
+    throw new Error('CSV can only be converted to JSON in blob mode.');
+};
+
+const convertMarkdownToBlob = async (buffer: ArrayBuffer, format: string, name: string): Promise<Blob> => {
+    const text = new TextDecoder().decode(buffer);
+    const html = await marked.parse(text, { gfm: true, breaks: true });
+    if (format === 'html') {
+        return new Blob([html], { type: 'text/html' });
+    }
+    throw new Error('Markdown can only be converted to HTML in blob mode.');
+};
+
+const convertPdfToBlob = async (buffer: ArrayBuffer, format: string, name: string): Promise<Blob> => {
+    if (format === 'jpg' || format === 'png') {
+        const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+        const page = await pdf.getPage(1);
+        const viewport = page.getViewport({ scale: 2 });
+
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        const context = canvas.getContext('2d');
+        if(!context) throw new Error('Could not get canvas context');
+        
+        await page.render({ canvasContext: context, viewport: viewport }).promise;
+        
+        return new Promise((resolve, reject) => {
+            canvas.toBlob((blob) => {
+                if(blob) resolve(blob);
+                else reject(new Error('Failed to convert PDF page'));
+            }, `image/${format}`);
+        });
+    }
+    throw new Error('PDF can only be converted to JPG or PNG in blob mode.');
+};
+
+const convertXlsxToBlob = async (buffer: ArrayBuffer, format: string, name: string): Promise<Blob> => {
+    if(format !== 'csv') throw new Error('XLSX can only be converted to CSV.');
+    const workbook = XLSX.read(buffer, { type: 'array' });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const csv = XLSX.utils.sheet_to_csv(worksheet);
+    return new Blob([csv], { type: 'text/csv' });
+};
+
+const convertSvgToBlob = async (file: File, format: string, name: string): Promise<Blob> => {
+    if (format !== 'png') throw new Error('SVG can only be converted to PNG.');
+    const text = await file.text();
+    const img = new Image();
+    const blob = new Blob([text], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+
+    return new Promise((resolve, reject) => {
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                URL.revokeObjectURL(url);
+                reject(new Error('Could not get canvas context'));
+                return;
+            }
+            ctx.drawImage(img, 0, 0);
+            URL.revokeObjectURL(url);
+            canvas.toBlob((pngBlob) => {
+                if (pngBlob) resolve(pngBlob);
+                else reject(new Error('Failed to convert SVG'));
+            }, 'image/png');
+        };
+        img.onerror = () => {
+            URL.revokeObjectURL(url);
+            reject(new Error('Failed to load SVG'));
+        };
+        img.src = url;
+    });
+};
+
+const convertXmlToBlob = async (buffer: ArrayBuffer, format: string, name: string): Promise<Blob> => {
+    if (format !== 'json') throw new Error('XML can only be converted to JSON.');
+    const text = new TextDecoder().decode(buffer);
+    const parser = new XMLParser();
+    const jsonObj = parser.parse(text);
+    const jsonString = JSON.stringify(jsonObj, null, 2);
+    return new Blob([jsonString], { type: 'application/json' });
+};
+
+const convertMovToBlob = async (file: File, format: string, name: string): Promise<Blob> => {
+    if (format !== 'mp4') throw new Error('MOV can only be converted to MP4.');
+    
+    await ensureFFmpegLoaded();
+    if (!ffmpegInstance) throw new Error('FFmpeg not initialized');
+    
+    try {
+        // Load the MOV file into FFmpeg's virtual filesystem
+        const inputData = await fetchFile(file);
+        await ffmpegInstance.writeFile('input.mov', inputData);
+        
+        // Convert MOV to MP4 with high quality settings
+        await ffmpegInstance.exec([
+            '-i', 'input.mov',           // Input file
+            '-c:v', 'libx264',           // Use H.264 video codec
+            '-c:a', 'aac',               // Use AAC audio codec
+            '-preset', 'medium',         // Balanced speed/quality
+            '-crf', '18',                // High quality (lower = better quality)
+            '-movflags', '+faststart',   // Web optimization
+            '-y',                        // Overwrite output file
+            'output.mp4'                 // Output file
+        ]);
+        
+        // Read the converted file
+        const outputData = await ffmpegInstance.readFile('output.mp4');
+        const blob = new Blob([outputData], { type: 'video/mp4' });
+        
+        // Clean up FFmpeg filesystem
+        await ffmpegInstance.deleteFile('input.mov');
+        await ffmpegInstance.deleteFile('output.mp4');
+        
+        return blob;
+        
+    } catch (error) {
+        console.error('FFmpeg conversion error:', error);
+        throw new Error(`Failed to convert MOV to MP4: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
 }; 

@@ -136,6 +136,34 @@ const ToolsPage: React.FC = () => {
       imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuChtsJoh6mWfORQgwUKcajnhfFf5Wan7nfEKLpw8XmuXMbq17DHgRPS-P5WSMrVpTqifW-HrEAGwRfClecZ09k3vZAa1LjxRbp8kdJqvAKPC0SueaBouUc8GGqO0oQ-CElMPL7tg8wjGSqElL_AV2bbgZBhlVQpgGo9w_5F0tWI66xbNoEUxzG9re1b29p4iunA-7b6u6fd-bSEPTk9uwL7iaew_ChRqHgrezuuPLMnR2OgmoT1hM6fbnMX6ljOiE_Pnc3eM6kFWP9Y',
       link: '/mcp-lite',
       category: 'AI'
+    },
+    {
+      title: 'Terminal',
+      description: 'Web-based terminal emulator with filesystem simulation.',
+      imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBgRPVp5d2qWk2Qf0zGY_H55dMnziI9ah7d31W-0XzeLogjhuQuWY8dgjrSb_wFFVbRg80L3kkyVVJMX61vQ5LojFWQN2jok9mu8ZIF9Xj3-kiWGlWjlXB2Lan10sU6VtpuO58RrS3nC8ALJVSjwmphd60T6MCTZ9NohKYOsoAiw2IlahXC9M9QjzTCqf13PXeccHNq3EacpTHr0619xrJBRDeiF7U30zdz-V0Qci0sC8qcs7kNPIQAEVlVPA5eFBLpN-QEColA8cM_',
+      link: '/terminal',
+      category: 'Developer'
+    },
+    {
+      title: 'Basic Agent',
+      description: 'Intelligent AI assistant for complex tasks and analysis.',
+      imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCBYTCEG-uu12NKmCQYHeDOO4w3yG1BlnH4TxVoqP5tgSpY1X1AeloG6KibodwbVhdiFTA4s3canYMiKHbgpu7r53zDgnde2awzp_jKgslfgbyfNrz426cU_vV21_WnZAo8BWGZTgmR48ifYkkQJ8V0XlyDxTvLkmpvvG4voyYcDVIhfICXZCKGaegjhcA3lAEoEEiPJ6YSoFDgXCJZf8vSRlRL9HcK_e2pNBxIEVXpie8nLFnk_RK1p3vyr6MI3t8TF2vixkXltYHE',
+      link: '/basic-agent',
+      category: 'AI'
+    },
+    {
+      title: 'Therapy AI Agent',
+      description: 'AI-powered mental health support and therapeutic guidance.',
+      imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCq-Ih7_vvb50JxwOE-_FiAGW50b8T0DB1pX5ZzLG85_G2SJQ3amDE_02r7D1aH0VOPpb0fqNYsJkA4M5rlTXQoyrnVI-AE1BBVpU8K2KRRepOsP-KP0zCbd-55gnR-LIdykU8HurkZHCQ5DJoOf8wYkDU8T-OIYryZkrnDKL-i_B2XZAX5hGKdwPABkO1Up6zjKb0uAXoknYGydMS-wAnVqF9f2JuesL-ooEP08jUmpfvztoXqyKyczpZ-8m052Z64am8saAz8MX9c',
+      link: '/therapy-agent',
+      category: 'Health'
+    },
+    {
+      title: 'Real Terminal',
+      description: 'Full development environment with Python, Node.js, Git & OPFS persistence.',
+      imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBgRPVp5d2qWk2Qf0zGY_H55dMnziI9ah7d31W-0XzeLogjhuQuWY8dgjrSb_wFFVbRg80L3kkyVVJMX61vQ5LojFWQN2jok9mu8ZIF9Xj3-kiWGlWjlXB2Lan10sU6VtpuO58RrS3nC8ALJVSjwmphd60T6MCTZ9NohKYOsoAiw2IlahXC9M9QjzTCqf13PXeccHNq3EacpTHr0619xrJBRDeiF7U30zdz-V0Qci0sC8qcs7kNPIQAEVlVPA5eFBLpN-QEColA8cM_',
+      link: '/real-terminal',
+      category: 'Developer'
     }
   ];
 
