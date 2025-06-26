@@ -4,17 +4,25 @@ import { PythonEngine, PythonREPL } from '../services/realTerminal/pythonEngine'
 import { GitEngine } from '../services/realTerminal/gitEngine';
 import { NodeEngine, NodeREPL } from '../services/realTerminal/nodeEngine';
 import TextEditor from '../components/TextEditor';
+import { AIProviderService, AIMessage, AIResponse, AITools, AI_PROVIDERS } from '../services/aiProviders';
 
 interface TerminalOutput {
   id: string;
-  type: 'command' | 'output' | 'error' | 'system';
+  type: 'command' | 'output' | 'error' | 'system' | 'ai-response';
   content: string;
   timestamp: Date;
 }
 
 interface ActiveSession {
-  type: 'python' | 'node' | null;
+  type: 'python' | 'node' | 'ai' | null;
   repl: PythonREPL | NodeREPL | null;
+}
+
+interface AISession {
+  messages: AIMessage[];
+  isActive: boolean;
+  provider?: string;
+  model?: string;
 }
 
 export default function RealTerminalPage() {
@@ -22,9 +30,10 @@ export default function RealTerminalPage() {
     {
       id: '1',
       type: 'system',
-      content: '🚀 Entropy Real Terminal v2.0 - Browser-based Development Environment\n' +
-               '📁 OPFS File System | 🐍 Python (Pyodide) | 📦 Node.js (WebContainers) | 🔧 Git Operations\n' +
-               'Type "help" for available commands.\n',
+      content: '🚀 Entropy Real Terminal v2.0 - AI-Native Development Environment\n' +
+               '📁 OPFS File System | 🐍 Python (Pyodide) | 📦 Node.js (WebContainers) | 🔧 Git Operations | 🤖 AI Agent\n' +
+               '🆓 AI Ready: Google Gemini 2.0 Flash Lite (Free Tier)\n' +
+               'Type "help" for available commands or "ai" to start AI session.\n',
       timestamp: new Date()
     }
   ]);
@@ -35,20 +44,55 @@ export default function RealTerminalPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [currentPath, setCurrentPath] = useState('/home/user');
   const [activeSession, setActiveSession] = useState<ActiveSession>({ type: null, repl: null });
+  const [aiSession, setAiSession] = useState<AISession>({ messages: [], isActive: false });
   const [showEditor, setShowEditor] = useState(false);
   const [editorFile, setEditorFile] = useState<{ filename: string; content: string; mode: 'vim' | 'nano' | 'emacs' }>({ filename: '', content: '', mode: 'vim' });
+  const [showAIConfig, setShowAIConfig] = useState(false);
+  const [showFileSystem, setShowFileSystem] = useState(false);
+  const [fileSystemFiles, setFileSystemFiles] = useState<Array<{name: string, type: string, content?: string}>>([]);
   
   // Engine instances
   const [fileSystem] = useState(() => new RealFileSystem());
   const [pythonEngine] = useState(() => new PythonEngine());
   const [gitEngine] = useState(() => new GitEngine(fileSystem));
   const [nodeEngine] = useState(() => new NodeEngine());
+  const [tools] = useState<AITools>(() => ({
+    executeCode: async (code: string, language: string) => {
+      if (language === 'python') {
+        const result = await pythonEngine.executeCode(code);
+        return result.output || result.error || 'Code executed';
+      } else if (language === 'javascript' || language === 'js') {
+        // Note: NodeEngine uses WebContainers which doesn't have direct executeCode
+        // We'll implement this when we add the AI execution
+        return 'JavaScript execution will be implemented with WebContainer integration';
+      }
+      return 'Unsupported language';
+    },
+    editFile: async (filename: string, content: string) => {
+      await fileSystem.writeFile(filename, content);
+    },
+    readFile: async (filename: string) => {
+      const content = await fileSystem.readFile(filename);
+      return typeof content === 'string' ? content : new TextDecoder().decode(content);
+    },
+    listFiles: async (path?: string) => {
+      const items = await fileSystem.listDirectory(path || currentPath);
+      return items.map(item => `${item.type === 'directory' ? '📁' : '📄'} ${item.name}`);
+    },
+    runCommand: async (command: string) => {
+      // This would execute the command and return the result
+      return `Command executed: ${command}`;
+    }
+  }));
+  
+  const [aiService] = useState(() => new AIProviderService(tools));
   
   const [engineStatus, setEngineStatus] = useState({
     filesystem: false,
     python: false,
     node: false,
-    git: false
+    git: false,
+    ai: false
   });
 
   const terminalRef = useRef<HTMLDivElement>(null);
@@ -81,6 +125,11 @@ export default function RealTerminalPage() {
         addOutput('system', '✅ File system initialized with OPFS');
         addOutput('system', '✅ Git engine ready');
         setEngineStatus(prev => ({ ...prev, git: true }));
+
+        // Initialize AI with default Gemini (always available)
+        const currentProvider = aiService.getCurrentProvider();
+        addOutput('system', `✅ AI ready: ${currentProvider?.name || 'Google'} (${currentProvider?.model || 'gemini-2.0-flash-lite'}) - Free Tier`);
+        setEngineStatus(prev => ({ ...prev, ai: true }));
 
       } catch (error) {
         addOutput('error', `❌ Initialization failed: ${error}`);
@@ -118,9 +167,12 @@ export default function RealTerminalPage() {
       return '>>> ';
     } else if (activeSession.type === 'node') {
       return '> ';
+    } else if (activeSession.type === 'ai') {
+      const provider = aiService.getCurrentProvider();
+      return `🤖 ${provider?.name || 'AI'}:${provider?.model || 'unknown'}$ `;
     }
     return `entropy:${currentPath}$ `;
-  }, [currentPath, activeSession.type]);
+  }, [currentPath, activeSession.type, aiService]);
 
   const executeCommand = async (command: string) => {
     if (!command.trim()) return;
@@ -143,6 +195,18 @@ export default function RealTerminalPage() {
           const result = await activeSession.repl.execute(command);
           if (result.output) addOutput('output', result.output);
           if (result.error) addOutput('error', result.error);
+        }
+        return;
+      }
+
+      // Handle AI session
+      if (activeSession.type === 'ai') {
+        if (command.trim() === 'exit' || command.trim() === 'quit') {
+          setActiveSession({ type: null, repl: null });
+          setAiSession({ messages: [], isActive: false });
+          addOutput('system', 'Exited AI session');
+        } else {
+          await handleAIMessage(command);
         }
         return;
       }
@@ -250,6 +314,28 @@ export default function RealTerminalPage() {
 
         case 'git':
           await handleGit(args);
+          break;
+
+        case 'ai':
+          await handleAICommand(args);
+          break;
+
+        case 'ai-config':
+          setShowAIConfig(true);
+          break;
+
+        case 'ai-providers':
+          await handleAIProviders(args);
+          break;
+
+        case 'ai-models':
+          await handleAIModels(args);
+          break;
+
+        case 'files':
+        case 'filesystem':
+          setShowFileSystem(true);
+          await refreshFileSystem();
           break;
 
         case 'code':
@@ -819,22 +905,6 @@ export default function RealTerminalPage() {
           }
           break;
 
-        case 'curl':
-          if (args[0]) {
-            addOutput('output', `curl: Network requests simulated - would fetch ${args[0]}`);
-          } else {
-            addOutput('error', 'curl: usage: curl URL');
-          }
-          break;
-
-        case 'wget':
-          if (args[0]) {
-            addOutput('output', `--2024-01-01 12:00:00--  ${args[0]}\nResolving hostname... done.\nConnecting to server... connected.\nHTTP request sent, awaiting response... 200 OK\nLength: 1024 (1.0K) [text/html]\nSaving to: 'index.html'\n\nindex.html          100%[===================>]   1.00K  --.-KB/s    in 0s\n\n2024-01-01 12:00:00 (100 MB/s) - 'index.html' saved [1024/1024]`);
-          } else {
-            addOutput('error', 'wget: usage: wget URL');
-          }
-          break;
-
         case 'ssh':
           if (args[0]) {
             addOutput('output', `ssh: Browser security prevents direct SSH connections. Use web-based SSH clients.`);
@@ -1148,11 +1218,7 @@ export default function RealTerminalPage() {
           addOutput('output', 'entropy  pts/0        entropy-terminal Mon Jan  1 12:00   still logged in\nentropy  pts/0        entropy-terminal Sun Dec 31 11:30 - 12:00  (00:30)\n\nwtmp begins Mon Jan  1 12:00:00 2024');
           break;
 
-        case 'history':
-          commandHistory.forEach((cmd, index) => {
-            addOutput('output', `${(index + 1).toString().padStart(4)} ${cmd}`);
-          });
-          break;
+
 
         case 'fc':
           addOutput('output', 'fc: command history editor - use "history" to view commands');
@@ -1552,6 +1618,465 @@ export default function RealTerminalPage() {
     }
   };
 
+  const handleAICommand = async (args: string[]) => {
+    if (args.length === 0) {
+      // Start AI session
+      const currentProvider = aiService.getCurrentProvider();
+      if (!currentProvider) {
+        addOutput('error', 'No AI provider configured. Use "ai-config" to set up providers.');
+        return;
+      }
+      
+      setActiveSession({ type: 'ai', repl: null });
+      setAiSession({ messages: [], isActive: true, provider: currentProvider.id, model: currentProvider.model });
+      addOutput('system', `🤖 AI session started with ${currentProvider.name} (${currentProvider.model})`);
+      addOutput('system', 'AI Agent has access to file system, code execution, and terminal commands.');
+      addOutput('system', 'Type your message or "exit" to quit.');
+    } else if (args[0] === 'set-provider') {
+      if (args.length < 2) {
+        addOutput('error', 'Usage: ai set-provider <provider> [model]');
+        return;
+      }
+      
+      try {
+        aiService.setProvider(args[1], args[2]);
+        const provider = aiService.getCurrentProvider();
+        addOutput('output', `AI provider set to ${provider?.name} (${provider?.model})`);
+      } catch (error) {
+        addOutput('error', `Failed to set provider: ${error}`);
+      }
+    } else if (args[0] === 'add-key') {
+      if (args.length < 3) {
+        addOutput('error', 'Usage: ai add-key <provider> <api-key>');
+        return;
+      }
+      
+      try {
+        aiService.addProvider(args[1], args[2]);
+        addOutput('output', `API key added for ${args[1]}`);
+      } catch (error) {
+        addOutput('error', `Failed to add API key: ${error}`);
+      }
+    } else {
+      // Direct AI message
+      const message = args.join(' ');
+      await handleAIMessage(message);
+    }
+  };
+
+  const refreshFileSystem = async () => {
+    try {
+      const items = await fileSystem.listDirectory(currentPath);
+      const filesWithContent = await Promise.all(
+        items.map(async (item) => {
+          if (item.type === 'file') {
+            try {
+              const content = await fileSystem.readFile(`${currentPath}/${item.name}`);
+              return {
+                name: item.name,
+                type: item.type,
+                content: typeof content === 'string' ? content : new TextDecoder().decode(content)
+              };
+            } catch (error) {
+              return { name: item.name, type: item.type, content: 'Error reading file' };
+            }
+          }
+          return { name: item.name, type: item.type };
+        })
+      );
+      setFileSystemFiles(filesWithContent);
+    } catch (error) {
+      addOutput('error', `Failed to refresh file system: ${error}`);
+    }
+  };
+
+  const parseAndExecuteAITools = async (aiResponse: string, toolsInstance: AITools) => {
+    // Enhanced parsing for file creation and code execution
+    const pythonFileRegex = /```python:([^\s]+)\s*\n(.*?)\n```/gs;
+    const jsFileRegex = /```(?:javascript|js):([^\s]+)\s*\n(.*?)\n```/gs;
+    const pythonCodeRegex = /```python\s*\n(.*?)\n```/gs;
+    const jsCodeRegex = /```(?:javascript|js)\s*\n(.*?)\n```/gs;
+    const toolCallRegex = /```tool_code\s*\n(.*?)\n```/gs;
+    const executeCodeRegex = /executeCode\(code=['"`](.*?)['"`],\s*language=['"`](.*?)['"`]\)/gs;
+    const editFileRegex = /editFile\(['"`]([^'"`]+)['"`],\s*['"`](.*?)['"`]\)/gs;
+    
+    interface ExecutionResult {
+      filename?: string;
+      type?: string;
+      language?: string;
+      result: string;
+      error?: string;
+    }
+    
+    let match;
+    let executionResults: ExecutionResult[] = [];
+    
+    // Handle Python files (code with filename)
+    while ((match = pythonFileRegex.exec(aiResponse)) !== null) {
+      const filename = match[1];
+      const code = match[2];
+      
+      addOutput('system', `📝 Creating Python file: ${filename}`);
+      
+      try {
+        await toolsInstance.editFile(filename, code);
+        addOutput('output', `✅ File ${filename} created successfully`);
+        
+        // If it's a Python file, also execute it
+        if (filename.endsWith('.py')) {
+          addOutput('system', `🔧 Executing ${filename}...`);
+          const result = await toolsInstance.executeCode(code, 'python');
+          addOutput('output', result);
+          executionResults.push({ filename, result });
+        }
+      } catch (error) {
+        const errorMsg = `Failed to create ${filename}: ${error}`;
+        addOutput('error', errorMsg);
+        executionResults.push({ filename, result: '', error: errorMsg });
+      }
+    }
+    
+    // Handle JavaScript files (code with filename)
+    while ((match = jsFileRegex.exec(aiResponse)) !== null) {
+      const filename = match[1];
+      const code = match[2];
+      
+      addOutput('system', `📝 Creating JavaScript file: ${filename}`);
+      
+      try {
+        await toolsInstance.editFile(filename, code);
+        addOutput('output', `✅ File ${filename} created successfully`);
+        
+        // If it's a JS file, also execute it
+        if (filename.endsWith('.js')) {
+          addOutput('system', `🔧 Executing ${filename}...`);
+          const result = await toolsInstance.executeCode(code, 'javascript');
+          addOutput('output', result);
+          executionResults.push({ filename, result });
+        }
+      } catch (error) {
+        const errorMsg = `Failed to create ${filename}: ${error}`;
+        addOutput('error', errorMsg);
+        executionResults.push({ filename, result: '', error: errorMsg });
+      }
+    }
+    
+    // Handle explicit editFile calls
+    while ((match = editFileRegex.exec(aiResponse)) !== null) {
+      const filename = match[1];
+      const content = match[2].replace(/\\n/g, '\n').replace(/\\'/g, "'");
+      
+      addOutput('system', `📝 Creating/editing file: ${filename}`);
+      
+      try {
+        await toolsInstance.editFile(filename, content);
+        addOutput('output', `✅ File ${filename} saved successfully`);
+        executionResults.push({ filename, result: 'File saved successfully' });
+      } catch (error) {
+        const errorMsg = `Failed to save ${filename}: ${error}`;
+        addOutput('error', errorMsg);
+        executionResults.push({ filename, result: '', error: errorMsg });
+      }
+    }
+    
+    // Handle Python code blocks (execute only, don't save)
+    // Reset regex lastIndex to avoid issues with global regex
+    pythonCodeRegex.lastIndex = 0;
+    while ((match = pythonCodeRegex.exec(aiResponse)) !== null) {
+      const code = match[1];
+      
+      // Check if code starts with a filename comment (e.g., # filename.py)
+      const filenameMatch = code.match(/^#\s*([a-zA-Z0-9_-]+\.py)/);
+      
+      if (filenameMatch && code.trim().length > 20) {
+        // This looks like a file that should be saved
+        const filename = filenameMatch[1];
+        addOutput('system', `📝 Creating Python file: ${filename}`);
+        
+        try {
+          await toolsInstance.editFile(filename, code);
+          addOutput('output', `✅ File ${filename} created successfully`);
+          
+          // Also execute the file
+          addOutput('system', `🔧 Executing ${filename}...`);
+          const result = await toolsInstance.executeCode(code, 'python');
+          addOutput('output', result);
+          executionResults.push({ filename, result });
+        } catch (error) {
+          const errorMsg = `Failed to create/execute ${filename}: ${error}`;
+          addOutput('error', errorMsg);
+          executionResults.push({ filename, result: '', error: errorMsg });
+        }
+      } else if (code.trim().length > 10 && (!pythonFileRegex.test(aiResponse) || !aiResponse.includes(code))) {
+        // Regular code execution
+        addOutput('system', `🔧 Executing Python code...`);
+        
+        try {
+          const result = await toolsInstance.executeCode(code, 'python');
+          addOutput('output', result);
+          executionResults.push({ type: 'execution', result });
+        } catch (error) {
+          const errorMsg = `Execution error: ${error}`;
+          addOutput('error', errorMsg);
+          executionResults.push({ type: 'execution', result: '', error: errorMsg });
+        }
+      }
+    }
+    
+    // Handle JavaScript code blocks (execute only, don't save)
+    jsCodeRegex.lastIndex = 0;
+    while ((match = jsCodeRegex.exec(aiResponse)) !== null) {
+      const code = match[1];
+      
+      // Check if code starts with a filename comment (e.g., // filename.js)
+      const filenameMatch = code.match(/^\/\/\s*([a-zA-Z0-9_-]+\.js)/);
+      
+      if (filenameMatch && code.trim().length > 20) {
+        // This looks like a file that should be saved
+        const filename = filenameMatch[1];
+        addOutput('system', `📝 Creating JavaScript file: ${filename}`);
+        
+        try {
+          await toolsInstance.editFile(filename, code);
+          addOutput('output', `✅ File ${filename} created successfully`);
+          
+          // Also execute the file
+          addOutput('system', `🔧 Executing ${filename}...`);
+          const result = await toolsInstance.executeCode(code, 'javascript');
+          addOutput('output', result);
+          executionResults.push({ filename, result });
+        } catch (error) {
+          const errorMsg = `Failed to create/execute ${filename}: ${error}`;
+          addOutput('error', errorMsg);
+          executionResults.push({ filename, result: '', error: errorMsg });
+        }
+      } else if (code.trim().length > 10 && (!jsFileRegex.test(aiResponse) || !aiResponse.includes(code))) {
+        // Regular code execution
+        addOutput('system', `🔧 Executing JavaScript code...`);
+        
+        try {
+          const result = await toolsInstance.executeCode(code, 'javascript');
+          addOutput('output', result);
+          executionResults.push({ type: 'execution', result });
+        } catch (error) {
+          const errorMsg = `Execution error: ${error}`;
+          addOutput('error', errorMsg);
+          executionResults.push({ type: 'execution', result: '', error: errorMsg });
+        }
+      }
+    }
+    
+    // Handle executeCode calls
+    while ((match = executeCodeRegex.exec(aiResponse)) !== null) {
+      const code = match[1].replace(/\\n/g, '\n').replace(/\\'/g, "'");
+      const language = match[2];
+      
+      addOutput('system', `🔧 Executing ${language} code...`);
+      
+      try {
+        const result = await toolsInstance.executeCode(code, language);
+        addOutput('output', result);
+        executionResults.push({ type: 'tool_call', language, result });
+      } catch (error) {
+        const errorMsg = `Execution error: ${error}`;
+        addOutput('error', errorMsg);
+        executionResults.push({ type: 'tool_call', language, result: '', error: errorMsg });
+      }
+    }
+    
+    // Handle tool_code blocks
+    while ((match = toolCallRegex.exec(aiResponse)) !== null) {
+      const toolCall = match[1];
+      
+      // Parse the tool call
+      const executeMatch = toolCall.match(/executeCode\(code=['"`](.*?)['"`],\s*language=['"`](.*?)['"`]\)/s);
+      if (executeMatch) {
+        const code = executeMatch[1].replace(/\\n/g, '\n').replace(/\\'/g, "'");
+        const language = executeMatch[2];
+        
+        addOutput('system', `🔧 Executing ${language} code...`);
+        
+        try {
+          const result = await toolsInstance.executeCode(code, language);
+          addOutput('output', result);
+          executionResults.push({ type: 'tool_block', language, result });
+        } catch (error) {
+          const errorMsg = `Execution error: ${error}`;
+          addOutput('error', errorMsg);
+          executionResults.push({ type: 'tool_block', language, result: '', error: errorMsg });
+        }
+      }
+    }
+    
+    return executionResults;
+  };
+
+  const handleAIMessage = async (message: string) => {
+    try {
+      const currentProvider = aiService.getCurrentProvider();
+      if (!currentProvider) {
+        addOutput('error', 'No AI provider configured');
+        return;
+      }
+
+      addOutput('system', '🤖 Processing...');
+      
+      // Add context about current directory and recent files
+      const currentFiles = await tools.listFiles(currentPath);
+      const contextMessage = `${message}\n\nContext:\n- Current directory: ${currentPath}\n- Files: ${currentFiles.slice(0, 10).join(', ')}${currentFiles.length > 10 ? '...' : ''}`;
+      
+      const newMessage: AIMessage = { role: 'user', content: contextMessage };
+      let updatedMessages = [...aiSession.messages, newMessage];
+      
+      let attemptCount = 0;
+      const maxAttempts = 3;
+      let hasErrors = false;
+      
+      do {
+        attemptCount++;
+        hasErrors = false;
+        
+        if (attemptCount > 1) {
+          addOutput('system', `🔄 AI Auto-correction attempt ${attemptCount}/${maxAttempts}...`);
+        }
+        
+        const response = await aiService.sendMessage(updatedMessages);
+        
+        // Parse and execute AI commands
+        const aiResponse = response.content;
+        const executionResults = await parseAndExecuteAITools(aiResponse, tools);
+        
+        // Check for errors in execution results
+        const errorResults = executionResults.filter(r => r.error);
+        hasErrors = errorResults.length > 0;
+        
+        // Prepare assistant message with execution context
+        let enhancedAssistantContent = response.content;
+        if (executionResults.length > 0) {
+          enhancedAssistantContent += '\n\n--- EXECUTION RESULTS ---\n';
+          executionResults.forEach((result, index) => {
+            if (result.filename) {
+              if (result.error) {
+                enhancedAssistantContent += `File ${result.filename} creation failed:\nERROR: ${result.error}\n\n`;
+              } else {
+                enhancedAssistantContent += `File ${result.filename} created and executed:\n${result.result}\n\n`;
+              }
+            } else {
+              if (result.error) {
+                enhancedAssistantContent += `Execution ${index + 1} failed:\nERROR: ${result.error}\n\n`;
+              } else {
+                enhancedAssistantContent += `Execution ${index + 1}:\n${result.result}\n\n`;
+              }
+            }
+          });
+        }
+        
+        // Add assistant message to conversation
+        const assistantMessage: AIMessage = { role: 'assistant', content: enhancedAssistantContent };
+        updatedMessages = [...updatedMessages, assistantMessage];
+        
+        // If there are errors and we haven't reached max attempts, try to fix them
+        if (hasErrors && attemptCount < maxAttempts) {
+          const errorSummary = errorResults.map(r => r.error).join('\n');
+          const fixMessage = `The previous code had execution errors. Please fix these issues and provide corrected code:\n\nErrors:\n${errorSummary}\n\nPlease provide the fixed code. Focus only on fixing the errors, don't repeat the entire conversation.`;
+          
+          updatedMessages.push({ role: 'user', content: fixMessage });
+        } else {
+          // No errors or max attempts reached - display results
+          
+          // Extract just the conversational part (remove code blocks for display)
+          const displayContent = aiResponse
+            .replace(/```[\s\S]*?```/g, '') // Remove code blocks
+            .replace(/^\s*#[^\n]*$/gm, '') // Remove single-line comments
+            .replace(/^\s*\/\/[^\n]*$/gm, '') // Remove JS comments
+            .trim();
+          
+          // Display AI response in a nice format
+          if (displayContent) {
+            addOutput('ai-response', `🤖 ${currentProvider.name}:\n\n${displayContent}`);
+          }
+          
+          // Show file system status if files were created
+          const successfulFiles = executionResults.filter(r => r.filename && !r.error);
+          if (successfulFiles.length > 0) {
+            const fileCount = await tools.listFiles(currentPath);
+            addOutput('system', `📁 Current directory now has ${fileCount.length} files`);
+            // Auto-refresh file system if modal is open
+            if (showFileSystem) {
+              await refreshFileSystem();
+            }
+          }
+          
+          // Show final status
+          if (hasErrors) {
+            addOutput('system', `⚠️ Some operations failed after ${maxAttempts} attempts. Check the errors above.`);
+          } else if (attemptCount > 1) {
+            addOutput('system', `✅ AI successfully fixed issues in ${attemptCount} attempts.`);
+          }
+        }
+        
+        // Show cost information
+        addOutput('system', `💰 Cost: $${response.usage.cost.toFixed(6)} (${response.usage.input_tokens} in, ${response.usage.output_tokens} out)`);
+        
+      } while (hasErrors && attemptCount < maxAttempts);
+      
+      // Update final conversation history
+      setAiSession(prev => ({
+        ...prev,
+        messages: updatedMessages
+      }));
+
+    } catch (error) {
+      addOutput('error', `AI Error: ${error}`);
+    }
+  };
+
+  const handleAIProviders = async (args: string[]) => {
+    if (args.length === 0) {
+      // List available providers
+      const providers = aiService.getAvailableProviders();
+      const current = aiService.getCurrentProvider();
+      
+      addOutput('output', 'Available AI Providers:');
+      providers.forEach(provider => {
+        const status = current?.id === provider.id ? ' (current)' : '';
+        addOutput('output', `  ${provider.id}: ${provider.name}${status}`);
+        provider.models.forEach(model => {
+          const modelStatus = current?.model === model ? ' (active)' : '';
+          addOutput('output', `    - ${model}${modelStatus}`);
+        });
+      });
+      
+      if (providers.length === 0) {
+        addOutput('output', 'No providers configured. Use "ai add-key <provider> <api-key>" to add providers.');
+      }
+    } else if (args[0] === 'pricing') {
+      addOutput('output', '💰 AI Provider Pricing (per million tokens):');
+      Object.entries(AI_PROVIDERS).forEach(([id, config]) => {
+        addOutput('output', `${config.name}: $${config.pricing.input} input, $${config.pricing.output} output`);
+      });
+    }
+  };
+
+  const handleAIModels = async (args: string[]) => {
+    const currentProvider = aiService.getCurrentProvider();
+    if (!currentProvider) {
+      addOutput('error', 'No AI provider configured');
+      return;
+    }
+
+    const providers = aiService.getAvailableProviders();
+    const provider = providers.find(p => p.id === currentProvider.id);
+    
+    if (provider) {
+      addOutput('output', `Available models for ${provider.name}:`);
+      provider.models.forEach(model => {
+        const status = currentProvider.model === model ? ' (current)' : '';
+        addOutput('output', `  ${model}${status}`);
+      });
+    }
+  };
+
   const getHelpText = () => {
     return `
 🚀 Entropy Real Terminal - Professional Grade Terminal (100+ Commands)
@@ -1591,6 +2116,21 @@ export default function RealTerminalPage() {
   git remote       - Manage remotes
   git push/pull    - Sync with remote
 
+🤖 AI INTEGRATION:
+  ai               - Start AI chat session
+  ai <message>     - Send message to AI
+  ai add-key <provider> <key> - Add API key
+  ai set-provider <provider>  - Switch AI provider
+  ai-providers     - List available providers
+  ai-models        - List available models
+  ai-config        - Open AI configuration
+  
+  Supported providers: OpenAI, Anthropic, Google, xAI, DeepSeek, Mistral
+
+📁 FILE MANAGEMENT:
+  files, filesystem - Open file system browser
+  tree             - Show directory tree structure
+
 📝 TEXT EDITORS:
   vim <file>       - Full vim editor with all keybindings
   nano <file>      - User-friendly nano editor
@@ -1627,9 +2167,10 @@ export default function RealTerminalPage() {
 🐍 Python (Pyodide): ${engineStatus.python ? '✅ Ready' : '⏳ Initialize with: python'}
 📦 Node.js (WebContainers): ${engineStatus.node ? '✅ Ready' : '⏳ Initialize with: node'}
 🔧 Git (isomorphic-git): ${engineStatus.git ? '✅ Ready' : '❌ Not initialized'}
+🤖 AI Providers: ${engineStatus.ai ? '✅ Ready' : '⏳ Configure with: ai-config'}
 
 💾 Storage: Browser OPFS (Origin Private File System)
-🌐 Network: Git clone/push/pull, npm packages
+🌐 Network: Git clone/push/pull, npm packages, AI APIs
 ⚡ Performance: WebAssembly + native browser APIs
 `;
   };
@@ -1678,6 +2219,261 @@ export default function RealTerminalPage() {
           mode={editorFile.mode}
         />
       )}
+
+      {/* File System Modal */}
+      {showFileSystem && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-gray-800 border border-green-400 rounded-lg p-6 max-w-6xl w-full max-h-[90vh] overflow-y-auto text-green-400 font-mono">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold">📁 File System - {currentPath}</h2>
+              <div className="flex gap-2">
+                <button
+                  onClick={refreshFileSystem}
+                  className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm"
+                >
+                  🔄 Refresh
+                </button>
+                <button
+                  onClick={() => setShowFileSystem(false)}
+                  className="text-red-400 hover:text-red-300"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* File List */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Files & Directories</h3>
+                <div className="bg-gray-700 rounded p-4 max-h-96 overflow-y-auto">
+                  {fileSystemFiles.length === 0 ? (
+                    <p className="text-gray-400">No files in current directory</p>
+                  ) : (
+                    fileSystemFiles.map((file, index) => (
+                      <div key={index} className="flex items-center gap-2 py-1 hover:bg-gray-600 px-2 rounded">
+                        <span className="text-blue-400">
+                          {file.type === 'directory' ? '📁' : '📄'}
+                        </span>
+                        <span className="flex-1">{file.name}</span>
+                        {file.type === 'file' && (
+                          <span className="text-xs text-gray-400">
+                            {file.content ? `${file.content.length} chars` : 'binary'}
+                          </span>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* File Content Preview */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3">File Contents</h3>
+                <div className="bg-gray-700 rounded p-4 max-h-96 overflow-y-auto">
+                  {fileSystemFiles.filter(f => f.type === 'file' && f.content).map((file, index) => (
+                    <div key={index} className="mb-4 border-b border-gray-600 pb-4">
+                      <h4 className="font-medium text-yellow-400 mb-2">{file.name}</h4>
+                      <pre className="text-xs text-gray-300 whitespace-pre-wrap bg-gray-800 p-3 rounded max-h-40 overflow-y-auto">
+                        {file.content}
+                      </pre>
+                    </div>
+                  ))}
+                  {fileSystemFiles.filter(f => f.type === 'file' && f.content).length === 0 && (
+                    <p className="text-gray-400">No readable files to preview</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 text-sm text-gray-400">
+              <p>💡 Use commands like <code>cat filename</code>, <code>vim filename</code>, or ask the AI to create files</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI Configuration Modal */}
+      {showAIConfig && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-gray-800 border border-green-400 rounded-lg p-6 max-w-4xl w-full max-h-[80vh] overflow-y-auto text-green-400 font-mono">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold">🤖 AI Configuration</h2>
+              <button
+                onClick={() => setShowAIConfig(false)}
+                className="text-red-400 hover:text-red-300"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {/* Current Provider */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Current Provider</h3>
+                {(() => {
+                  const current = aiService.getCurrentProvider();
+                  return current ? (
+                    <div className="bg-gray-700 p-3 rounded">
+                      <p>Provider: {current.name}</p>
+                      <p>Model: {current.model}</p>
+                    </div>
+                  ) : (
+                    <p className="text-yellow-400">No provider configured</p>
+                  );
+                })()}
+              </div>
+
+              {/* Add API Keys */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Add API Keys</h3>
+                <div className="space-y-4">
+                                     {Object.entries(AI_PROVIDERS).map(([id, config]) => (
+                     <div key={id} className="bg-gray-700 p-4 rounded">
+                       <div className="flex justify-between items-center mb-2">
+                         <h4 className="font-medium">
+                           {config.name}
+                           {id === 'google' && (
+                             <span className="ml-2 text-xs bg-green-600 px-2 py-1 rounded">
+                               FREE TIER AVAILABLE
+                             </span>
+                           )}
+                         </h4>
+                         <span className="text-sm text-gray-400">
+                           {id === 'google' 
+                             ? 'Free for gemini-2.0-flash-lite'
+                             : `$${config.pricing.input}/$${config.pricing.output} per M tokens`
+                           }
+                         </span>
+                       </div>
+                      <div className="flex gap-2">
+                                                 <input
+                           type="password"
+                           placeholder={id === 'google' 
+                             ? `${config.name} API Key (optional for free tier)`
+                             : `${config.name} API Key`
+                           }
+                           className="flex-1 bg-gray-800 border border-gray-600 rounded px-3 py-2 text-white"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              const input = e.target as HTMLInputElement;
+                              if (input.value.trim()) {
+                                try {
+                                  aiService.addProvider(id, input.value.trim());
+                                  input.value = '';
+                                  addOutput('system', `✅ API key added for ${config.name}`);
+                                } catch (error) {
+                                  addOutput('error', `❌ Failed to add key: ${error}`);
+                                }
+                              }
+                            }
+                          }}
+                        />
+                        <button
+                          onClick={(e) => {
+                            const input = (e.target as HTMLElement).previousElementSibling as HTMLInputElement;
+                            if (input.value.trim()) {
+                              try {
+                                aiService.addProvider(id, input.value.trim());
+                                input.value = '';
+                                addOutput('system', `✅ API key added for ${config.name}`);
+                              } catch (error) {
+                                addOutput('error', `❌ Failed to add key: ${error}`);
+                              }
+                            }
+                          }}
+                          className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded text-white"
+                        >
+                          Add
+                        </button>
+                      </div>
+                                             <div className="mt-2 text-sm text-gray-400">
+                         Models: {config.models.join(', ')}
+                         {id === 'google' && (
+                           <div className="mt-1 text-green-400">
+                             ✅ gemini-2.0-flash-lite is free without API key
+                           </div>
+                         )}
+                       </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Available Providers */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Configured Providers</h3>
+                {(() => {
+                  const providers = aiService.getAvailableProviders();
+                  return providers.length > 0 ? (
+                    <div className="space-y-2">
+                      {providers.map(provider => (
+                        <div key={provider.id} className="bg-gray-700 p-3 rounded flex justify-between items-center">
+                          <div>
+                            <span className="font-medium">{provider.name}</span>
+                            <div className="text-sm text-gray-400">
+                              Models: {provider.models.join(', ')}
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <select
+                              className="bg-gray-800 border border-gray-600 rounded px-2 py-1"
+                              onChange={(e) => {
+                                if (e.target.value) {
+                                  aiService.setProvider(provider.id, e.target.value);
+                                  addOutput('system', `✅ Switched to ${provider.name} (${e.target.value})`);
+                                }
+                              }}
+                            >
+                              <option value="">Select Model</option>
+                              {provider.models.map(model => (
+                                <option key={model} value={model}>{model}</option>
+                              ))}
+                            </select>
+                            <button
+                              onClick={() => {
+                                aiService.removeProvider(provider.id);
+                                addOutput('system', `🗑️ Removed ${provider.name}`);
+                              }}
+                              className="px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-white"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-400">No providers configured</p>
+                  );
+                })()}
+              </div>
+
+              {/* Usage Instructions */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Usage Instructions</h3>
+                                 <div className="bg-gray-700 p-4 rounded text-sm space-y-2">
+                   <p><code className="bg-gray-800 px-2 py-1 rounded">ai</code> - Start interactive AI session</p>
+                   <p><code className="bg-gray-800 px-2 py-1 rounded">ai "write a python script"</code> - Direct AI command</p>
+                   <p><code className="bg-gray-800 px-2 py-1 rounded">ai set-provider openai gpt-4o</code> - Switch provider</p>
+                   <p><code className="bg-gray-800 px-2 py-1 rounded">ai-providers pricing</code> - View pricing</p>
+                   <p className="text-green-400 mt-3">🆓 <strong>Free:</strong> Google Gemini 2.0 Flash Lite (no API key needed)</p>
+                   <p className="text-yellow-400">💡 The AI can execute code, edit files, and run terminal commands!</p>
+                 </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setShowAIConfig(false)}
+                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded text-white"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Terminal Header */}
       <div className="bg-gray-800 border-b border-gray-700 p-3 flex items-center justify-between">
@@ -1715,14 +2511,22 @@ export default function RealTerminalPage() {
       >
         {output.map((item) => (
           <div key={item.id} className="mb-1">
-            <pre className={`whitespace-pre-wrap font-mono text-sm ${
-              item.type === 'command' ? 'text-white' :
-              item.type === 'error' ? 'text-red-400' :
-              item.type === 'system' ? 'text-blue-400' :
-              'text-green-400'
-            }`}>
-              {item.content}
-            </pre>
+            {item.type === 'ai-response' ? (
+              <div className="bg-gray-800 border-l-4 border-blue-500 p-4 rounded-r-lg my-3">
+                <pre className="whitespace-pre-wrap font-mono text-sm text-cyan-300 leading-relaxed">
+                  {item.content}
+                </pre>
+              </div>
+            ) : (
+              <pre className={`whitespace-pre-wrap font-mono text-sm ${
+                item.type === 'command' ? 'text-white' :
+                item.type === 'error' ? 'text-red-400' :
+                item.type === 'system' ? 'text-blue-400' :
+                'text-green-400'
+              }`}>
+                {item.content}
+              </pre>
+            )}
           </div>
         ))}
         

@@ -1,0 +1,448 @@
+{
+  "version": "2.0",
+  "system": "Entropy AI Agent",
+  "environment": "browser-terminal",
+  "capabilities": {
+    "core_functions": [
+      {
+        "name": "executeCode",
+        "description": "Execute Python or JavaScript code with full output capture and error handling",
+        "parameters": {
+          "code": {
+            "type": "string",
+            "description": "Source code to execute",
+            "required": true
+          },
+          "language": {
+            "type": "string",
+            "enum": ["python", "javascript"],
+            "description": "Programming language to execute",
+            "required": true
+          }
+        },
+        "features": [
+          "automatic_syntax_validation",
+          "error_detection_and_recovery",
+          "output_capture",
+          "execution_context_preservation",
+          "performance_monitoring"
+        ]
+      },
+      {
+        "name": "editFile",
+        "description": "Create, modify, or update files with automatic syntax validation and intelligent formatting",
+        "parameters": {
+          "filename": {
+            "type": "string",
+            "description": "Target file path (relative or absolute)",
+            "required": true
+          },
+          "content": {
+            "type": "string",
+            "description": "Complete file content to write",
+            "required": true
+          }
+        },
+        "features": [
+          "syntax_highlighting",
+          "automatic_formatting",
+          "backup_creation",
+          "directory_auto_creation",
+          "encoding_detection"
+        ]
+      },
+      {
+        "name": "readFile",
+        "description": "Read and analyze file contents with context awareness and intelligent parsing",
+        "parameters": {
+          "filename": {
+            "type": "string",
+            "description": "File path to read",
+            "required": true
+          }
+        },
+        "features": [
+          "encoding_detection",
+          "large_file_streaming",
+          "binary_file_detection",
+          "metadata_extraction",
+          "content_analysis"
+        ]
+      },
+      {
+        "name": "listFiles",
+        "description": "Explore directory structures with advanced filtering and metadata",
+        "parameters": {
+          "path": {
+            "type": "string",
+            "description": "Directory path to list (defaults to current directory)",
+            "required": false
+          }
+        },
+        "features": [
+          "recursive_listing",
+          "file_type_filtering",
+          "size_and_date_metadata",
+          "permission_checking",
+          "hidden_file_detection"
+        ]
+      },
+      {
+        "name": "runCommand",
+        "description": "Execute terminal commands with full shell access and output capture",
+        "parameters": {
+          "command": {
+            "type": "string",
+            "description": "Shell command to execute",
+            "required": true
+          }
+        },
+        "features": [
+          "interactive_command_support",
+          "output_streaming",
+          "error_capture",
+          "environment_variable_access",
+          "working_directory_management"
+        ]
+      }
+    ],
+    "advanced_features": {
+      "self_correction": {
+        "enabled": true,
+        "max_attempts": 3,
+        "error_patterns": [
+          "syntax_errors",
+          "import_errors",
+          "type_errors",
+          "runtime_errors",
+          "indentation_errors"
+        ],
+        "correction_strategies": [
+          "automatic_syntax_fixing",
+          "import_resolution",
+          "type_inference",
+          "error_handling_injection",
+          "code_refactoring"
+        ]
+      },
+      "context_preservation": {
+        "enabled": true,
+        "conversation_history": true,
+        "execution_results": true,
+        "file_system_state": true,
+        "environment_variables": true
+      },
+      "intelligent_parsing": {
+        "enabled": true,
+        "file_creation_detection": true,
+        "execution_intent_analysis": true,
+        "code_block_classification": true,
+        "dependency_resolution": true
+      },
+      "error_recovery": {
+        "enabled": true,
+        "automatic_retry": true,
+        "fallback_strategies": true,
+        "user_guidance": true,
+        "learning_integration": true
+      }
+    },
+    "environments": {
+      "python": {
+        "runtime": "pyodide",
+        "version": "3.11+",
+        "available_packages": [
+          "numpy",
+          "pandas",
+          "matplotlib",
+          "scipy",
+          "scikit-learn",
+          "seaborn",
+          "plotly",
+          "requests",
+          "beautifulsoup4",
+          "pillow",
+          "opencv-python",
+          "tensorflow",
+          "pytorch",
+          "jupyter",
+          "sympy",
+          "nltk",
+          "networkx"
+        ],
+        "features": [
+          "interactive_mode",
+          "scientific_computing",
+          "data_visualization",
+          "machine_learning",
+          "web_scraping",
+          "image_processing"
+        ]
+      },
+      "javascript": {
+        "runtime": "webcontainers",
+        "version": "Node.js 18+",
+        "package_manager": "npm",
+        "available_frameworks": [
+          "react",
+          "vue",
+          "angular",
+          "express",
+          "fastify",
+          "next.js",
+          "nuxt.js",
+          "svelte",
+          "solid.js",
+          "remix"
+        ],
+        "features": [
+          "full_npm_ecosystem",
+          "modern_es_features",
+          "typescript_support",
+          "bundling_and_building",
+          "testing_frameworks",
+          "api_development"
+        ]
+      }
+    },
+    "file_system": {
+      "storage": "browser_persistent",
+      "features": [
+        "full_directory_structure",
+        "file_metadata",
+        "permission_simulation",
+        "symbolic_links",
+        "file_compression",
+        "search_and_indexing"
+      ],
+      "supported_operations": [
+        "create",
+        "read",
+        "update",
+        "delete",
+        "copy",
+        "move",
+        "rename",
+        "compress",
+        "extract"
+      ]
+    },
+    "version_control": {
+      "system": "git",
+      "features": [
+        "repository_initialization",
+        "staging_and_commits",
+        "branch_management",
+        "remote_operations",
+        "merge_and_rebase",
+        "conflict_resolution",
+        "history_tracking",
+        "tag_management"
+      ],
+      "supported_commands": [
+        "init",
+        "clone",
+        "add",
+        "commit",
+        "push",
+        "pull",
+        "branch",
+        "checkout",
+        "merge",
+        "rebase",
+        "status",
+        "log",
+        "diff",
+        "tag"
+      ]
+    },
+    "text_editors": {
+      "available_editors": [
+        {
+          "name": "vim",
+          "features": [
+            "modal_editing",
+            "full_keybinding_support",
+            "syntax_highlighting",
+            "search_and_replace",
+            "macro_recording",
+            "plugin_simulation",
+            "customizable_settings"
+          ]
+        },
+        {
+          "name": "nano",
+          "features": [
+            "user_friendly_interface",
+            "syntax_highlighting",
+            "search_and_replace",
+            "line_numbering",
+            "auto_indentation",
+            "file_browser"
+          ]
+        },
+        {
+          "name": "emacs",
+          "features": [
+            "extensible_interface",
+            "keybinding_customization",
+            "syntax_highlighting",
+            "buffer_management",
+            "built_in_help",
+            "org_mode_support"
+          ]
+        }
+      ]
+    },
+    "network_access": {
+      "protocols": ["http", "https", "websocket"],
+      "features": [
+        "api_integration",
+        "web_scraping",
+        "file_downloading",
+        "real_time_communication",
+        "authentication_handling",
+        "rate_limiting",
+        "proxy_support"
+      ],
+      "security": [
+        "cors_compliance",
+        "ssl_verification",
+        "secure_authentication",
+        "data_encryption",
+        "privacy_protection"
+      ]
+    }
+  },
+  "ai_native_features": {
+    "intelligent_code_generation": {
+      "capabilities": [
+        "full_application_generation",
+        "test_suite_creation",
+        "documentation_generation",
+        "performance_optimization",
+        "security_implementation",
+        "design_pattern_application"
+      ]
+    },
+    "multi_domain_expertise": {
+      "data_science": [
+        "data_analysis",
+        "statistical_modeling",
+        "machine_learning",
+        "data_visualization",
+        "feature_engineering",
+        "model_evaluation"
+      ],
+      "web_development": [
+        "frontend_frameworks",
+        "backend_apis",
+        "database_integration",
+        "responsive_design",
+        "performance_optimization",
+        "security_implementation"
+      ],
+      "devops": [
+        "ci_cd_pipelines",
+        "containerization",
+        "monitoring_setup",
+        "automation_scripts",
+        "infrastructure_as_code",
+        "deployment_strategies"
+      ],
+      "api_integration": [
+        "authentication_handling",
+        "rate_limiting",
+        "error_recovery",
+        "data_transformation",
+        "webhook_implementation",
+        "real_time_processing"
+      ]
+    },
+    "user_interaction": {
+      "communication_styles": [
+        "technical_explanations",
+        "beginner_friendly",
+        "expert_level",
+        "educational",
+        "problem_solving",
+        "creative_collaboration"
+      ],
+      "response_formats": [
+        "code_execution",
+        "step_by_step_guidance",
+        "multiple_solutions",
+        "best_practices",
+        "documentation_links",
+        "visual_demonstrations"
+      ]
+    }
+  },
+  "security_and_safety": {
+    "code_security": [
+      "input_validation",
+      "secure_authentication",
+      "credential_protection",
+      "owasp_compliance",
+      "vulnerability_scanning"
+    ],
+    "data_protection": [
+      "privacy_compliance",
+      "secure_transmission",
+      "data_sanitization",
+      "gdpr_compliance",
+      "confidentiality_maintenance"
+    ],
+    "execution_safety": [
+      "sandboxed_environment",
+      "resource_limits",
+      "malicious_code_detection",
+      "user_consent_required",
+      "audit_logging"
+    ]
+  },
+  "performance_optimization": {
+    "code_efficiency": [
+      "algorithm_optimization",
+      "data_structure_selection",
+      "caching_strategies",
+      "memory_management",
+      "performance_profiling"
+    ],
+    "resource_management": [
+      "browser_memory_optimization",
+      "io_operation_optimization",
+      "asynchronous_patterns",
+      "resource_cleanup",
+      "usage_monitoring"
+    ]
+  },
+  "innovation_features": {
+    "cutting_edge_practices": [
+      "latest_technology_adoption",
+      "modern_development_patterns",
+      "creative_problem_solving",
+      "tool_introduction",
+      "innovation_balance"
+    ],
+    "continuous_improvement": [
+      "pattern_learning",
+      "feedback_integration",
+      "style_adaptation",
+      "error_prevention",
+      "capability_evolution"
+    ]
+  },
+  "metadata": {
+    "last_updated": "2024",
+    "version": "2.0",
+    "compatibility": "all_modern_browsers",
+    "requirements": [
+      "webcontainers_support",
+      "pyodide_compatibility",
+      "persistent_storage",
+      "network_access",
+      "modern_javascript"
+    ]
+  }
+} 
