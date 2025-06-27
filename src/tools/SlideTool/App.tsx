@@ -26,7 +26,9 @@ import LoginPage from '../../pages/LoginPage';
 import TerminalPage from '../../pages/TerminalPage';
 import BasicAgentPage from '../../pages/BasicAgentPage';
 import TherapyAgentPage from '../../pages/TherapyAgentPage';
-import RealTerminalPage from '../../pages/RealTerminalPage';
+import RealTerminalPageNew from '../../pages/RealTerminalPageNew';
+import BackgroundRemoverPage from '../../pages/BackgroundRemoverPage';
+import PlagiarismCheckerPage from '../../pages/PlagiarismCheckerPage';
 import PptxGenJS from 'pptxgenjs';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -699,7 +701,9 @@ const App: React.FC = () => (
       <Route path="/terminal" element={<TerminalPage />} />
       <Route path="/basic-agent" element={<BasicAgentPage />} />
                 <Route path="/therapy-agent" element={<TherapyAgentPage />} />
-          <Route path="/real-terminal" element={<RealTerminalPage />} />
+          <Route path="/real-terminal" element={<RealTerminalPageNew />} />
+      <Route path="/background-remover" element={<BackgroundRemoverPage />} />
+      <Route path="/plagiarism-checker" element={<PlagiarismCheckerPage />} />
       <Route path="/login" element={<LoginPage />} />
     </Routes>
   </BrowserRouter>

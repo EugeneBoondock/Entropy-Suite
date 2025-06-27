@@ -277,6 +277,21 @@ print("Temporary execution")
 ### 3. File Creation Without Execution
 Use editFile(filename, content) for config files, documentation, etc.
 
+**CRITICAL PYTHON FORMATTING RULES:**
+- ALWAYS use exactly 4 spaces for Python indentation (never tabs)
+- ALL code inside functions MUST be indented by 4 spaces
+- Docstrings inside functions MUST be indented by 4 spaces
+- NEVER leave empty function bodies - add 'pass' if needed
+- Every line after a colon (:) MUST be indented
+- Write syntactically perfect Python code - the execution environment is strict
+- Example correct function format:
+\`\`\`python
+def my_function():
+    """This docstring is properly indented."""
+    print("This code is properly indented")
+    return "success"
+\`\`\`
+
 ## Operational Excellence
 
 ### Code Quality Standards

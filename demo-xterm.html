@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XTerminal Demo</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #00ff00;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Courier New', monospace;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .terminal-container {
+            background: #1a1a1a;
+            border: 2px solid #00ff00;
+            border-radius: 8px;
+            height: 600px;
+            margin-top: 20px;
+        }
+        
+        .header {
+            background: #333;
+            color: #fff;
+            padding: 10px;
+            text-align: center;
+            border-radius: 6px 6px 0 0;
+        }
+        
+        .feature-list {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .feature-list h3 {
+            margin-top: 0;
+            color: #00ff00;
+        }
+        
+        .feature-list ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        
+        .feature-list li {
+            padding: 5px 0;
+            color: #ccc;
+        }
+        
+        .feature-list li::before {
+            content: "✅ ";
+            color: #00ff00;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Entropy Real Terminal with XTerm.js</h1>
+        <p>Professional terminal implementation using XTerm.js instead of building from scratch</p>
+        
+        <div class="feature-list">
+            <h3>New Features with XTerm.js:</h3>
+            <ul>
+                <li>Professional terminal rendering with proper fonts and colors</li>
+                <li>Native terminal keybindings and shortcuts</li>
+                <li>Proper cursor handling and blinking</li>
+                <li>Arrow key history navigation</li>
+                <li>ANSI escape sequence support for colors</li>
+                <li>Text selection and copy/paste</li>
+                <li>Automatic scrolling and buffer management</li>
+                <li>Responsive design and proper resizing</li>
+                <li>Search functionality</li>
+                <li>Web links support</li>
+            </ul>
+        </div>
+        
+        <div class="terminal-container">
+            <div class="header">
+                Entropy Real Terminal (XTerm.js) - Professional Grade
+            </div>
+            <div id="terminal" style="height: calc(100% - 40px); padding: 10px;">
+                <!-- Terminal will be mounted here -->
+                <p style="color: #00ff00; text-align: center; margin-top: 200px;">
+                    🔧 Terminal will be rendered here in the React app<br>
+                    Navigate to /real-terminal to see the live implementation
+                </p>
+            </div>
+        </div>
+        
+        <div style="margin-top: 20px; background: #2a2a2a; padding: 20px; border-radius: 8px;">
+            <h3 style="color: #00ff00;">Implementation Benefits:</h3>
+            <ul style="color: #ccc;">
+                <li><strong>Maintainability:</strong> Uses battle-tested XTerm.js instead of custom implementation</li>
+                <li><strong>Features:</strong> Gets professional terminal features out of the box</li>
+                <li><strong>Performance:</strong> Optimized rendering for large amounts of text</li>
+                <li><strong>Compatibility:</strong> Works consistently across all browsers</li>
+                <li><strong>Accessibility:</strong> Screen reader support and keyboard navigation</li>
+            </ul>
+        </div>
+        
+        <div style="margin-top: 20px; background: #2a2a2a; padding: 20px; border-radius: 8px;">
+            <h3 style="color: #00ff00;">Available Commands:</h3>
+            <ul style="color: #ccc; columns: 2;">
+                <li><code>help</code> - Show available commands</li>
+                <li><code>ls</code> - List directory contents</li>
+                <li><code>cd &lt;path&gt;</code> - Change directory</li>
+                <li><code>python</code> - Start Python REPL</li>
+                <li><code>node</code> - Start Node.js REPL</li>
+                <li><code>git</code> - Git operations</li>
+                <li><code>ai</code> - Start AI session</li>
+                <li><code>clear</code> - Clear terminal</li>
+                <li><code>pwd</code> - Print working directory</li>
+                <li><code>cat &lt;file&gt;</code> - Display file contents</li>
+                <li><code>mkdir &lt;name&gt;</code> - Create directory</li>
+                <li><code>touch &lt;file&gt;</code> - Create file</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html> 

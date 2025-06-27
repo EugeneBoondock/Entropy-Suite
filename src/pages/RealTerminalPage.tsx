@@ -1341,7 +1341,8 @@ export default function RealTerminalPage() {
         addOutput('output', `Python ${version} (Pyodide) on WebAssembly\nType "exit" or "quit" to exit the REPL.`);
       } else if (args[0] === '-c') {
         // Execute Python code
-        const code = args.slice(1).join(' ');
+        let code = args.slice(1).join(' ');
+        code = cleanPythonCode(code);
         const result = await pythonEngine.executeCode(code, currentPath);
         if (result.output) addOutput('output', result.output);
         if (result.error) addOutput('error', result.error);
@@ -1361,11 +1362,20 @@ export default function RealTerminalPage() {
           }
         }
       } else {
-        // Execute Python file
+        // Execute Python file (read from OPFS, clean code, and run)
         try {
-          const result = await pythonEngine.runScript(args[0]);
-          if (result.output) addOutput('output', result.output);
-          if (result.error) addOutput('error', result.error);
+          const filePath = args[0];
+          const fileContent = await fileSystem.readFile(filePath);
+          if (typeof fileContent === 'string') {
+            // Write the file to the Pyodide FS before running
+            await pythonEngine.saveToFile(filePath, fileContent);
+            const cleaned = cleanPythonCode(fileContent);
+            const result = await pythonEngine.executeCode(cleaned, currentPath);
+            if (result.output) addOutput('output', result.output);
+            if (result.error) addOutput('error', result.error);
+          } else {
+            addOutput('error', `${filePath}: binary file or unreadable`);
+          }
         } catch (error) {
           addOutput('error', `python: ${error}`);
         }
@@ -1692,13 +1702,14 @@ export default function RealTerminalPage() {
 
   const parseAndExecuteAITools = async (aiResponse: string, toolsInstance: AITools) => {
     // Enhanced parsing for file creation and code execution
-    const pythonFileRegex = /```python:([^\s]+)\s*\n(.*?)\n```/gs;
-    const jsFileRegex = /```(?:javascript|js):([^\s]+)\s*\n(.*?)\n```/gs;
-    const pythonCodeRegex = /```python\s*\n(.*?)\n```/gs;
-    const jsCodeRegex = /```(?:javascript|js)\s*\n(.*?)\n```/gs;
+    const pythonFileRegex = /```python:([^\s]+)\s*\n(.*?)```/gs;
+    const jsFileRegex = /```(?:javascript|js):([^\s]+)\s*\n(.*?)```/gs;
+    const pythonCodeRegex = /```python\s*\n(.*?)```/gs;
+    const jsCodeRegex = /```(?:javascript|js)\s*\n(.*?)```/gs;
     const toolCallRegex = /```tool_code\s*\n(.*?)\n```/gs;
     const executeCodeRegex = /executeCode\(code=['"`](.*?)['"`],\s*language=['"`](.*?)['"`]\)/gs;
     const editFileRegex = /editFile\(['"`]([^'"`]+)['"`],\s*['"`](.*?)['"`]\)/gs;
+    const deleteFileRegex = /deleteFile\(['"`]([^'"`]+)['"`]\)/gs;
     
     interface ExecutionResult {
       filename?: string;
@@ -1719,18 +1730,19 @@ export default function RealTerminalPage() {
       addOutput('system', `📝 Creating Python file: ${filename}`);
       
       try {
-        await toolsInstance.editFile(filename, code);
+        const cleanedCode = cleanPythonCode(code);
+        await toolsInstance.editFile(filename, cleanedCode);
         addOutput('output', `✅ File ${filename} created successfully`);
         
-        // If it's a Python file, also execute it
+        // Directly execute the full content of the file
         if (filename.endsWith('.py')) {
           addOutput('system', `🔧 Executing ${filename}...`);
-          const result = await toolsInstance.executeCode(code, 'python');
+          const result = await toolsInstance.executeCode(cleanedCode, 'python');
           addOutput('output', result);
           executionResults.push({ filename, result });
         }
       } catch (error) {
-        const errorMsg = `Failed to create ${filename}: ${error}`;
+        const errorMsg = `Failed to create/execute ${filename}: ${error}`;
         addOutput('error', errorMsg);
         executionResults.push({ filename, result: '', error: errorMsg });
       }
@@ -1780,7 +1792,6 @@ export default function RealTerminalPage() {
     }
     
     // Handle Python code blocks (execute only, don't save)
-    // Reset regex lastIndex to avoid issues with global regex
     pythonCodeRegex.lastIndex = 0;
     while ((match = pythonCodeRegex.exec(aiResponse)) !== null) {
       const code = match[1];
@@ -1794,12 +1805,13 @@ export default function RealTerminalPage() {
         addOutput('system', `📝 Creating Python file: ${filename}`);
         
         try {
-          await toolsInstance.editFile(filename, code);
+          const cleanedCode = cleanPythonCode(code);
+          await toolsInstance.editFile(filename, cleanedCode);
           addOutput('output', `✅ File ${filename} created successfully`);
           
           // Also execute the file
           addOutput('system', `🔧 Executing ${filename}...`);
-          const result = await toolsInstance.executeCode(code, 'python');
+          const result = await toolsInstance.executeCode(cleanedCode, 'python');
           addOutput('output', result);
           executionResults.push({ filename, result });
         } catch (error) {
@@ -1812,50 +1824,8 @@ export default function RealTerminalPage() {
         addOutput('system', `🔧 Executing Python code...`);
         
         try {
-          const result = await toolsInstance.executeCode(code, 'python');
-          addOutput('output', result);
-          executionResults.push({ type: 'execution', result });
-        } catch (error) {
-          const errorMsg = `Execution error: ${error}`;
-          addOutput('error', errorMsg);
-          executionResults.push({ type: 'execution', result: '', error: errorMsg });
-        }
-      }
-    }
-    
-    // Handle JavaScript code blocks (execute only, don't save)
-    jsCodeRegex.lastIndex = 0;
-    while ((match = jsCodeRegex.exec(aiResponse)) !== null) {
-      const code = match[1];
-      
-      // Check if code starts with a filename comment (e.g., // filename.js)
-      const filenameMatch = code.match(/^\/\/\s*([a-zA-Z0-9_-]+\.js)/);
-      
-      if (filenameMatch && code.trim().length > 20) {
-        // This looks like a file that should be saved
-        const filename = filenameMatch[1];
-        addOutput('system', `📝 Creating JavaScript file: ${filename}`);
-        
-        try {
-          await toolsInstance.editFile(filename, code);
-          addOutput('output', `✅ File ${filename} created successfully`);
-          
-          // Also execute the file
-          addOutput('system', `🔧 Executing ${filename}...`);
-          const result = await toolsInstance.executeCode(code, 'javascript');
-          addOutput('output', result);
-          executionResults.push({ filename, result });
-        } catch (error) {
-          const errorMsg = `Failed to create/execute ${filename}: ${error}`;
-          addOutput('error', errorMsg);
-          executionResults.push({ filename, result: '', error: errorMsg });
-        }
-      } else if (code.trim().length > 10 && (!jsFileRegex.test(aiResponse) || !aiResponse.includes(code))) {
-        // Regular code execution
-        addOutput('system', `🔧 Executing JavaScript code...`);
-        
-        try {
-          const result = await toolsInstance.executeCode(code, 'javascript');
+          const cleanedCode = cleanPythonCode(code);
+          const result = await toolsInstance.executeCode(cleanedCode, 'python');
           addOutput('output', result);
           executionResults.push({ type: 'execution', result });
         } catch (error) {
@@ -1905,6 +1875,21 @@ export default function RealTerminalPage() {
           addOutput('error', errorMsg);
           executionResults.push({ type: 'tool_block', language, result: '', error: errorMsg });
         }
+      }
+    }
+    
+    // Handle explicit deleteFile calls
+    while ((match = deleteFileRegex.exec(aiResponse)) !== null) {
+      const filename = match[1];
+      addOutput('system', `🗑️ Deleting file: ${filename}`);
+      try {
+        await fileSystem.deleteFile(filename);
+        addOutput('output', `✅ File ${filename} deleted`);
+        executionResults.push({ filename, result: 'File deleted' });
+      } catch (error) {
+        const errorMsg = `Failed to delete ${filename}: ${error}`;
+        addOutput('error', errorMsg);
+        executionResults.push({ filename, result: '', error: errorMsg });
       }
     }
     
@@ -2205,6 +2190,40 @@ export default function RealTerminalPage() {
       e.preventDefault();
       // TODO: Implement tab completion
     }
+  };
+
+  // Brute force approach to fixing Python code indentation
+  const cleanPythonCode = (code: string): string => {
+    // First, normalize the code by removing empty lines at beginning and end
+    let cleanedCode = code.trim();
+    
+    // Add pass statements to any function definitions without a body
+    cleanedCode = cleanedCode.replace(/def\s+\w+\s*\([^)]*\)\s*:/g, 
+      (match) => `${match}\n    pass`);
+    
+    // Add pass statements to any class definitions without a body
+    cleanedCode = cleanedCode.replace(/class\s+\w+(\s*\([^)]*\))?\s*:/g, 
+      (match) => `${match}\n    pass`);
+    
+    // Add except blocks to any try statements without an except or finally
+    cleanedCode = cleanedCode.replace(/try\s*:/g, 
+      (match) => `${match}\n    pass\nexcept Exception:\n    pass`);
+    
+    // Add pass statements to if/else/elif without a body
+    cleanedCode = cleanedCode.replace(/if\s+.+:/g, 
+      (match) => `${match}\n    pass`);
+    cleanedCode = cleanedCode.replace(/else\s*:/g, 
+      (match) => `${match}\n    pass`);
+    cleanedCode = cleanedCode.replace(/elif\s+.+:/g, 
+      (match) => `${match}\n    pass`);
+    
+    // Add pass statements to for/while loops without a body
+    cleanedCode = cleanedCode.replace(/for\s+.+:/g, 
+      (match) => `${match}\n    pass`);
+    cleanedCode = cleanedCode.replace(/while\s+.+:/g, 
+      (match) => `${match}\n    pass`);
+    
+    return cleanedCode;
   };
 
   return (

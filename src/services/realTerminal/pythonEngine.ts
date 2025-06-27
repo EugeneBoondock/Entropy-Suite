@@ -65,9 +65,10 @@ output_capture = OutputCapture()
     await this.initialize();
 
     try {
-      // Set working directory
+      // Set working directory, creating it if it doesn't exist
       this.pyodide.runPython(`
 import os
+os.makedirs('${workingDir}', exist_ok=True)
 os.chdir('${workingDir}')
 output_capture.clear()
       `);
@@ -250,7 +251,13 @@ output_capture.get_output()
 
   async saveToFile(filename: string, content: string): Promise<void> {
     await this.initialize();
-    
+
+    // Create directories if they don't exist
+    const path = filename.substring(0, filename.lastIndexOf('/'));
+    if (path) {
+      this.pyodide.FS.mkdirTree(path);
+    }
+
     this.pyodide.FS.writeFile(filename, content);
   }
 

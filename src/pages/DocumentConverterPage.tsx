@@ -27,48 +27,48 @@ const DocumentConverterPage: React.FC = () => {
       if (uniqueExtensions.length === 1) {
         // Single file type - use original logic
         const extension = uniqueExtensions[0];
-        switch(extension) {
-          case 'docx':
+      switch(extension) {
+        case 'docx':
             commonFormats = ['txt', 'html', 'pdf', 'pptx'];
-            break;
-          case 'png':
-          case 'jpg':
-          case 'jpeg':
-          case 'webp':
+          break;
+        case 'png':
+        case 'jpg':
+        case 'jpeg':
+        case 'webp':
             commonFormats = ['pdf', 'docx', 'png', 'jpg', 'webp'];
-            break;
-          case 'txt':
+          break;
+        case 'txt':
             commonFormats = ['pdf', 'docx', 'html'];
-            break;
-          case 'json':
+          break;
+        case 'json':
             commonFormats = ['csv'];
-            break;
-          case 'csv':
+          break;
+        case 'csv':
             commonFormats = ['json', 'xlsx'];
-            break;
-          case 'md':
+          break;
+        case 'md':
             commonFormats = ['html', 'pdf'];
-            break;
-          case 'pdf':
+          break;
+        case 'pdf':
             commonFormats = ['jpg', 'png'];
-            break;
-          case 'xlsx':
+          break;
+        case 'xlsx':
             commonFormats = ['csv'];
-            break;
-          case 'svg':
+          break;
+        case 'svg':
             commonFormats = ['png'];
-            break;
-          case 'xml':
+          break;
+        case 'xml':
             commonFormats = ['json'];
             break;
           case 'mov':
             commonFormats = ['mp4'];
-            break;
-          default:
+          break;
+        default:
             commonFormats = [];
-            setError(`File type ".${extension}" is not supported.`);
-            break;
-        }
+          setError(`File type ".${extension}" is not supported.`);
+          break;
+      }
       } else {
         // Multiple file types - for now, we'll convert each to its most common format
         commonFormats = ['pdf', 'png', 'jpg', 'html', 'txt'];
@@ -138,7 +138,7 @@ const DocumentConverterPage: React.FC = () => {
     return (
       <div className="space-y-2">
         {files.map((file, index) => {
-          const extension = file.name.split('.').pop()?.toLowerCase();
+    const extension = file.name.split('.').pop()?.toLowerCase();
           return (
             <div key={index} className="flex items-center gap-4 p-3 bg-gray-50 rounded-md">
               {renderFileIcon(extension)}
