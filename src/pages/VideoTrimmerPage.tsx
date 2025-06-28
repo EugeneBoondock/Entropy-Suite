@@ -237,303 +237,325 @@ const VideoTrimmerPage: React.FC = () => {
   };
 
   return (
-    <div className="flex size-full min-h-screen flex-col bg-[#f6f0e4]" style={{ fontFamily: '"Space Grotesk", "Noto Sans", sans-serif' }}>
-      <Navbar />
-      
-      <main className="flex-1 px-4 sm:px-10 md:px-20 lg:px-40 py-5">
-        <div className="max-w-4xl mx-auto">
-          {/* Header */}
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h1 className="text-[#382f29] text-3xl font-bold">Video Trimmer</h1>
-              <p className="text-[#b8a99d] text-lg mt-2">Trim videos to specific lengths with precision</p>
-            </div>
-            
-            {videoFile && (
-              <button
-                onClick={downloadTrimmedVideo}
-                disabled={isProcessing || trimSettings.duration <= 0}
-                className="px-4 py-2 bg-[#382f29] text-white rounded-lg hover:bg-[#4a3f37] disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center gap-2"
-              >
-                {isProcessing ? (
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                ) : (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                )}
-                {isProcessing ? 'Processing...' : 'Download Trimmed'}
-              </button>
-            )}
-          </div>
-
-          {/* Upload Area */}
-          {!videoFile && (
-            <div
-              className={`border-2 border-dashed rounded-xl p-12 text-center transition-colors duration-200 mb-6 ${
-                dragActive 
-                  ? 'border-[#382f29] bg-[#382f29]/5' 
-                  : 'border-[#e0d5c7] hover:border-[#382f29] hover:bg-[#382f29]/5'
-              }`}
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-            >
-              <div className="space-y-4">
-                <svg className="mx-auto w-16 h-16 text-[#b8a99d]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-                
-                <div>
-                  <p className="text-xl font-semibold text-[#382f29] mb-2">
-                    {dragActive ? 'Drop video here' : 'Drag and drop video here'}
-                  </p>
-                  <p className="text-[#b8a99d] mb-4">or</p>
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="px-6 py-3 bg-[#382f29] text-white rounded-lg hover:bg-[#4a3f37] transition-colors duration-200"
-                  >
-                    Select Video
-                  </button>
-                </div>
-                
-                <p className="text-sm text-[#b8a99d]">
-                  Supports: MP4, MOV, AVI, WebM (Max 500MB)
-                </p>
+    <div 
+      className="min-h-screen bg-cover bg-center bg-fixed"
+      style={{
+        backgroundImage: "url('/images/bg_image.png')",
+        fontFamily: '"Space Grotesk", "Noto Sans", sans-serif'
+      }}
+    >
+      {/* Background overlay */}
+      <div className="min-h-screen bg-black/10">
+        <Navbar />
+        
+        {/* Spacer for fixed navbar */}
+        <div className="h-16"></div>
+        
+        <main className="px-4 sm:px-10 md:px-20 lg:px-40 py-8">
+          <div className="max-w-4xl mx-auto">
+            {/* Header */}
+            <div className="flex justify-between items-center mb-8">
+              <div className="bg-white/20 backdrop-blur-md border border-white/30 rounded-2xl p-6 shadow-xl">
+                <h1 className="text-white text-3xl font-bold mb-2">Video Trimmer</h1>
+                <p className="text-white/80 text-lg">Trim videos to specific lengths with precision</p>
               </div>
               
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="video/*"
-                onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])}
-                className="hidden"
-              />
+              {videoFile && (
+                <button
+                  onClick={downloadTrimmedVideo}
+                  disabled={isProcessing || trimSettings.duration <= 0}
+                  className="bg-white/20 backdrop-blur-md border border-white/30 rounded-2xl px-6 py-3 text-white hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center gap-3 shadow-xl"
+                >
+                  {isProcessing ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  )}
+                  {isProcessing ? 'Processing...' : 'Download Trimmed'}
+                </button>
+              )}
             </div>
-          )}
 
-          {/* Error Display */}
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 flex items-center justify-between">
-              {error}
-              <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          )}
-
-          {/* Video Player */}
-          {videoFile && (
-            <div className="bg-white rounded-xl border border-[#e0d5c7] overflow-hidden shadow-lg mb-6">
-              <div className="bg-black relative">
-                <video
-                  ref={videoRef}
-                  src={videoUrl}
-                  className="w-full aspect-video object-contain"
-                  onPlay={() => setIsPlaying(true)}
-                  onPause={() => setIsPlaying(false)}
-                />
-                
-                {/* Play/Pause Overlay */}
-                <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={togglePlayPause}
-                    className="bg-white/20 hover:bg-white/30 rounded-full p-4 transition-colors"
-                  >
-                    {isPlaying ? (
-                      <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
-                      </svg>
-                    ) : (
-                      <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8 5v14l11-7z"/>
-                      </svg>
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* Video Info */}
-              <div className="p-4 border-b border-[#e0d5c7]">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="font-semibold text-[#382f29]">{videoFile.name}</h3>
-                    <p className="text-sm text-[#b8a99d]">
-                      {formatFileSize(videoFile.size)} • {formatTime(duration)}
+            {/* Upload Area */}
+            {!videoFile && (
+              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-12 mb-8 shadow-xl">
+                <div
+                  className={`border-2 border-dashed rounded-xl p-12 text-center transition-all duration-300 ${
+                    dragActive 
+                      ? 'border-white/60 bg-white/10' 
+                      : 'border-white/30 hover:border-white/50 hover:bg-white/5'
+                  }`}
+                  onDrop={handleDrop}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                >
+                  <div className="space-y-6">
+                    <svg className="mx-auto w-16 h-16 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    
+                    <div>
+                      <p className="text-xl font-semibold text-white mb-3">
+                        {dragActive ? 'Drop video here' : 'Drag and drop video here'}
+                      </p>
+                      <p className="text-white/70 mb-6">or</p>
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="bg-white/20 backdrop-blur-md border border-white/30 rounded-xl px-8 py-4 text-white hover:bg-white/30 transition-all duration-300 font-medium"
+                      >
+                        Select Video
+                      </button>
+                    </div>
+                    
+                    <p className="text-sm text-white/60">
+                      Supports: MP4, MOV, AVI, WebM (Max 500MB)
                     </p>
                   </div>
-                  <button
-                    onClick={() => {
-                      setVideoFile(null);
-                      setVideoUrl('');
-                      setTrimSettings({ startTime: 0, endTime: 0, duration: 0 });
-                    }}
-                    className="px-3 py-1 text-sm border border-[#e0d5c7] text-[#382f29] rounded hover:bg-[#f1f1f1] transition-colors"
-                  >
-                    Remove
-                  </button>
+                  
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="video/*"
+                    onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])}
+                    className="hidden"
+                  />
                 </div>
               </div>
+            )}
 
-              {/* Timeline */}
-              <div className="p-4">
-                <div className="mb-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-[#382f29]">Timeline</span>
-                    <span className="text-sm text-[#b8a99d]">{formatTime(currentTime)} / {formatTime(duration)}</span>
-                  </div>
-                  
-                  <div
-                    ref={timelineRef}
-                    className="relative h-2 bg-[#e0d5c7] rounded-full cursor-pointer"
-                    onClick={handleTimelineClick}
-                  >
-                    {/* Trim range */}
-                    <div
-                      className="absolute h-full bg-[#382f29]/30 rounded-full"
-                      style={{
-                        left: `${(trimSettings.startTime / duration) * 100}%`,
-                        width: `${((trimSettings.endTime - trimSettings.startTime) / duration) * 100}%`
-                      }}
-                    />
-                    
-                    {/* Current position */}
-                    <div
-                      className="absolute top-0 w-1 h-full bg-[#382f29] rounded-full transform -translate-x-0.5"
-                      style={{ left: `${(currentTime / duration) * 100}%` }}
-                    />
-                    
-                    {/* Trim markers */}
-                    <div
-                      className="absolute top-0 w-3 h-full bg-green-500 rounded-full transform -translate-x-1.5 cursor-move"
-                      style={{ left: `${(trimSettings.startTime / duration) * 100}%` }}
-                      title="Start time"
-                    />
-                    <div
-                      className="absolute top-0 w-3 h-full bg-red-500 rounded-full transform -translate-x-1.5 cursor-move"
-                      style={{ left: `${(trimSettings.endTime / duration) * 100}%` }}
-                      title="End time"
-                    />
-                  </div>
+            {/* Error Display */}
+            {error && (
+              <div className="bg-red-500/20 backdrop-blur-md border border-red-500/30 text-white px-6 py-4 rounded-2xl mb-8 flex items-center justify-between shadow-xl">
+                <div className="flex items-center gap-3">
+                  <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {error}
                 </div>
+                <button 
+                  onClick={() => setError(null)} 
+                  className="text-white/70 hover:text-white transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            )}
 
-                {/* Controls */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+            {/* Video Player */}
+            {videoFile && (
+              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl overflow-hidden shadow-xl mb-8">
+                <div className="bg-black relative">
+                  <video
+                    ref={videoRef}
+                    src={videoUrl}
+                    className="w-full aspect-video object-contain"
+                    onPlay={() => setIsPlaying(true)}
+                    onPause={() => setIsPlaying(false)}
+                  />
+                  
+                  {/* Play/Pause Overlay */}
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 hover:opacity-100 transition-opacity">
                     <button
                       onClick={togglePlayPause}
-                      className="p-2 bg-[#382f29] text-white rounded-lg hover:bg-[#4a3f37] transition-colors"
+                      className="bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-full p-4 transition-all duration-300"
                     >
                       {isPlaying ? (
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
                         </svg>
                       ) : (
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M8 5v14l11-7z"/>
                         </svg>
                       )}
                     </button>
+                  </div>
+                </div>
+
+                {/* Video Info */}
+                <div className="p-6 border-b border-white/10">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h3 className="font-semibold text-white text-lg">{videoFile.name}</h3>
+                      <p className="text-white/70 mt-1">
+                        {formatFileSize(videoFile.size)} • {formatTime(duration)}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setVideoFile(null);
+                        setVideoUrl('');
+                        setTrimSettings({ startTime: 0, endTime: 0, duration: 0 });
+                      }}
+                      className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2 text-white hover:bg-white/20 transition-all duration-300"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+
+                {/* Timeline */}
+                <div className="p-6">
+                  <div className="mb-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="text-white font-medium">Timeline</span>
+                      <span className="text-white/70">{formatTime(currentTime)} / {formatTime(duration)}</span>
+                    </div>
                     
-                    <div className="flex items-center gap-2">
+                    <div
+                      ref={timelineRef}
+                      className="relative h-3 bg-white/20 rounded-full cursor-pointer backdrop-blur-md"
+                      onClick={handleTimelineClick}
+                    >
+                      {/* Trim range */}
+                      <div
+                        className="absolute h-full bg-blue-400/50 rounded-full"
+                        style={{
+                          left: `${(trimSettings.startTime / duration) * 100}%`,
+                          width: `${((trimSettings.endTime - trimSettings.startTime) / duration) * 100}%`
+                        }}
+                      />
+                      
+                      {/* Current position */}
+                      <div
+                        className="absolute top-0 w-1 h-full bg-white rounded-full transform -translate-x-0.5"
+                        style={{ left: `${(currentTime / duration) * 100}%` }}
+                      />
+                      
+                      {/* Trim markers */}
+                      <div
+                        className="absolute top-0 w-4 h-full bg-green-400 rounded-full transform -translate-x-2 cursor-move shadow-lg"
+                        style={{ left: `${(trimSettings.startTime / duration) * 100}%` }}
+                        title="Start time"
+                      />
+                      <div
+                        className="absolute top-0 w-4 h-full bg-red-400 rounded-full transform -translate-x-2 cursor-move shadow-lg"
+                        style={{ left: `${(trimSettings.endTime / duration) * 100}%` }}
+                        title="End time"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Controls */}
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-4">
                       <button
-                        onClick={() => seekTo(Math.max(0, currentTime - 5))}
-                        className="px-2 py-1 text-sm border border-[#e0d5c7] text-[#382f29] rounded hover:bg-[#f1f1f1] transition-colors"
+                        onClick={togglePlayPause}
+                        className="bg-white/20 backdrop-blur-md border border-white/30 rounded-xl p-3 text-white hover:bg-white/30 transition-all duration-300"
                       >
-                        -5s
+                        {isPlaying ? (
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                          </svg>
+                        ) : (
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z"/>
+                          </svg>
+                        )}
+                      </button>
+                      
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => seekTo(Math.max(0, currentTime - 5))}
+                          className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg px-3 py-2 text-white hover:bg-white/20 transition-all duration-300 text-sm"
+                        >
+                          -5s
+                        </button>
+                        <button
+                          onClick={() => seekTo(Math.min(duration, currentTime + 5))}
+                          className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg px-3 py-2 text-white hover:bg-white/20 transition-all duration-300 text-sm"
+                        >
+                          +5s
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={setTrimStart}
+                        className="bg-green-500/20 backdrop-blur-md border border-green-400/30 rounded-xl px-4 py-2 text-green-100 hover:bg-green-500/30 transition-all duration-300 flex items-center gap-2"
+                      >
+                        <span className="w-2 h-2 bg-green-400 rounded-full"></span>
+                        Set Start
                       </button>
                       <button
-                        onClick={() => seekTo(Math.min(duration, currentTime + 5))}
-                        className="px-2 py-1 text-sm border border-[#e0d5c7] text-[#382f29] rounded hover:bg-[#f1f1f1] transition-colors"
+                        onClick={setTrimEnd}
+                        className="bg-red-500/20 backdrop-blur-md border border-red-400/30 rounded-xl px-4 py-2 text-red-100 hover:bg-red-500/30 transition-all duration-300 flex items-center gap-2"
                       >
-                        +5s
+                        <span className="w-2 h-2 bg-red-400 rounded-full"></span>
+                        Set End
+                      </button>
+                      <button
+                        onClick={resetTrim}
+                        className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2 text-white hover:bg-white/20 transition-all duration-300"
+                      >
+                        Reset
                       </button>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={setTrimStart}
-                      className="px-3 py-1 text-sm bg-green-100 text-green-700 border border-green-200 rounded hover:bg-green-200 transition-colors flex items-center gap-1"
-                    >
-                      <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                      Set Start
-                    </button>
-                    <button
-                      onClick={setTrimEnd}
-                      className="px-3 py-1 text-sm bg-red-100 text-red-700 border border-red-200 rounded hover:bg-red-200 transition-colors flex items-center gap-1"
-                    >
-                      <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-                      Set End
-                    </button>
-                    <button
-                      onClick={resetTrim}
-                      className="px-3 py-1 text-sm border border-[#e0d5c7] text-[#382f29] rounded hover:bg-[#f1f1f1] transition-colors"
-                    >
-                      Reset
-                    </button>
-                  </div>
-                </div>
-
-                {/* Trim Info */}
-                <div className="mt-4 p-3 bg-[#f1f1f1] rounded-lg">
-                  <div className="grid grid-cols-3 gap-4 text-sm">
-                    <div>
-                      <span className="text-[#b8a99d]">Start: </span>
-                      <span className="font-medium text-[#382f29]">{formatTime(trimSettings.startTime)}</span>
-                    </div>
-                    <div>
-                      <span className="text-[#b8a99d]">End: </span>
-                      <span className="font-medium text-[#382f29]">{formatTime(trimSettings.endTime)}</span>
-                    </div>
-                    <div>
-                      <span className="text-[#b8a99d]">Duration: </span>
-                      <span className="font-medium text-[#382f29]">{formatTime(trimSettings.duration)}</span>
+                  {/* Trim Info */}
+                  <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-4">
+                    <div className="grid grid-cols-3 gap-6 text-sm">
+                      <div className="text-center">
+                        <span className="text-white/70 block mb-1">Start</span>
+                        <span className="font-medium text-white text-lg">{formatTime(trimSettings.startTime)}</span>
+                      </div>
+                      <div className="text-center">
+                        <span className="text-white/70 block mb-1">End</span>
+                        <span className="font-medium text-white text-lg">{formatTime(trimSettings.endTime)}</span>
+                      </div>
+                      <div className="text-center">
+                        <span className="text-white/70 block mb-1">Duration</span>
+                        <span className="font-medium text-white text-lg">{formatTime(trimSettings.duration)}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Features Info */}
-          {!videoFile && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="text-center p-6">
-                <div className="w-12 h-12 bg-[#382f29] rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M12 5v.01M12 19v.01M12 9a3 3 0 003-3V5a3 3 0 00-6 0v1a3 3 0 003 3z" />
-                  </svg>
+            {/* Features Info */}
+            {!videoFile && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8 text-center shadow-xl">
+                  <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M12 5v.01M12 19v.01M12 9a3 3 0 003-3V5a3 3 0 00-6 0v1a3 3 0 003 3z" />
+                    </svg>
+                  </div>
+                  <h3 className="font-semibold text-white text-xl mb-3">Precise Trimming</h3>
+                  <p className="text-white/70">Set exact start and end points with frame-level precision</p>
                 </div>
-                <h3 className="font-semibold text-[#382f29] mb-2">Precise Trimming</h3>
-                <p className="text-[#b8a99d] text-sm">Set exact start and end points with frame-level precision</p>
-              </div>
-              
-              <div className="text-center p-6">
-                <div className="w-12 h-12 bg-[#382f29] rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
+                
+                <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8 text-center shadow-xl">
+                  <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <h3 className="font-semibold text-white text-xl mb-3">Real-time Preview</h3>
+                  <p className="text-white/70">See your changes instantly with built-in video player</p>
                 </div>
-                <h3 className="font-semibold text-[#382f29] mb-2">Real-time Preview</h3>
-                <p className="text-[#b8a99d] text-sm">See your changes instantly with built-in video player</p>
-              </div>
-              
-              <div className="text-center p-6">
-                <div className="w-12 h-12 bg-[#382f29] rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
+                
+                <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8 text-center shadow-xl">
+                  <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <h3 className="font-semibold text-white text-xl mb-3">Easy Export</h3>
+                  <p className="text-white/70">Download your trimmed video in high quality</p>
                 </div>
-                <h3 className="font-semibold text-[#382f29] mb-2">Easy Export</h3>
-                <p className="text-[#b8a99d] text-sm">Download your trimmed video in high quality</p>
               </div>
-            </div>
-          )}
-        </div>
-      </main>
+            )}
+          </div>
+        </main>
+      </div>
     </div>
   );
 };
