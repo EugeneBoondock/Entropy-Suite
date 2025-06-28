@@ -95,7 +95,7 @@ const BlogPostPage: React.FC = () => {
     return content
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/`(.*?)`/g, '<code class="bg-black/20 px-2 py-1 rounded text-emerald-300">$1</code>')
+      .replace(/`(.*?)`/g, '<code class="bg-black/20 px-2 py-1 rounded text-blue-200">$1</code>')
       .replace(/\n\n/g, '</p><p class="mb-4">')
       .replace(/\n/g, '<br/>');
   };
@@ -138,7 +138,7 @@ const BlogPostPage: React.FC = () => {
                 <p className="text-white/80 mb-8">The blog post you're looking for doesn't exist or has been removed.</p>
                 <Link
                   to="/blog"
-                  className="bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200"
+                  className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200"
                 >
                   Back to Blog
                 </Link>
@@ -199,7 +199,7 @@ const BlogPostPage: React.FC = () => {
                     <div className="flex gap-2 ml-4">
                       <Link
                         to={`/blog/edit/${post.id}`}
-                        className="bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 px-3 py-2 rounded-lg text-sm transition-colors"
+                        className="bg-blue-500/20 text-blue-200 hover:bg-blue-500/30 px-3 py-2 rounded-lg text-sm transition-colors"
                       >
                         Edit Post
                       </Link>
@@ -213,7 +213,7 @@ const BlogPostPage: React.FC = () => {
                     {post.tags.map((tag, index) => (
                       <span
                         key={index}
-                        className="px-3 py-1 bg-emerald-500/20 text-emerald-300 text-sm rounded-full"
+                        className="px-3 py-1 bg-blue-500/30 text-blue-100 text-sm rounded-full border border-blue-400/30"
                       >
                         {tag}
                       </span>
@@ -254,7 +254,7 @@ const BlogPostPage: React.FC = () => {
                         {relatedPost.tags.slice(0, 2).map((tag, index) => (
                           <span
                             key={index}
-                            className="px-2 py-1 bg-emerald-500/20 text-emerald-300 text-xs rounded-full"
+                            className="px-2 py-1 bg-blue-500/30 text-blue-100 text-xs rounded-full border border-blue-400/30"
                           >
                             {tag}
                           </span>
@@ -271,7 +271,7 @@ const BlogPostPage: React.FC = () => {
               <h2 className="text-2xl font-bold text-white mb-4">Comments</h2>
               <p className="text-white/60">
                 Comments feature coming soon! For now, feel free to reach out via the{' '}
-                <Link to="/contact" className="text-emerald-300 hover:text-emerald-200">
+                <Link to="/contact" className="text-blue-200 hover:text-blue-100">
                   contact page
                 </Link>{' '}
                 with your thoughts and feedback.

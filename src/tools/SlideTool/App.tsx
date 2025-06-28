@@ -767,6 +767,7 @@ const App: React.FC = () => (
       <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/notes" element={<NotesPage />} />
       <Route path="/blog" element={<BlogPage />} />
+      <Route path="/blog/edit/:id" element={<BlogPage />} />
       <Route path="/blog/:id" element={<BlogPostPage />} />
       <Route path="/login" element={<LoginPage />} />
       </Routes>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../utils/supabaseClient';
 import Navbar from '../components/Navbar';
 
@@ -18,6 +18,8 @@ interface BlogPost {
 }
 
 const BlogPage: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,6 +42,40 @@ const BlogPage: React.FC = () => {
     checkUser();
     fetchPosts();
   }, []);
+
+  // Handle edit mode when accessing via URL
+  useEffect(() => {
+    if (id && user?.email === ADMIN_EMAIL) {
+      // We're in edit mode, fetch the post and show editor
+      fetchPostForEdit(id);
+    }
+  }, [id, user]);
+
+  const fetchPostForEdit = async (postId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .select('*')
+        .eq('id', postId)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setEditingPost(data);
+        setTitle(data.title);
+        setContent(data.content);
+        setExcerpt(data.excerpt);
+        setTags(data.tags.join(', '));
+        setPublished(data.published);
+        setShowEditor(true);
+      }
+    } catch (error) {
+      console.error('Error fetching post for edit:', error);
+      alert('Error loading post for editing');
+      navigate('/blog');
+    }
+  };
 
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -130,6 +166,11 @@ const BlogPage: React.FC = () => {
       }
 
       alert(editingPost ? 'Post updated successfully!' : 'Post created successfully!');
+      
+      // If we were editing via URL, navigate back to blog main page
+      if (id) {
+        navigate('/blog');
+      }
     } catch (error) {
       console.error('Error saving post:', error);
       alert('Error saving post. Please try again.');
@@ -239,6 +280,10 @@ const BlogPage: React.FC = () => {
                       setExcerpt('');
                       setTags('');
                       setPublished(false);
+                      // If we were editing via URL, navigate back to blog main page
+                      if (id) {
+                        navigate('/blog');
+                      }
                     }}
                     className="text-white/60 hover:text-white transition-colors"
                   >
@@ -255,7 +300,7 @@ const BlogPage: React.FC = () => {
                       type="text"
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
-                      className="w-full px-4 py-3 bg-black/20 border border-white/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full px-4 py-3 bg-black/20 border border-white/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400"
                       placeholder="Enter post title..."
                     />
                   </div>
@@ -268,7 +313,7 @@ const BlogPage: React.FC = () => {
                       value={excerpt}
                       onChange={(e) => setExcerpt(e.target.value)}
                       rows={3}
-                      className="w-full px-4 py-3 bg-black/20 border border-white/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full px-4 py-3 bg-black/20 border border-white/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400"
                       placeholder="Brief description of the post..."
                     />
                   </div>
@@ -281,7 +326,7 @@ const BlogPage: React.FC = () => {
                       value={content}
                       onChange={(e) => setContent(e.target.value)}
                       rows={15}
-                      className="w-full px-4 py-3 bg-black/20 border border-white/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full px-4 py-3 bg-black/20 border border-white/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400"
                       placeholder="Write your post content here... (Markdown supported)"
                     />
                   </div>
@@ -294,7 +339,7 @@ const BlogPage: React.FC = () => {
                       type="text"
                       value={tags}
                       onChange={(e) => setTags(e.target.value)}
-                      className="w-full px-4 py-3 bg-black/20 border border-white/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full px-4 py-3 bg-black/20 border border-white/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400"
                       placeholder="AI, Technology, Productivity..."
                     />
                   </div>
@@ -305,7 +350,7 @@ const BlogPage: React.FC = () => {
                       id="published"
                       checked={published}
                       onChange={(e) => setPublished(e.target.checked)}
-                      className="mr-3 text-emerald-600 focus:ring-emerald-500"
+                      className="mr-3 text-blue-500 focus:ring-blue-400"
                     />
                     <label htmlFor="published" className="text-white/80">
                       Publish immediately
@@ -316,7 +361,7 @@ const BlogPage: React.FC = () => {
                     <button
                       onClick={handleSavePost}
                       disabled={saving}
-                      className="bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 disabled:opacity-50"
+                      className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 disabled:opacity-50"
                     >
                       {saving ? 'Saving...' : (editingPost ? 'Update Post' : 'Save Post')}
                     </button>
@@ -324,6 +369,15 @@ const BlogPage: React.FC = () => {
                       onClick={() => {
                         setShowEditor(false);
                         setEditingPost(null);
+                        setTitle('');
+                        setContent('');
+                        setExcerpt('');
+                        setTags('');
+                        setPublished(false);
+                        // If we were editing via URL, navigate back to blog main page
+                        if (id) {
+                          navigate('/blog');
+                        }
                       }}
                       className="bg-gray-500/50 hover:bg-gray-500/70 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200"
                     >
@@ -365,7 +419,7 @@ const BlogPage: React.FC = () => {
                   <h2 className="text-xl font-semibold text-white">Admin Panel</h2>
                   <button
                     onClick={() => setShowEditor(true)}
-                    className="bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-semibold py-2 px-6 rounded-lg transition-all duration-200"
+                    className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition-all duration-200"
                   >
                     + New Post
                   </button>
@@ -382,14 +436,14 @@ const BlogPage: React.FC = () => {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Search posts..."
-                    className="w-full px-4 py-3 bg-black/20 border border-white/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full px-4 py-3 bg-black/20 border border-white/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400"
                   />
                 </div>
                 <div className="md:w-48">
                   <select
                     value={selectedTag}
                     onChange={(e) => setSelectedTag(e.target.value)}
-                    className="w-full px-4 py-3 bg-black/20 border border-white/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full px-4 py-3 bg-black/20 border border-white/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
                   >
                     <option value="">All Tags</option>
                     {allTags.map(tag => (
@@ -434,7 +488,7 @@ const BlogPage: React.FC = () => {
                           <div className="flex gap-2 ml-4">
                             <button
                               onClick={() => handleEditPost(post)}
-                              className="text-emerald-300 hover:text-emerald-200 text-sm"
+                              className="text-blue-200 hover:text-blue-100 text-sm"
                               title="Edit"
                             >
                               ✏️
@@ -466,7 +520,7 @@ const BlogPage: React.FC = () => {
                           {post.tags.map((tag, index) => (
                             <span
                               key={index}
-                              className="px-2 py-1 bg-emerald-500/20 text-emerald-300 text-xs rounded-full"
+                              className="px-2 py-1 bg-blue-500/30 text-blue-100 text-xs rounded-full border border-blue-400/30"
                             >
                               {tag}
                             </span>
@@ -476,7 +530,7 @@ const BlogPage: React.FC = () => {
 
                       <Link
                         to={`/blog/${post.id}`}
-                        className="inline-flex items-center text-emerald-300 hover:text-emerald-200 font-medium transition-colors"
+                        className="inline-flex items-center text-blue-200 hover:text-blue-100 font-medium transition-colors"
                       >
                         Read More →
                       </Link>
