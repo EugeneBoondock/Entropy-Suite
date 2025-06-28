@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Theme } from '../types'; // Import Theme type
 
 interface ToolbarProps {
@@ -104,80 +105,85 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                 )}
             </svg>
         </button>
-        <img 
-          src="/images/entropy_tools.png" 
-          alt="Entropy Suite Logo" 
-          className="w-7 h-7 md:w-8 md:h-8 mr-1 md:mr-2 object-contain"
-        />
-        <h1 className="text-xl md:text-2xl font-bold text-primary-700 dark:text-primary-400 hidden sm:block">Entropy Suite</h1>
+        <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
+          <img 
+            src="/images/entropy_tools.png" 
+            alt="Entropy Suite Logo" 
+            className="w-7 h-7 md:w-8 md:h-8 mr-1 md:mr-2 object-contain"
+          />
+          <h1 className="text-xl md:text-2xl font-bold text-primary-700 dark:text-primary-400 hidden sm:block">Entropy Suite</h1>
+        </Link>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex-grow flex items-center space-x-1 md:space-x-2 max-w-sm md:max-w-md xl:max-w-lg">
-        <input
-          type="text"
-          value={prompt}
-          onChange={(e) => {
-            setPrompt(e.target.value);
-            if (error) clearError();
-          }}
-          placeholder="Enter topic..."
-          className="flex-grow p-2 md:p-2.5 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-shadow text-sm bg-[#f7f0e4] dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
-          disabled={isLoading}
-          aria-label="Presentation topic prompt"
-        />
-        <button
-          type="submit"
-          className="px-3 py-2 md:px-3 md:py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-opacity-50 disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center text-xs sm:text-sm font-medium"
-          disabled={isLoading}
-          aria-label="Generate slides with AI"
-        >
-          {isLoading && !hasSlides ? ( // Initial generation
-            <>
-              <svg className="animate-spin -ml-1 mr-1 md:mr-1.5 h-4 w-4 md:h-5 md:w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      <div className="flex-grow flex flex-col md:flex-row items-stretch md:items-center space-y-2 md:space-y-0 space-x-0 md:space-x-2 max-w-xs sm:max-w-sm md:max-w-md xl:max-w-lg">
+        <form onSubmit={handleSubmit} className="flex items-center space-x-1 md:space-x-2 flex-grow">
+          <input
+            type="text"
+            value={prompt}
+            onChange={(e) => {
+              setPrompt(e.target.value);
+              if (error) clearError();
+            }}
+            placeholder="Enter topic..."
+            className="flex-grow p-2 md:p-2.5 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-shadow text-sm bg-[#f7f0e4] dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 min-w-0"
+            disabled={isLoading}
+            aria-label="Presentation topic prompt"
+          />
+          <button
+            type="submit"
+            className="px-2 py-2 md:px-3 md:py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-opacity-50 disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center text-xs sm:text-sm font-medium whitespace-nowrap"
+            disabled={isLoading}
+            aria-label="Generate slides with AI"
+          >
+            {isLoading && !hasSlides ? ( // Initial generation
+              <>
+                <svg className="animate-spin h-4 w-4 md:h-5 md:w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span className="hidden sm:inline ml-1.5">Generating...</span>
+              </>
+            ) : (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 md:w-5 md:h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z" />
+                </svg>
+                <span className="hidden sm:inline ml-1.5">Generate</span>
+              </>
+            )}
+          </button>
+        </form>
+        
+        {/* More button - only show when there are slides */}
+        {hasSlides && (
+          <button
+            type="button"
+            onClick={handleGenerateMore}
+            className="px-2 py-2 md:px-3 md:py-2.5 bg-sky-600 text-white rounded-lg hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-opacity-50 disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center text-xs sm:text-sm font-medium whitespace-nowrap"
+            disabled={isLoading}
+            title="Add more AI-generated slides"
+            aria-label="Add more AI-generated slides"
+          >
+           {isLoading && hasSlides ? ( // Generating more
+              <>
+                <svg className="animate-spin h-4 w-4 md:h-5 md:w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span className="hidden sm:inline ml-1.5">Adding...</span>
+              </>
+            ) : (
+              <>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 md:w-5 md:h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
               </svg>
-              <span className="hidden sm:inline">Generating...</span>
-              <span className="sm:hidden">AI...</span>
-            </>
-          ) : (
-            <>
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-1.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z" />
-              </svg>
-              <span className="hidden sm:inline">Generate</span>
-              <span className="sm:hidden">AI</span>
-            </>
-          )}
-        </button>
-        <button
-          type="button"
-          onClick={handleGenerateMore}
-          className="px-3 py-2 md:px-3 md:py-2.5 bg-sky-600 text-white rounded-lg hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-opacity-50 disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center text-xs sm:text-sm font-medium"
-          disabled={isLoading || !hasSlides}
-          title="Add more AI-generated slides"
-          aria-label="Add more AI-generated slides"
-        >
-         {isLoading && hasSlides ? ( // Generating more
-            <>
-              <svg className="animate-spin -ml-1 mr-1 md:mr-1.5 h-4 w-4 md:h-5 md:w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              <span className="hidden sm:inline">More...</span>
-              <span className="sm:hidden">More</span>
-            </>
-          ) : (
-            <>
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-1.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-            <span className="hidden sm:inline">More</span>
-            <span className="sm:hidden">+AI</span>
-            </>
-          )}
-        </button>
-      </form>
+              <span className="hidden sm:inline ml-1.5">More</span>
+              <span className="sm:hidden">+</span>
+              </>
+            )}
+          </button>
+        )}
+      </div>
 
       {/* Action buttons for medium screens and up */}
       <div className="hidden md:flex items-center space-x-1 md:space-x-1.5">
@@ -325,6 +331,28 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           </button>
           {showMobileActionsMenu && (
             <div className="absolute right-0 mt-2 w-56 bg-[#f7f0e4] dark:bg-slate-700 rounded-md shadow-lg py-1 z-50 border dark:border-slate-600">
+              {/* Navigation */}
+              <Link
+                to="/tools"
+                className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600 flex items-center"
+                onClick={() => setShowMobileActionsMenu(false)}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 mr-2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437 1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008Z" />
+                </svg>
+                All Tools
+              </Link>
+              <Link
+                to="/pricing"
+                className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600 flex items-center"
+                onClick={() => setShowMobileActionsMenu(false)}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 mr-2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12s-1.536-.219-2.121-.659c-1.172-.879-1.172-2.303 0-3.182C10.464 7.69 11.232 7.5 12 7.5s1.536.21 2.121.659" />
+                </svg>
+                Pricing
+              </Link>
+              <hr className="my-1 border-slate-200 dark:border-slate-600" />
               {/* Export (triggers existing export menu) */}
               <button
                 onClick={() => { setShowExportMenu(!showExportMenu); setShowMobileActionsMenu(false); }}

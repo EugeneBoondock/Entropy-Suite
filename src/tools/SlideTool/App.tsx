@@ -642,11 +642,16 @@ const EditorApp: React.FC = () => {
           ))}
         </aside>
 
-        <main className={`flex-1 p-3 md:p-6 overflow-y-auto bg-[#f7f0e4] dark:bg-slate-800 transition-colors duration-300 custom-scrollbar ${isSidebarVisible && window.innerWidth < 768 ? 'blur-sm pointer-events-none' : ''}`}>
+        <main className={`flex-1 p-3 md:p-6 overflow-y-auto bg-[#f7f0e4] dark:bg-slate-800 transition-colors duration-300 custom-scrollbar ${isSidebarVisible && typeof window !== 'undefined' && window.innerWidth < 768 ? 'blur-sm pointer-events-none' : ''}`}>
           {isLoading && !error && (
-            <div className="flex flex-col justify-center items-center h-full">
+            <div className="flex flex-col justify-center items-center h-full px-4">
               <LoadingSpinner />
-              <p className="ml-4 text-slate-700 dark:text-slate-300 text-xl mt-4">AI is crafting your slides...</p>
+              <p className="text-slate-700 dark:text-slate-300 text-lg md:text-xl mt-4 text-center">
+                {slides.length === 0 ? 'AI is crafting your slides...' : 'Adding more slides...'}
+              </p>
+              <p className="text-slate-500 dark:text-slate-400 text-sm mt-2 text-center">
+                This may take a moment
+              </p>
             </div>
           )}
           {!isLoading && slides.length === 0 && (
@@ -673,15 +678,40 @@ const EditorApp: React.FC = () => {
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-20 h-20 md:w-24 md:h-24 mb-4 text-slate-400 dark:text-slate-500">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 4.5v15m6-15v15m-10.875 0h15.75c.621 0 1.125-.504 1.125-1.125V5.625c0-.621-.504-1.125-1.125-1.125H4.125C3.504 4.5 3 5.004 3 5.625v12.75c0 .621.504 1.125 1.125 1.125Z" />
               </svg>
-              <h2 className="text-xl md:text-2xl font-semibold mb-2">Select a slide</h2>
-              <p className="text-center text-sm md:text-base">Choose a slide from the left panel to start editing.</p>
+              <h2 className="text-xl md:text-2xl font-semibold mb-2 text-center">Select a slide</h2>
+              <p className="text-center text-sm md:text-base">
+                Choose a slide from the {typeof window !== 'undefined' && window.innerWidth < 768 ? 'sidebar menu' : 'left panel'} to start editing.
+              </p>
+              {typeof window !== 'undefined' && window.innerWidth < 768 && (
+                <button
+                  onClick={() => setIsSidebarVisible(true)}
+                  className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm"
+                >
+                  Open Slides Menu
+                </button>
+              )}
+            </div>
+          )}
+          {error && (
+            <div className="flex flex-col justify-center items-center h-full text-red-600 dark:text-red-400 p-4">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-16 h-16 md:w-20 md:h-20 mb-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+              </svg>
+              <h2 className="text-xl md:text-2xl font-semibold mb-2 text-center">Something went wrong</h2>
+              <p className="text-center text-sm md:text-base mb-4 max-w-md">{error}</p>
+              <button
+                onClick={() => setError(null)}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+              >
+                Try Again
+              </button>
             </div>
           )}
         </main>
       </div>
-      {isSidebarVisible && window.innerWidth < 768 && (
+      {isSidebarVisible && typeof window !== 'undefined' && window.innerWidth < 768 && (
         <div 
-            className="fixed inset-0 bg-black/30 z-30 backdrop-blur-sm" 
+            className="fixed inset-0 bg-black/30 z-30 backdrop-blur-sm md:hidden" 
             onClick={() => setIsSidebarVisible(false)}
         ></div>
       )}
