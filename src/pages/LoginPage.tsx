@@ -39,16 +39,33 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-[#f6f0e4] via-[#e8dcc0] to-[#d4c4a8]">
-      <Navbar />
-      <main className="flex-1 flex justify-center items-center p-4">
-        <div className="bg-white/80 backdrop-blur-md border border-[#382f29]/20 rounded-lg shadow-2xl p-8 w-full max-w-md">
+    <div 
+      className="relative flex size-full min-h-screen flex-col bg-[#f6f0e4] group/design-root overflow-x-hidden"
+      style={{ 
+        fontFamily: '"Space Grotesk", "Noto Sans", sans-serif',
+        backgroundImage: 'url("/images/bg_image.png")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed'
+      }}
+    >
+      {/* Full page overlay for text readability */}
+      <div className="absolute inset-0 bg-black/10 pointer-events-none"></div>
+      
+      <div className="layout-container flex h-full grow flex-col relative z-10">
+        <Navbar />
+        {/* Spacer for fixed navbar */}
+        <div className="h-16 sm:h-20"></div>
+        
+        <main className="flex-1 flex justify-center items-center p-4">
+          <div className="bg-white/20 backdrop-blur-md border border-white/30 rounded-xl shadow-2xl p-8 w-full max-w-md">
           <h1 className="text-2xl font-bold mb-4 text-center text-[#382f29]">Login / Sign Up</h1>
           {error && (
-            <div className="bg-red-100/80 backdrop-blur-sm text-red-800 p-3 rounded-lg mb-4 text-sm border border-red-200/50">{error}</div>
+            <div className="bg-red-100/60 backdrop-blur-sm text-red-900 p-3 rounded-lg mb-4 text-sm border border-red-300/50 shadow-sm">{error}</div>
           )}
           {message && (
-            <div className="bg-green-100/80 backdrop-blur-sm text-green-800 p-3 rounded-lg mb-4 text-sm border border-green-200/50">{message}</div>
+            <div className="bg-green-100/60 backdrop-blur-sm text-green-900 p-3 rounded-lg mb-4 text-sm border border-green-300/50 shadow-sm">{message}</div>
           )}
           <input
             type="email"
@@ -109,6 +126,7 @@ const LoginPage: React.FC = () => {
           </button>
         </div>
       </main>
+    </div>
     </div>
   );
 };
