@@ -187,86 +187,150 @@ const DocumentConverterPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#f6f0e4]">
-      <Navbar />
-      <main className="flex-grow container mx-auto p-4 flex flex-col items-center">
-        <div className="text-center my-8">
-          <h1 className="text-3xl font-bold text-[#382f29]">
-            File Converter
-          </h1>
-          <p className="text-[#5d4633] mt-2">
-            Convert documents, images, and other files between different formats.
-          </p>
-        </div>
-
-        <div className="w-full max-w-2xl bg-white rounded-lg shadow-lg p-8">
-          <div {...getRootProps()} className={`border-2 border-dashed rounded-md p-10 text-center cursor-pointer transition-all ${isDragActive ? 'border-[#e67722] bg-[#f6f0e4]' : 'border-gray-300'}`}>
-            <input {...getInputProps()} />
-            {isDragActive ?
-              <p className="text-[#e67722]">Drop files here ...</p> :
-              <p className="text-gray-500">Drag & drop files here, or click to select files</p>
-            }
-          </div>
-
-          {files.length > 0 && (
-            <div className="mt-6">
-              <h3 className="text-lg font-semibold text-[#382f29]">
-                Your Files ({files.length}):
-              </h3>
-              <div className="mt-2">
-                {renderFileIcons()}
-              </div>
-            </div>
-          )}
-          
-          <div className="mt-6">
-            <label htmlFor="outputFormat" className="text-lg font-semibold text-[#382f29]">Convert To:</label>
-            <select
-              id="outputFormat"
-              className="w-full p-2 mt-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#e67722] focus:outline-none"
-              value={outputFormat}
-              onChange={(e) => setOutputFormat(e.target.value)}
-              disabled={!files.length || availableFormats.length === 0}
-            >
-              <option value="">Select format...</option>
-              {availableFormats.map(format => (
-                <option key={format} value={format}>{format.toUpperCase()}</option>
-              ))}
-            </select>
-          </div>
-
-          {isConverting && files.length > 1 && (
-            <div className="mt-4">
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-[#e67722] h-2 rounded-full transition-all duration-300" 
-                  style={{ width: `${conversionProgress}%` }}
-                ></div>
-              </div>
-              <p className="text-sm text-gray-600 mt-1 text-center">
-                Converting files... {Math.round(conversionProgress)}%
+    <div 
+      className="min-h-screen bg-cover bg-center bg-fixed"
+      style={{ backgroundImage: 'url(/images/bg_image.png)' }}
+    >
+      <div className="min-h-screen bg-black/10">
+        <Navbar />
+        <main className="pt-20 pb-16">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            {/* Header */}
+            <div className="text-center mb-12">
+              <h1 className="text-4xl font-bold text-white sm:text-5xl mb-4">
+                File Converter
+              </h1>
+              <p className="text-xl text-white/80 max-w-2xl mx-auto">
+                Convert documents, images, and other files between different formats with ease.
               </p>
             </div>
-          )}
 
-          <div className="mt-8 text-center">
-            <button
-              onClick={handleConvert}
-              disabled={!files.length || !outputFormat || isConverting}
-              className="px-8 py-3 bg-[#e67722] text-[#382f29] font-bold rounded-md hover:bg-opacity-90 transition-all disabled:bg-gray-400 disabled:cursor-not-allowed"
-            >
-              {isConverting ? (
-                <div className="flex items-center gap-2">
-                  <LoadingSpinner />
-                  {files.length > 1 ? 'Converting to ZIP...' : 'Converting...'}
+            {/* Main Converter Card */}
+            <div className="bg-white/20 backdrop-blur-md rounded-xl p-8 border border-white/30 shadow-xl">
+              {/* Drag & Drop Area */}
+              <div {...getRootProps()} className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all ${isDragActive ? 'border-blue-400 bg-blue-400/10 backdrop-blur-sm' : 'border-white/40 hover:border-white/60'}`}>
+                <input {...getInputProps()} />
+                <div className="flex flex-col items-center space-y-4">
+                  <svg className="w-16 h-16 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                  {isDragActive ? (
+                    <p className="text-blue-200 text-lg font-medium">Drop files here...</p>
+                  ) : (
+                    <div>
+                      <p className="text-white text-lg font-medium mb-2">Drag & drop files here</p>
+                      <p className="text-white/60">or click to select files</p>
+                    </div>
+                  )}
                 </div>
-              ) : (
-                files.length > 1 ? 'Convert Files to ZIP' : 'Convert File'
+              </div>
+
+              {/* File List */}
+              {files.length > 0 && (
+                <div className="mt-8">
+                  <h3 className="text-xl font-semibold text-white mb-4">
+                    Your Files ({files.length}):
+                  </h3>
+                  <div className="space-y-3">
+                    {files.map((file, index) => {
+                      const extension = file.name.split('.').pop()?.toLowerCase();
+                      return (
+                        <div key={index} className="flex items-center gap-4 p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 hover:bg-white/20 transition-all">
+                          {renderFileIcon(extension)}
+                          <span className="font-medium text-white flex-1">{file.name}</span>
+                          <button
+                            onClick={() => setFiles(files.filter((_, i) => i !== index))}
+                            className="text-red-300 hover:text-red-100 p-2 rounded-lg hover:bg-red-500/20 transition-colors"
+                            aria-label="Remove file"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               )}
-            </button>
+              
+              {/* Format Selection */}
+              <div className="mt-8">
+                <label htmlFor="outputFormat" className="block text-xl font-semibold text-white mb-3">
+                  Convert To:
+                </label>
+                <select
+                  id="outputFormat"
+                  className="w-full p-4 bg-white/10 backdrop-blur-sm border border-white/30 rounded-lg text-white focus:ring-2 focus:ring-blue-400 focus:border-blue-400 focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  value={outputFormat}
+                  onChange={(e) => setOutputFormat(e.target.value)}
+                  disabled={!files.length || availableFormats.length === 0}
+                >
+                  <option value="" className="text-gray-800">Select format...</option>
+                  {availableFormats.map(format => (
+                    <option key={format} value={format} className="text-gray-800">
+                      {format.toUpperCase()}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Progress Bar */}
+              {isConverting && files.length > 1 && (
+                <div className="mt-6">
+                  <div className="w-full bg-white/20 rounded-full h-3 backdrop-blur-sm">
+                    <div 
+                      className="bg-gradient-to-r from-blue-400 to-blue-600 h-3 rounded-full transition-all duration-300 shadow-lg" 
+                      style={{ width: `${conversionProgress}%` }}
+                    ></div>
+                  </div>
+                  <p className="text-white/80 mt-2 text-center font-medium">
+                    Converting files... {Math.round(conversionProgress)}%
+                  </p>
+                </div>
+              )}
+
+              {/* Error Message */}
+              {error && (
+                <div className="mt-6 p-4 bg-red-500/20 backdrop-blur-sm border border-red-400/30 rounded-lg">
+                  <p className="text-red-200">{error}</p>
+                </div>
+              )}
+
+              {/* Convert Button */}
+              <div className="mt-8 text-center">
+                <button
+                  onClick={handleConvert}
+                  disabled={!files.length || !outputFormat || isConverting}
+                  className="px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none"
+                >
+                  {isConverting ? (
+                    <div className="flex items-center gap-3">
+                      <LoadingSpinner />
+                      <span>{files.length > 1 ? 'Converting to ZIP...' : 'Converting...'}</span>
+                    </div>
+                  ) : (
+                    <span>{files.length > 1 ? 'Convert Files to ZIP' : 'Convert File'}</span>
+                  )}
+                </button>
+              </div>
+
+              {/* Supported Formats Info */}
+              <div className="mt-8 p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
+                <h4 className="text-white font-semibold mb-2">Supported Formats:</h4>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 text-sm text-white/70">
+                  <span>• Documents: DOCX, PDF, TXT</span>
+                  <span>• Images: PNG, JPG, WEBP</span>
+                  <span>• Data: JSON, CSV, XLSX</span>
+                  <span>• Markup: HTML, MD, XML</span>
+                  <span>• Video: MOV to MP4</span>
+                  <span>• Vector: SVG to PNG</span>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 };
