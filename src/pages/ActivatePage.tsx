@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { subscriptionService } from '../services/subscriptionService';
+import ReCaptcha from '../components/ReCaptcha';
 
 const ActivatePage: React.FC = () => {
   const [couponCode, setCouponCode] = useState('');
@@ -8,20 +9,28 @@ const ActivatePage: React.FC = () => {
   const [message, setMessage] = useState('');
   const [success, setSuccess] = useState(false);
   const [subscriptionInfo, setSubscriptionInfo] = useState<any>(null);
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
 
   const handleActivate = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!recaptchaToken) {
+      setMessage('Please complete the reCAPTCHA verification.');
+      return;
+    }
+    
     setLoading(true);
     setMessage('');
 
     try {
-      const data = await subscriptionService.activateCoupon(couponCode, email);
+      const data = await subscriptionService.activateCoupon(couponCode, email, recaptchaToken || undefined);
 
       if (data.success) {
         setSuccess(true);
         setMessage(data.message || 'Coupon activated successfully!');
         setSubscriptionInfo(data.subscription);
         setCouponCode('');
+        setRecaptchaToken(null);
       } else {
         setSuccess(false);
         setMessage(data.error || 'Failed to activate coupon');
@@ -153,9 +162,20 @@ const ActivatePage: React.FC = () => {
                   </p>
                 </div>
 
+                {/* reCAPTCHA */}
+                <div className="mb-4">
+                  <ReCaptcha
+                    onVerify={setRecaptchaToken}
+                    onError={() => setRecaptchaToken(null)}
+                    onExpired={() => setRecaptchaToken(null)}
+                    theme="light"
+                    size="normal"
+                  />
+                </div>
+
                 <button
                   type="submit"
-                  disabled={loading || !couponCode || !email}
+                  disabled={loading || !couponCode || !email || !recaptchaToken}
                   className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-3 px-6 rounded-lg font-semibold shadow-lg hover:from-indigo-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? (

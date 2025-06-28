@@ -6,6 +6,7 @@ import ToolsPage from '../../pages/ToolsPage';
 import SummarizerPage from '../../pages/SummarizerPage';
 import DocumentConverterPage from '../../pages/DocumentConverterPage';
 import ChatbotPage from '../../pages/ChatbotPage';
+import ChatToDocumentPage from '../../pages/ChatToDocumentPage';
 import ProductivityPlannerPage from '../../pages/ProductivityPlannerPage';
 import ImageResizerPage from '../../pages/ImageResizerPage';
 import VideoTrimmerPage from '../../pages/VideoTrimmerPage';
@@ -695,6 +696,7 @@ const App: React.FC = () => (
       <Route path="/summarizer" element={<SummarizerPage />} />
       <Route path="/converter" element={<DocumentConverterPage />} />
       <Route path="/chatbot" element={<ChatbotPage />} />
+      <Route path="/chat-to-document" element={<ChatToDocumentPage />} />
       <Route path="/productivity-planner" element={<ProductivityPlannerPage />} />
       <Route path="/image-resizer" element={<ImageResizerPage />} />
       <Route path="/video-trimmer" element={<VideoTrimmerPage />} />

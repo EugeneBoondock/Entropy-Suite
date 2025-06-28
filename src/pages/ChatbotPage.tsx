@@ -91,10 +91,24 @@ const ChatbotPage: React.FC = () => {
   };
 
   return (
-    <div className="flex size-full min-h-screen flex-col bg-[#f6f0e4]" style={{ fontFamily: '"Space Grotesk", "Noto Sans", sans-serif' }}>
-      <Navbar />
+    <div 
+      className="flex size-full min-h-screen flex-col bg-[#f6f0e4]" 
+      style={{ 
+        fontFamily: '"Space Grotesk", "Noto Sans", sans-serif',
+        backgroundImage: 'url("/images/bg_image.png")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed'
+      }}
+    >
+      {/* Full page overlay for text readability */}
+      <div className="absolute inset-0 bg-black/10 pointer-events-none"></div>
       
-      <main className="flex-1 px-4 sm:px-10 md:px-20 lg:px-40 py-5">
+      <div className="relative z-10">
+        <Navbar />
+        
+        <main className="flex-1 px-4 sm:px-10 md:px-20 lg:px-40 py-5 pt-20">
         <div className="max-w-4xl mx-auto h-full flex flex-col">
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
@@ -225,7 +239,8 @@ const ChatbotPage: React.FC = () => {
             </div>
           </div>
         </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 };

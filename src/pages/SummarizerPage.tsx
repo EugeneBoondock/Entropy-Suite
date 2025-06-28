@@ -151,16 +151,32 @@ const SummarizerPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#f6f0e4]">
-      <Navbar />
-      <main className="flex-grow container mx-auto p-4 flex flex-col">
+    <div 
+      className="flex flex-col min-h-screen bg-[#f6f0e4]"
+      style={{ 
+        fontFamily: '"Space Grotesk", "Noto Sans", sans-serif',
+        backgroundImage: 'url("/images/bg_image.png")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed'
+      }}
+    >
+      {/* Full page overlay for text readability */}
+      <div className="absolute inset-0 bg-black/10 pointer-events-none"></div>
+      
+      <div className="relative z-10">
+        <Navbar />
+        <main className="flex-grow container mx-auto p-4 flex flex-col pt-20">
         <div className="text-center my-8">
-          <h1 className="text-3xl font-bold text-[#382f29]">
-            AI Text Summarizer
-          </h1>
-          <p className="text-[#5d4633] mt-2">
-            Paste your text below to get a concise summary.
-          </p>
+          <div className="bg-white/40 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-white/20 max-w-2xl mx-auto">
+            <h1 className="text-3xl font-bold text-[#1a1a1a] drop-shadow-md">
+              AI Text Summarizer
+            </h1>
+            <p className="text-[#1a1a1a]/80 mt-2 drop-shadow-sm">
+              Paste your text below to get a concise summary.
+            </p>
+          </div>
         </div>
 
         {error && (
@@ -170,57 +186,70 @@ const SummarizerPage: React.FC = () => {
           </div>
         )}
 
-        <div className="flex-grow grid grid-cols-1 md:grid-cols-2 gap-4 min-h-0">
+        <div className="flex-grow grid grid-cols-1 md:grid-cols-2 gap-6 min-h-0">
           <div className="flex flex-col min-h-0">
-            <textarea
-              className="w-full h-full p-4 border border-[#382f29] rounded-md resize-none focus:ring-2 focus:ring-[#e67722] focus:outline-none"
-              placeholder="Enter text to summarize..."
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-            />
+            <div className="bg-white/40 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-white/20 h-full flex flex-col">
+              <h3 className="text-lg font-semibold text-[#1a1a1a] mb-4 drop-shadow-sm">Input Text</h3>
+              <textarea
+                className="w-full h-full p-4 bg-white/60 backdrop-blur-sm border border-white/30 rounded-xl resize-none focus:ring-2 focus:ring-[#e67722] focus:outline-none shadow-inner"
+                placeholder="Enter text to summarize..."
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+              />
+            </div>
           </div>
           <div className="flex flex-col min-h-0">
-            <EditorToolbar editor={editor} />
-            <div className="relative flex-grow bg-white border border-t-0 border-[#382f29] rounded-b-md overflow-hidden">
-              <EditorContent editor={editor} className="h-full overflow-y-auto" />
-              {isLoading && (
-                <div className="absolute inset-0 z-10 flex items-center justify-center bg-white bg-opacity-75">
-                  <LoadingSpinner />
-                </div>
-              )}
+            <div className="bg-white/40 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 h-full flex flex-col overflow-hidden">
+              <div className="p-4 border-b border-white/20">
+                <h3 className="text-lg font-semibold text-[#1a1a1a] mb-4 drop-shadow-sm">Summary Output</h3>
+                <EditorToolbar editor={editor} />
+              </div>
+              <div className="relative flex-grow bg-white/60 backdrop-blur-sm overflow-hidden">
+                <EditorContent editor={editor} className="h-full overflow-y-auto p-4" />
+                {isLoading && (
+                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/75 backdrop-blur-sm">
+                    <LoadingSpinner />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="text-center my-8 flex justify-center items-center gap-4">
-          <button
-            className="px-8 py-3 bg-[#e67722] text-[#382f29] font-bold rounded-md hover:bg-opacity-90 transition-all disabled:bg-gray-400"
-            onClick={handleSummarize}
-            disabled={isLoading}
-          >
-            {isLoading ? 'Summarizing...' : 'Summarize'}
-          </button>
-          <div className="relative inline-block text-left">
-            <div className="group">
+        <div className="text-center my-8">
+          <div className="bg-white/40 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-white/20 inline-block">
+            <div className="flex justify-center items-center gap-4">
               <button
-                type="button"
-                className="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="px-8 py-3 bg-[#e67722] text-[#382f29] font-bold rounded-xl hover:bg-[#d66320] transition-all disabled:bg-gray-400 shadow-lg"
+                onClick={handleSummarize}
+                disabled={isLoading}
               >
-                Download
+                {isLoading ? 'Summarizing...' : 'Summarize'}
               </button>
-              <div
-                className="origin-top-right absolute right-0 bottom-full mb-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all duration-200"
-              >
-                <div className="py-1">
-                  <button onClick={() => handleDownload('pdf')} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">PDF</button>
-                  <button onClick={() => handleDownload('docx')} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">DOCX</button>
-                  <button onClick={() => handleDownload('doc')} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">DOC</button>
+              <div className="relative inline-block text-left">
+                <div className="group">
+                  <button
+                    type="button"
+                    className="inline-flex justify-center w-full rounded-xl border border-white/30 shadow-lg px-4 py-3 bg-white/60 backdrop-blur-sm text-sm font-medium text-[#1a1a1a] hover:bg-white/70 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#e67722]"
+                  >
+                    Download
+                  </button>
+                  <div
+                    className="origin-top-right absolute right-0 bottom-full mb-2 w-56 rounded-xl shadow-xl bg-white/90 backdrop-blur-md border border-white/30 focus:outline-none opacity-0 invisible group-hover:visible group-hover:opacity-100 transition-all duration-200"
+                  >
+                    <div className="py-1">
+                      <button onClick={() => handleDownload('pdf')} className="block w-full text-left px-4 py-2 text-sm text-[#1a1a1a] hover:bg-white/50 rounded-lg mx-1">PDF</button>
+                      <button onClick={() => handleDownload('docx')} className="block w-full text-left px-4 py-2 text-sm text-[#1a1a1a] hover:bg-white/50 rounded-lg mx-1">DOCX</button>
+                      <button onClick={() => handleDownload('doc')} className="block w-full text-left px-4 py-2 text-sm text-[#1a1a1a] hover:bg-white/50 rounded-lg mx-1">DOC</button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </main>
+        </main>
+      </div>
       <style>{`
         .custom-editor ul {
           list-style-type: disc;

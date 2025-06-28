@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Key, Eye, EyeOff, Copy, Check, Plus, Trash2, Edit3, Save, X, Shield, Clock, AlertCircle, Settings, Database } from 'lucide-react';
+import { User, Key, Eye, EyeOff, Copy, Check, Plus, Trash2, Edit3, Save, X, Shield, Clock, AlertCircle, Settings, Database, Cloud, HardDrive } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { supabase } from '../utils/supabaseClient';
 
@@ -10,6 +10,7 @@ interface ApiKey {
   key: string;
   created_at: string;
   last_used?: string;
+  storage_type?: 'database' | 'local';
 }
 
 interface UserProfile {
@@ -29,6 +30,9 @@ const DashboardPage: React.FC = () => {
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  
+  // New state for storage choice dialog
+  const [showStorageChoice, setShowStorageChoice] = useState(false);
 
   // New API key form state
   const [newKey, setNewKey] = useState({
@@ -140,6 +144,7 @@ const DashboardPage: React.FC = () => {
 
   const loadApiKeys = async (userId: string) => {
     try {
+      // Load database API keys
       const { data, error } = await supabase
         .from('api_keys')
         .select('*')
@@ -148,8 +153,8 @@ const DashboardPage: React.FC = () => {
 
       if (error) throw error;
       
-      // Decrypt API keys
-      const decryptedKeys = await Promise.all(
+      // Decrypt database API keys
+      const decryptedDatabaseKeys = await Promise.all(
         (data || []).map(async (apiKey: any) => {
           try {
             const decryptedKey = await decryptData(apiKey.encrypted_key, userId);
@@ -159,7 +164,8 @@ const DashboardPage: React.FC = () => {
               service: apiKey.service,
               key: decryptedKey,
               created_at: apiKey.created_at,
-              last_used: apiKey.last_used
+              last_used: apiKey.last_used,
+              storage_type: 'database' as const
             };
           } catch (decryptError) {
             console.error('Error decrypting API key:', decryptError);
@@ -169,13 +175,22 @@ const DashboardPage: React.FC = () => {
               service: apiKey.service,
               key: '[Decryption Failed]',
               created_at: apiKey.created_at,
-              last_used: apiKey.last_used
+              last_used: apiKey.last_used,
+              storage_type: 'database' as const
             };
           }
         })
       );
+
+      // Load local API keys
+      const localKeys = JSON.parse(localStorage.getItem('entropy_api_keys') || '[]') as ApiKey[];
       
-      setApiKeys(decryptedKeys);
+      // Combine database and local keys
+      const allKeys = [...decryptedDatabaseKeys, ...localKeys].sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      
+      setApiKeys(allKeys);
     } catch (error) {
       console.error('Error loading API keys:', error);
       setError('Failed to load API keys. Please ensure the database is set up correctly.');
@@ -188,6 +203,16 @@ const DashboardPage: React.FC = () => {
       return;
     }
 
+    if (!user) {
+      setError('User not authenticated');
+      return;
+    }
+
+    // Show storage choice dialog
+    setShowStorageChoice(true);
+  };
+
+  const handleSaveToDatabase = async () => {
     if (!user) {
       setError('User not authenticated');
       return;
@@ -206,7 +231,8 @@ const DashboardPage: React.FC = () => {
             name: newKey.name,
             service: newKey.service,
             encrypted_key: encryptedKey,
-            key_hash: keyHash
+            key_hash: keyHash,
+            storage_type: 'database'
           }
         ])
         .select()
@@ -215,23 +241,60 @@ const DashboardPage: React.FC = () => {
       if (error) throw error;
 
       // Add the decrypted version to local state
-      const decryptedApiKey = {
+      const decryptedApiKey: ApiKey = {
         id: data.id,
         name: newKey.name,
         service: newKey.service,
         key: newKey.key,
         created_at: data.created_at,
-        last_used: data.last_used
+        last_used: data.last_used,
+        storage_type: 'database'
       };
 
       setApiKeys(prev => [decryptedApiKey, ...prev]);
       setNewKey({ name: '', service: '', key: '' });
       setIsAddingKey(false);
-      setSuccess('API key added successfully');
+      setShowStorageChoice(false);
+      setSuccess('API key saved to encrypted database successfully');
       setTimeout(() => setSuccess(''), 3000);
     } catch (error) {
-      console.error('Error adding API key:', error);
-      setError('Failed to add API key');
+      console.error('Error adding API key to database:', error);
+      setError('Failed to save API key to database');
+    }
+  };
+
+  const handleSaveLocally = async () => {
+    try {
+      // Generate a unique ID for local storage
+      const localId = `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Get existing local keys
+      const existingLocalKeys = JSON.parse(localStorage.getItem('entropy_api_keys') || '[]');
+      
+      // Create new local API key
+      const localApiKey: ApiKey = {
+        id: localId,
+        name: newKey.name,
+        service: newKey.service,
+        key: newKey.key,
+        created_at: new Date().toISOString(),
+        storage_type: 'local'
+      };
+
+      // Save to localStorage
+      const updatedLocalKeys = [localApiKey, ...existingLocalKeys];
+      localStorage.setItem('entropy_api_keys', JSON.stringify(updatedLocalKeys));
+
+      // Add to current state
+      setApiKeys(prev => [localApiKey, ...prev]);
+      setNewKey({ name: '', service: '', key: '' });
+      setIsAddingKey(false);
+      setShowStorageChoice(false);
+      setSuccess('API key saved locally to your device successfully');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (error) {
+      console.error('Error saving API key locally:', error);
+      setError('Failed to save API key locally');
     }
   };
 
@@ -239,12 +302,22 @@ const DashboardPage: React.FC = () => {
     if (!confirm('Are you sure you want to delete this API key?')) return;
 
     try {
-      const { error } = await supabase
-        .from('api_keys')
-        .delete()
-        .eq('id', keyId);
+      const keyToDelete = apiKeys.find(key => key.id === keyId);
+      
+      if (keyToDelete?.storage_type === 'local') {
+        // Delete from localStorage
+        const localKeys = JSON.parse(localStorage.getItem('entropy_api_keys') || '[]');
+        const updatedLocalKeys = localKeys.filter((key: ApiKey) => key.id !== keyId);
+        localStorage.setItem('entropy_api_keys', JSON.stringify(updatedLocalKeys));
+      } else {
+        // Delete from database
+        const { error } = await supabase
+          .from('api_keys')
+          .delete()
+          .eq('id', keyId);
 
-      if (error) throw error;
+        if (error) throw error;
+      }
 
       setApiKeys(prev => prev.filter(key => key.id !== keyId));
       setSuccess('API key deleted successfully');
@@ -543,6 +616,79 @@ const DashboardPage: React.FC = () => {
                 </div>
               )}
 
+              {/* Storage Choice Dialog */}
+              {showStorageChoice && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                  <div className="bg-white/90 backdrop-blur-md border border-white/50 rounded-2xl shadow-2xl p-8 max-w-lg w-full">
+                    <div className="text-center mb-6">
+                      <div className="w-16 h-16 bg-blue-100/80 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Shield className="w-8 h-8 text-blue-600" />
+                      </div>
+                      <h3 className="text-2xl font-bold text-[#1a1a1a] mb-2">Choose Storage Location</h3>
+                      <p className="text-[#2a2a2a]">Where would you like to store your API key?</p>
+                    </div>
+
+                    <div className="space-y-4 mb-6">
+                      {/* Database Storage Option */}
+                      <button
+                        onClick={handleSaveToDatabase}
+                        className="w-full p-6 bg-blue-50/80 hover:bg-blue-100/80 border-2 border-blue-200/50 hover:border-blue-300/50 rounded-xl transition-all duration-300 text-left group"
+                      >
+                        <div className="flex items-start gap-4">
+                          <div className="p-3 bg-blue-100/80 rounded-xl group-hover:bg-blue-200/80 transition-colors">
+                            <Cloud className="w-6 h-6 text-blue-600" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="text-lg font-semibold text-[#1a1a1a] mb-2">Encrypted Cloud Database</h4>
+                            <p className="text-sm text-[#2a2a2a] mb-2">
+                              Store your API key in our secure, encrypted database. Your keys are protected with end-to-end encryption.
+                            </p>
+                            <div className="flex items-center gap-2 text-xs text-blue-600">
+                              <Shield className="w-3 h-3" />
+                              <span>End-to-end encrypted</span>
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+
+                      {/* Local Storage Option */}
+                      <button
+                        onClick={handleSaveLocally}
+                        className="w-full p-6 bg-green-50/80 hover:bg-green-100/80 border-2 border-green-200/50 hover:border-green-300/50 rounded-xl transition-all duration-300 text-left group"
+                      >
+                        <div className="flex items-start gap-4">
+                          <div className="p-3 bg-green-100/80 rounded-xl group-hover:bg-green-200/80 transition-colors">
+                            <HardDrive className="w-6 h-6 text-green-600" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="text-lg font-semibold text-[#1a1a1a] mb-2">Local Device Storage</h4>
+                            <p className="text-sm text-[#2a2a2a] mb-2">
+                              Store your API key locally on your device only. Keys will not be sent to our servers.
+                            </p>
+                            <div className="flex items-center gap-2 text-xs text-green-600">
+                              <HardDrive className="w-3 h-3" />
+                              <span>Stored locally only</span>
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => {
+                          setShowStorageChoice(false);
+                        }}
+                        className="flex-1 bg-gray-200/80 hover:bg-gray-300/80 text-gray-700 px-6 py-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2"
+                      >
+                        <X className="w-4 h-4" />
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* API Keys List */}
               <div className="space-y-4">
                 {apiKeys.length === 0 ? (
@@ -578,7 +724,20 @@ const DashboardPage: React.FC = () => {
                               </div>
                             ) : (
                               <>
-                                <h3 className="font-semibold text-[#1a1a1a]">{apiKey.name}</h3>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h3 className="font-semibold text-[#1a1a1a]">{apiKey.name}</h3>
+                                  {apiKey.storage_type === 'local' ? (
+                                    <span className="flex items-center gap-1 px-2 py-1 bg-green-100/80 text-green-700 text-xs rounded-full">
+                                      <HardDrive className="w-3 h-3" />
+                                      Local
+                                    </span>
+                                  ) : (
+                                    <span className="flex items-center gap-1 px-2 py-1 bg-blue-100/80 text-blue-700 text-xs rounded-full">
+                                      <Cloud className="w-3 h-3" />
+                                      Cloud
+                                    </span>
+                                  )}
+                                </div>
                                 <p className="text-sm text-[#2a2a2a]">{getServiceLabel(apiKey.service)}</p>
                                 <div className="flex items-center gap-2 mt-2">
                                   <span className="text-sm font-mono text-[#2a2a2a] bg-white/70 px-2 py-1 rounded">
@@ -644,8 +803,8 @@ const DashboardPage: React.FC = () => {
                   <div>
                     <h4 className="font-medium text-yellow-800 mb-1">Security Notice</h4>
                     <p className="text-sm text-yellow-700">
-                      Your API keys are encrypted and stored securely. Never share your API keys with others. 
-                      If you suspect a key has been compromised, delete it immediately and generate a new one from your service provider.
+                      Your API keys stored in our cloud database are protected with end-to-end encryption. Local keys are stored only on your device. 
+                      Never share your API keys with others. If you suspect a key has been compromised, delete it immediately and generate a new one from your service provider.
                     </p>
                   </div>
                 </div>

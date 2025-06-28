@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { PrismaClient } from '@prisma/client';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
+import axios from 'axios';
 
 const prisma = new PrismaClient();
 
@@ -22,6 +23,29 @@ function generateCouponCode(): string {
     result += characters.charAt(crypto.randomInt(0, characters.length));
   }
   return result;
+}
+
+// Verify reCAPTCHA token
+async function verifyRecaptcha(token: string): Promise<boolean> {
+  try {
+    const secretKey = process.env.RECAPTCHA_SECRET_KEY;
+    if (!secretKey) {
+      console.warn('RECAPTCHA_SECRET_KEY not found in environment variables');
+      return true; // Allow operation to continue if reCAPTCHA is not configured
+    }
+
+    const response = await axios.post('https://www.google.com/recaptcha/api/siteverify', null, {
+      params: {
+        secret: secretKey,
+        response: token
+      }
+    });
+
+    return response.data.success === true;
+  } catch (error) {
+    console.error('reCAPTCHA verification error:', error);
+    return false;
+  }
 }
 
 // Determine subscription tier based on amount
@@ -139,11 +163,24 @@ export default async function subscriptionRoutes(fastify: FastifyInstance) {
   // Validate and activate coupon code
   fastify.post('/activate-coupon', async (request, reply) => {
     try {
-      const { code, userEmail } = request.body as { code: string; userEmail: string };
+      const { code, userEmail, recaptchaToken } = request.body as { 
+        code: string; 
+        userEmail: string; 
+        recaptchaToken?: string; 
+      };
 
       if (!code || !userEmail) {
         reply.status(400);
         return { error: 'Code and email are required' };
+      }
+
+      // Verify reCAPTCHA if token is provided
+      if (recaptchaToken) {
+        const isValidRecaptcha = await verifyRecaptcha(recaptchaToken);
+        if (!isValidRecaptcha) {
+          reply.status(400);
+          return { error: 'reCAPTCHA verification failed. Please try again.' };
+        }
       }
 
       // Find the coupon

@@ -40,7 +40,7 @@ class SubscriptionService {
     }
   }
 
-  async activateCoupon(code: string, email: string): Promise<ActivationResponse> {
+  async activateCoupon(code: string, email: string, recaptchaToken?: string): Promise<ActivationResponse> {
     try {
       const response = await fetch(`${this.baseUrl}/activate-coupon`, {
         method: 'POST',
@@ -49,7 +49,8 @@ class SubscriptionService {
         },
         body: JSON.stringify({
           code: code.toUpperCase(),
-          userEmail: email
+          userEmail: email,
+          recaptchaToken
         })
       });
 

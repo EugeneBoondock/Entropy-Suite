@@ -2,16 +2,25 @@ import React, { useState } from 'react';
 import Navbar from '../components/Navbar';
 import { supabase } from '../utils/supabaseClient';
 import { useNavigate } from 'react-router-dom';
+import ReCaptcha from '../components/ReCaptcha';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handleSendLink = async () => {
     if (!email.trim()) return;
+    
+    // For magic links, reCAPTCHA is optional but recommended for heavy usage
+    if (!recaptchaToken) {
+      setError('Please complete the reCAPTCHA verification.');
+      return;
+    }
+    
     setLoading(true);
     setError(null);
     setMessage(null);
@@ -20,6 +29,7 @@ const LoginPage: React.FC = () => {
       setError(error.message);
     } else {
       setMessage('Magic link sent! Check your inbox.');
+      setRecaptchaToken(null); // Reset reCAPTCHA after successful submission
     }
     setLoading(false);
   };
@@ -47,9 +57,21 @@ const LoginPage: React.FC = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
+          
+          {/* reCAPTCHA */}
+          <div className="mb-4">
+            <ReCaptcha
+              onVerify={setRecaptchaToken}
+              onError={() => setRecaptchaToken(null)}
+              onExpired={() => setRecaptchaToken(null)}
+              theme="light"
+              size="normal"
+            />
+          </div>
+          
           <button
             onClick={handleSendLink}
-            disabled={loading}
+            disabled={loading || !recaptchaToken}
             className="w-full bg-[#e67722] text-[#382f29] font-bold py-2 rounded-md mb-4 disabled:opacity-50"
           >
             {loading ? 'Sending...' : 'Send Magic Link'}

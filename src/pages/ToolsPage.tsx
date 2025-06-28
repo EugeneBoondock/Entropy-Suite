@@ -188,6 +188,14 @@ const ToolsPage: React.FC = () => {
         </svg>
       );
     }
+    if (title.includes('Chat') && title.includes('Document')) {
+      return (
+        <svg className={iconClass} fill="currentColor" viewBox="0 0 24 24">
+          <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
+          <path d="M20 15.5c.2 1.3-1 2.5-2.3 2.3L15 16.2c-1.1.4-2.3.4-3.4 0L9 17.8c-1.3.2-2.5-1-2.3-2.3L8.3 13c-.4-1.1-.4-2.3 0-3.4L6.7 7.3c-.2-1.3 1-2.5 2.3-2.3L11.6 6.7c1.1-.4 2.3-.4 3.4 0L17.3 4.9c1.3-.2 2.5 1 2.3 2.3L18 9.6c.4 1.1.4 2.3 0 3.4L20 15.5z" opacity="0.5"/>
+        </svg>
+      );
+    }
     
     // Default icon for any other tools
     return (
@@ -224,6 +232,13 @@ const ToolsPage: React.FC = () => {
       description: 'Engage with an AI chatbot for various tasks.',
       imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCBYTCEG-uu12NKmCQYHeDOO4w3yG1BlnH4TxVoqP5tgSpY1X1AeloG6KibodwbVhdiFTA4s3canYMiKHbgpu7r53zDgnde2awzp_jKgslfgbyfNrz426cU_vV21_WnZAo8BWGZTgmR48ifYkkQJ8V0XlyDxTvLkmpvvG4voyYcDVIhfICXZCKGaegjhcA3lAEoEEiPJ6YSoFDgXCJZf8vSRlRL9HcK_e2pNBxIEVXpie8nLFnk_RK1p3vyr6MI3t8TF2vixkXltYHE',
       link: '/chatbot',
+      category: 'AI'
+    },
+    {
+      title: 'Chat to Document',
+      description: 'Upload documents and ask AI questions about their content.',
+      imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCBYTCEG-uu12NKmCQYHeDOO4w3yG1BlnH4TxVoqP5tgSpY1X1AeloG6KibodwbVhdiFTA4s3canYMiKHbgpu7r53zDgnde2awzp_jKgslfgbyfNrz426cU_vV21_WnZAo8BWGZTgmR48ifYkkQJ8V0XlyDxTvLkmpvvG4voyYcDVIhfICXZCKGaegjhcA3lAEoEEiPJ6YSoFDgXCJZf8vSRlRL9HcK_e2pNBxIEVXpie8nLFnk_RK1p3vyr6MI3t8TF2vixkXltYHE',
+      link: '/chat-to-document',
       category: 'AI'
     },
     {

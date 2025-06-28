@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { default as Navbar } from "../components/Navbar";
+import ReCaptcha from "../components/ReCaptcha";
 
 const ContactPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -19,9 +20,16 @@ const ContactPage: React.FC = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!recaptchaToken) {
+      setSubmitStatus('error');
+      return;
+    }
+    
     setIsSubmitting(true);
     setSubmitStatus('idle');
     
@@ -31,12 +39,16 @@ const ContactPage: React.FC = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          'g-recaptcha-response': recaptchaToken
+        }),
       });
 
       if (response.ok) {
         setSubmitStatus('success');
         setFormData({ name: '', email: '', subject: '', message: '' });
+        setRecaptchaToken(null);
       } else {
         setSubmitStatus('error');
       }
@@ -233,9 +245,23 @@ const ContactPage: React.FC = () => {
                         />
                       </div>
 
+                      {/* reCAPTCHA */}
+                      <div className="mb-4">
+                        <ReCaptcha
+                          onVerify={setRecaptchaToken}
+                          onError={() => setRecaptchaToken(null)}
+                          onExpired={() => setRecaptchaToken(null)}
+                          theme="light"
+                          size="normal"
+                        />
+                        {submitStatus === 'error' && !recaptchaToken && (
+                          <p className="text-red-600 text-sm mt-2">Please complete the reCAPTCHA verification.</p>
+                        )}
+                      </div>
+
                       <button
                         type="submit"
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || !recaptchaToken}
                         className="w-full px-6 py-3 bg-[#e67722] text-white font-semibold rounded-lg hover:bg-[#d66320] disabled:bg-[#b8a99d] disabled:cursor-not-allowed transition-colors duration-200 flex items-center justify-center gap-2"
                       >
                         {isSubmitting ? (
