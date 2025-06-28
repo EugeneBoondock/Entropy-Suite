@@ -164,13 +164,12 @@ const ActivatePage: React.FC = () => {
 
                 {/* reCAPTCHA */}
                 <div className="mb-4">
-                  <ReCaptcha
-                    onVerify={setRecaptchaToken}
-                    onError={() => setRecaptchaToken(null)}
-                    onExpired={() => setRecaptchaToken(null)}
-                    theme="light"
-                    size="normal"
-                  />
+                            <ReCaptcha
+            version="v3"
+            action="activate"
+            onVerify={setRecaptchaToken}
+            onError={() => setRecaptchaToken(null)}
+          />
                 </div>
 
                 <button

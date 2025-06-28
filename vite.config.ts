@@ -37,6 +37,10 @@ export default defineConfig(({ mode }) => {
         }
       }
     },
+    preview: {
+      port: 5173,
+      host: true
+    },
     optimizeDeps: {
       include: [
         '@google/generative-ai',

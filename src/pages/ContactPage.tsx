@@ -247,13 +247,12 @@ const ContactPage: React.FC = () => {
 
                       {/* reCAPTCHA */}
                       <div className="mb-4">
-                        <ReCaptcha
-                          onVerify={setRecaptchaToken}
-                          onError={() => setRecaptchaToken(null)}
-                          onExpired={() => setRecaptchaToken(null)}
-                          theme="light"
-                          size="normal"
-                        />
+                                    <ReCaptcha
+              version="v3"
+              action="contact"
+              onVerify={setRecaptchaToken}
+              onError={() => setRecaptchaToken(null)}
+            />
                         {submitStatus === 'error' && !recaptchaToken && (
                           <p className="text-red-600 text-sm mt-2">Please complete the reCAPTCHA verification.</p>
                         )}
