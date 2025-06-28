@@ -237,8 +237,8 @@ const AudioTranscriberPage: React.FC = () => {
       <div className="absolute inset-0 bg-black/10 pointer-events-none"></div>
       
       <div className="relative z-10">
-        <Navbar />
-        
+      <Navbar />
+      
         <main className="flex-1 px-4 sm:px-10 md:px-20 lg:px-40 py-5 pt-20">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
@@ -493,7 +493,7 @@ const AudioTranscriberPage: React.FC = () => {
             </div>
           )}
         </div>
-        </main>
+      </main>
       </div>
     </div>
   );

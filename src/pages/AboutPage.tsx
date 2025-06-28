@@ -57,7 +57,7 @@ const AboutPage: React.FC = () => {
                     <p className="text-[#382f29] text-base leading-relaxed">
                       Our suite of AI-powered tools is designed to help you break free from conventional thinking, streamline your daily tasks, 
                       and discover new ways to be productive. From text summarization to background removal, from productivity planning to 
-                      real terminal environments – we've gathered the tools you didn't know you needed.
+                      real terminal environments, we've gathered the tools you didn't know you needed.
                     </p>
                   </div>
 
@@ -66,7 +66,7 @@ const AboutPage: React.FC = () => {
                     <h2 className="text-[#382f29] text-2xl font-bold mb-4">Our Mission</h2>
                     <p className="text-[#382f29] text-base leading-relaxed mb-4">
                       To democratize access to powerful AI tools and utilities that enhance human creativity and productivity. 
-                      We believe that everyone should have access to the tools that can help them focus on what truly matters – living their best life.
+                      We believe that everyone should have access to the tools that can help them focus on what truly matters, living their best life.
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
                       <div className="text-center p-4">

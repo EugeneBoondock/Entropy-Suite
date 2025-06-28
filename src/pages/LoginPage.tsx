@@ -54,11 +54,11 @@ const LoginPage: React.FC = () => {
       <div className="absolute inset-0 bg-black/10 pointer-events-none"></div>
       
       <div className="layout-container flex h-full grow flex-col relative z-10">
-        <Navbar />
+      <Navbar />
         {/* Spacer for fixed navbar */}
         <div className="h-16 sm:h-20"></div>
         
-        <main className="flex-1 flex justify-center items-center p-4">
+      <main className="flex-1 flex justify-center items-center p-4">
           <div className="bg-white/20 backdrop-blur-md border border-white/30 rounded-xl shadow-2xl p-8 w-full max-w-md">
           <h1 className="text-2xl font-bold mb-4 text-center text-[#382f29]">Login / Sign Up</h1>
           {error && (

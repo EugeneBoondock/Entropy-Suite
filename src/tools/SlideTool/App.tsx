@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import ScrollToTop from '../../components/ScrollToTop';
 import LandingPage from '../../pages/LandingPage';
 import Pricing from '../../pages/Pricing';
 import ToolsPage from '../../pages/ToolsPage';
@@ -688,6 +689,7 @@ const EditorApp: React.FC = () => {
 
 const App: React.FC = () => (
   <BrowserRouter>
+    <ScrollToTop />
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/editor" element={<EditorApp />} />

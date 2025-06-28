@@ -55,6 +55,14 @@ const Navbar: React.FC = () => {
             <Link className="text-[#382f29] text-sm font-medium leading-normal hover:text-[#e67722] transition-colors duration-200" to="/tools">Tools</Link>
             <Link className="text-[#382f29] text-sm font-medium leading-normal hover:text-[#e67722] transition-colors duration-200" to="/pricing">Pricing</Link>
             <a className="text-[#382f29] text-sm font-medium leading-normal hover:text-[#e67722] transition-colors duration-200" href="#">Blog</a>
+            <a 
+              href="https://coff.ee/eugeneboondock" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-[#382f29] text-sm font-medium leading-normal hover:text-[#e67722] transition-colors duration-200 flex items-center gap-1"
+            >
+              ☕ Coffee
+            </a>
             {userEmail ? (
               <>
                 <Link className="text-[#382f29] text-sm font-medium leading-normal hover:text-[#e67722] transition-colors duration-200" to="/dashboard">Dashboard</Link>
@@ -107,6 +115,15 @@ const Navbar: React.FC = () => {
               onClick={() => setNavOpen(false)}
             >
               Blog
+            </a>
+            <a 
+              href="https://www.buymeacoffee.com/entropytoolsai" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-[#382f29] text-base font-medium py-3 w-full text-center hover:bg-[#e67722]/20 rounded-lg transition-all duration-200"
+              onClick={() => setNavOpen(false)}
+            >
+              ☕ Buy me a coffee
             </a>
             {userEmail ? (
               <>
