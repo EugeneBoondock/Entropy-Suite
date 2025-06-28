@@ -44,6 +44,8 @@ import MusicGeneratorPage from '../../pages/MusicGeneratorPage';
 import AISearchEnginePage from '../../pages/AISearchEnginePage';
 import DashboardPage from '../../pages/DashboardPage';
 import NotesPage from '../../pages/NotesPage';
+import BlogPage from '../../pages/BlogPage';
+import BlogPostPage from '../../pages/BlogPostPage';
 import PptxGenJS from 'pptxgenjs';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -734,6 +736,8 @@ const App: React.FC = () => (
       <Route path="/ai-search-engine" element={<AISearchEnginePage />} />
       <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/notes" element={<NotesPage />} />
+      <Route path="/blog" element={<BlogPage />} />
+      <Route path="/blog/:id" element={<BlogPostPage />} />
       <Route path="/login" element={<LoginPage />} />
       </Routes>
   </BrowserRouter>

@@ -54,7 +54,7 @@ const Navbar: React.FC = () => {
           <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-9">
             <Link className="text-[#382f29] text-sm font-medium leading-normal hover:text-[#e67722] transition-colors duration-200" to="/tools">Tools</Link>
             <Link className="text-[#382f29] text-sm font-medium leading-normal hover:text-[#e67722] transition-colors duration-200" to="/pricing">Pricing</Link>
-            <a className="text-[#382f29] text-sm font-medium leading-normal hover:text-[#e67722] transition-colors duration-200" href="#">Blog</a>
+            <Link className="text-[#382f29] text-sm font-medium leading-normal hover:text-[#e67722] transition-colors duration-200" to="/blog">Blog</Link>
             <a 
               href="https://coff.ee/eugeneboondock" 
               target="_blank" 
@@ -109,13 +109,13 @@ const Navbar: React.FC = () => {
             >
               Pricing
             </Link>
-            <a 
+            <Link 
               className="text-[#382f29] text-base font-medium py-3 w-full text-center hover:bg-[#e67722]/20 rounded-lg transition-all duration-200" 
-              href="#"
+              to="/blog"
               onClick={() => setNavOpen(false)}
             >
               Blog
-            </a>
+            </Link>
             <a 
               href="https://www.buymeacoffee.com/entropytoolsai" 
               target="_blank" 

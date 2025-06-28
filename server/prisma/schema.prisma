@@ -131,6 +131,22 @@ model Note {
   @@map("notes")
 }
 
+model BlogPost {
+  id            String   @id @default(uuid())
+  title         String
+  content       String   @db.Text
+  excerpt       String   @db.Text
+  author        String
+  authorEmail   String   @map("author_email")
+  published     Boolean  @default(false)
+  tags          String[] @default([])
+  featuredImage String?  @map("featured_image")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("blog_posts")
+}
+
 enum SubscriptionTier {
   FREE
   BASIC      // 1 month - $5
