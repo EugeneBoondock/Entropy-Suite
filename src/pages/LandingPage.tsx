@@ -1,8 +1,516 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { ChevronLeft, ChevronRight, PlayCircle, PauseCircle } from "lucide-react";
 import { default as Navbar } from "../components/Navbar";
+import { supabase } from "../utils/supabaseClient";
 
 const LandingPage: React.FC = () => {
+  const navigate = useNavigate();
+
+  // Handle Get Started button click
+  const handleGetStarted = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        navigate('/tools');
+      } else {
+        navigate('/login');
+      }
+    } catch (error) {
+      console.error('Error checking auth status:', error);
+      navigate('/login');
+    }
+  };
+
+  // All tools data - including the new Notes tool
+  const allTools = [
+    {
+      title: 'Text to Presentation',
+      description: 'Convert text into presentation slides.',
+      link: '/editor',
+      category: 'AI'
+    },
+    {
+      title: 'Text Summarizer',
+      description: 'Summarize long texts into concise summaries.',
+      link: '/summarizer',
+      category: 'Text'
+    },
+    {
+      title: 'File Converter',
+      description: 'Convert documents, images, and other files between different formats.',
+      link: '/converter',
+      category: 'Documents'
+    },
+    {
+      title: 'AI Chatbot',
+      description: 'Engage with an AI chatbot for various tasks.',
+      link: '/chatbot',
+      category: 'AI'
+    },
+    {
+      title: 'Notes & Journal',
+      description: 'Capture your thoughts, ideas, and daily reflections.',
+      link: '/notes',
+      category: 'Productivity'
+    },
+    {
+      title: 'Productivity Planner',
+      description: 'Plan your day and manage your tasks effectively.',
+      link: '/productivity-planner',
+      category: 'Productivity'
+    },
+    {
+      title: 'Image Resizer',
+      description: 'Resize images to desired dimensions.',
+      link: '/image-resizer',
+      category: 'Documents'
+    },
+    {
+      title: 'Video Trimmer',
+      description: 'Trim videos to specific lengths.',
+      link: '/video-trimmer',
+      category: 'Documents'
+    },
+    {
+      title: 'Audio Transcriber',
+      description: 'Transcribe audio files into text.',
+      link: '/audio-transcriber',
+      category: 'AI'
+    },
+    {
+      title: 'Data Analysis',
+      description: 'Analyze data sets and extract insights.',
+      link: '/data-analysis',
+      category: 'Documents'
+    },
+    {
+      title: 'Color Picker',
+      description: 'Generate color palettes for your designs.',
+      link: '/color-picker',
+      category: 'Design'
+    },
+    {
+      title: 'PDF Reader',
+      description: 'View and read PDF files directly in your browser.',
+      link: '/pdf-reader',
+      category: 'Documents'
+    },
+    {
+      title: 'PDF Editor',
+      description: 'Edit PDF documents with ease.',
+      link: '/pdf-editor',
+      category: 'Documents'
+    },
+    {
+      title: 'DOC Reader',
+      description: 'Read Word documents (DOC, DOCX) in your browser.',
+      link: '/doc-reader',
+      category: 'Documents'
+    },
+    {
+      title: 'File Compressor',
+      description: 'Compress files to reduce their size.',
+      link: '/file-compressor',
+      category: 'Productivity'
+    },
+    {
+      title: 'QR Code Generator',
+      description: 'Create QR codes for various purposes.',
+      link: '/qr-generator',
+      category: 'Productivity'
+    },
+    {
+      title: 'Unit Converter',
+      description: 'Convert units between different systems.',
+      link: '/unit-converter',
+      category: 'Productivity'
+    },
+    {
+      title: 'Document Translator',
+      description: 'Translate documents into different languages.',
+      link: '/document-translator',
+      category: 'AI'
+    },
+    {
+      title: 'PDF Merger',
+      description: 'Merge multiple PDF files into one.',
+      link: '/pdf-merger',
+      category: 'Documents'
+    },
+    {
+      title: 'MCP Lite',
+      description: 'Build and deploy Model Context Protocols quickly.',
+      link: '/mcp-lite',
+      category: 'AI'
+    },
+    {
+      title: 'Terminal',
+      description: 'Web-based terminal emulator with filesystem simulation.',
+      link: '/terminal',
+      category: 'Developer'
+    },
+    {
+      title: 'Basic Agent',
+      description: 'Intelligent AI assistant for complex tasks and analysis.',
+      link: '/basic-agent',
+      category: 'AI'
+    },
+    {
+      title: 'Therapy AI Agent',
+      description: 'AI-powered mental health support and therapeutic guidance.',
+      link: '/therapy-agent',
+      category: 'Health'
+    },
+    {
+      title: 'Real Terminal',
+      description: 'Full development environment with Python, Node.js, Git & OPFS persistence.',
+      link: '/real-terminal',
+      category: 'Developer'
+    },
+    {
+      title: 'Background Remover',
+      description: 'Remove backgrounds from images instantly using AI.',
+      link: '/background-remover',
+      category: 'AI'
+    },
+    {
+      title: 'Plagiarism Checker',
+      description: 'Detect copied content and ensure originality.',
+      link: '/plagiarism-checker',
+      category: 'Text'
+    },
+    {
+      title: 'YouTube Downloader',
+      description: 'Download YouTube videos in various qualities and formats.',
+      link: '/youtube-downloader',
+      category: 'Media'
+    },
+    {
+      title: 'AI Image Generator',
+      description: 'Create stunning images with FLUX.1, DALL-E 3, and other AI models.',
+      link: '/image-generator',
+      category: 'AI'
+    },
+    {
+      title: 'AI Video Generator',
+      description: 'Generate professional videos from text or images.',
+      link: '/video-generator',
+      category: 'AI'
+    },
+    {
+      title: 'AI Music Generator',
+      description: 'Create songs and music with advanced AI models.',
+      link: '/music-generator',
+      category: 'AI'
+    },
+    {
+      title: 'AI Search Engine',
+      description: 'Next-generation intelligent search with real-time results.',
+      link: '/ai-search-engine',
+      category: 'AI'
+    }
+  ];
+
+  // Professional Tools Slideshow Component
+  const ToolsSlideshow: React.FC = () => {
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [isPlaying, setIsPlaying] = useState(true);
+    const [pauseTimeout, setPauseTimeout] = useState<NodeJS.Timeout | null>(null);
+    const [visibleTools, setVisibleTools] = useState(4);
+
+    // Separate calculations for mobile and desktop
+    const getMobileSlides = () => Math.ceil(allTools.length / 1); // 1 tool per slide on mobile
+    const getDesktopSlides = () => Math.ceil(allTools.length / visibleTools); // dynamic for desktop
+    
+    const totalSlides = typeof window !== 'undefined' && window.innerWidth < 640 
+      ? getMobileSlides() 
+      : getDesktopSlides();
+
+    const nextSlide = () => {
+      const maxSlides = typeof window !== 'undefined' && window.innerWidth < 640 
+        ? allTools.length 
+        : Math.ceil(allTools.length / visibleTools);
+      setCurrentIndex((prev) => (prev + 1) % maxSlides);
+      handleUserInteraction();
+    };
+
+    const prevSlide = () => {
+      const maxSlides = typeof window !== 'undefined' && window.innerWidth < 640 
+        ? allTools.length 
+        : Math.ceil(allTools.length / visibleTools);
+      setCurrentIndex((prev) => (prev - 1 + maxSlides) % maxSlides);
+      handleUserInteraction();
+    };
+
+    const goToSlide = (index: number) => {
+      setCurrentIndex(index);
+      handleUserInteraction();
+    };
+
+    const handleUserInteraction = () => {
+      // Pause auto-advance for 20 seconds when user interacts
+      setIsPlaying(false);
+      
+      if (pauseTimeout) {
+        clearTimeout(pauseTimeout);
+      }
+      
+      const timeout = setTimeout(() => {
+        setIsPlaying(true);
+      }, 20000);
+      
+      setPauseTimeout(timeout);
+    };
+
+    const getCurrentTools = () => {
+      const startIndex = currentIndex * visibleTools;
+      return allTools.slice(startIndex, startIndex + visibleTools);
+    };
+
+    // Auto-advance slides and handle responsive design
+    useEffect(() => {
+      const updateVisibleTools = () => {
+        let newVisibleTools = 4; // default desktop
+        if (typeof window !== 'undefined') {
+          if (window.innerWidth < 640) newVisibleTools = 1; // mobile
+          else if (window.innerWidth < 1024) newVisibleTools = 2; // tablet
+          else newVisibleTools = 4; // desktop
+        }
+        
+        if (newVisibleTools !== visibleTools) {
+          setVisibleTools(newVisibleTools);
+          setCurrentIndex(0); // Reset to first slide when layout changes
+        }
+      };
+
+      updateVisibleTools();
+      window.addEventListener('resize', updateVisibleTools);
+
+      return () => {
+        window.removeEventListener('resize', updateVisibleTools);
+      };
+    }, [visibleTools]);
+
+    // Auto-advance timer
+    useEffect(() => {
+      const interval = isPlaying ? setInterval(() => {
+        const maxSlides = typeof window !== 'undefined' && window.innerWidth < 640 
+          ? allTools.length 
+          : Math.ceil(allTools.length / visibleTools);
+        setCurrentIndex((prev) => (prev + 1) % maxSlides);
+      }, 4000) : null;
+      
+      return () => {
+        if (interval) clearInterval(interval);
+      };
+    }, [isPlaying, visibleTools]);
+
+    // Cleanup timeout on unmount
+    useEffect(() => {
+      return () => {
+        if (pauseTimeout) {
+          clearTimeout(pauseTimeout);
+        }
+      };
+    }, [pauseTimeout]);
+
+      return (
+        <div className="w-full">
+          {/* Mobile Version - Full Screen Cards */}
+          <div className="block sm:hidden">
+            <div className="relative w-full">
+              {/* Mobile Navigation Dots - Simplified */}
+              <div className="flex justify-center gap-1.5 mb-6 px-4">
+                {Array.from({ length: Math.min(allTools.length, 10) }).map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => goToSlide(index)}
+                    className={`h-2.5 rounded-full transition-all duration-300 ${
+                      index === currentIndex 
+                        ? 'bg-[#e67722] w-10 shadow-md' 
+                        : 'bg-white/60 w-2.5 hover:bg-white/80'
+                    }`}
+                  />
+                ))}
+                {allTools.length > 10 && (
+                  <span className="text-xs text-[#382f29]/70 self-center ml-2">
+                    +{allTools.length - 10} more
+                  </span>
+                )}
+              </div>
+
+              {/* Mobile Full-Width Cards */}
+              <div className="overflow-hidden">
+                <div 
+                  className="flex transition-transform duration-400 ease-out"
+                  style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+                >
+                  {allTools.map((tool, slideIndex) => (
+                    <div key={slideIndex} className="w-full flex-shrink-0">
+                      <div className="px-4">
+                        <Link 
+                          to={tool.link} 
+                          className="block w-full"
+                        >
+                          <div className="bg-white/70 backdrop-blur-md border border-white/50 rounded-3xl p-8 shadow-2xl active:scale-98 transition-all duration-200 hover:shadow-3xl">
+                            {/* Mobile Card - Vertical Layout */}
+                            <div className="flex flex-col items-center text-center space-y-6">
+                              {/* Large Icon */}
+                              <div className="flex items-center justify-center w-20 h-20 bg-gradient-to-br from-[#e67722]/20 to-[#e67722]/10 rounded-2xl border-2 border-[#e67722]/30 shadow-lg">
+                                <div className="w-10 h-10 text-[#382f29]">
+                                  {getToolIcon(tool.title, tool.category)}
+                                </div>
+                              </div>
+                              
+                              {/* Content */}
+                              <div className="space-y-4 w-full">
+                                <h3 className="text-[#382f29] font-bold text-2xl leading-tight">
+                                  {tool.title}
+                                </h3>
+                                <p className="text-[#5a5a5a] text-base leading-relaxed max-w-sm mx-auto">
+                                  {tool.description}
+                                </p>
+                                <div className="pt-2">
+                                  <span className="inline-block px-4 py-2 text-sm font-semibold bg-gradient-to-r from-[#e67722] to-[#d66320] text-white rounded-full shadow-lg">
+                                    {tool.category}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Mobile Bottom Navigation */}
+              <div className="flex justify-center items-center gap-6 mt-8 px-4">
+                <button
+                  onClick={prevSlide}
+                  className="p-4 rounded-2xl bg-white/90 backdrop-blur-sm border border-white/70 shadow-xl active:scale-90 transition-all duration-200 hover:shadow-2xl"
+                >
+                  <ChevronLeft className="w-6 h-6 text-[#382f29]" />
+                </button>
+                
+                <div className="text-center">
+                  <span className="text-[#382f29] text-lg font-bold px-6 py-3 bg-white/60 rounded-2xl backdrop-blur-sm border border-white/50 shadow-lg">
+                    {currentIndex + 1} / {allTools.length}
+                  </span>
+                </div>
+                
+                <button
+                  onClick={nextSlide}
+                  className="p-4 rounded-2xl bg-white/90 backdrop-blur-sm border border-white/70 shadow-xl active:scale-90 transition-all duration-200 hover:shadow-2xl"
+                >
+                  <ChevronRight className="w-6 h-6 text-[#382f29]" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop Version - Grid Layout */}
+          <div className="hidden sm:block">
+            <div className="relative">
+              {/* Desktop Navigation */}
+              <div className="relative overflow-hidden">
+                <div className="relative px-12 md:px-16">
+                  <button
+                    onClick={prevSlide}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white border border-white/50 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  >
+                    <ChevronLeft className="w-4 h-4 text-[#382f29]" />
+                  </button>
+
+                  <button
+                    onClick={nextSlide}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white border border-white/50 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  >
+                    <ChevronRight className="w-4 h-4 text-[#382f29]" />
+                  </button>
+
+                  {/* Desktop Grid */}
+                  <div className="overflow-hidden">
+                    <div 
+                      className="flex transition-transform duration-500 ease-out"
+                      style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+                    >
+                      {Array.from({ length: totalSlides }).map((_, slideIndex) => (
+                        <div 
+                          key={slideIndex} 
+                          className="w-full flex-shrink-0 py-6"
+                        >
+                          <div 
+                            className="grid gap-4 px-4"
+                            style={{
+                              gridTemplateColumns: `repeat(${visibleTools}, 1fr)`
+                            }}
+                          >
+                            {allTools.slice(slideIndex * visibleTools, (slideIndex + 1) * visibleTools).map((tool, toolIndex) => (
+                              <Link 
+                                key={`desktop-${slideIndex}-${toolIndex}`} 
+                                to={tool.link} 
+                                className="group block"
+                              >
+                                <div className="bg-white/40 backdrop-blur-sm border border-white/30 rounded-lg p-4 hover:bg-white/60 hover:border-white/50 transition-all duration-200 group-hover:scale-[1.02] shadow-sm hover:shadow-md h-full min-h-[180px] flex flex-col">
+                                  <div className="flex flex-col items-center text-center gap-3 flex-1">
+                                    <div className="flex items-center justify-center w-12 h-12 bg-white/50 rounded-lg border border-white/30 group-hover:bg-white/70 transition-all duration-200">
+                                      {getToolIcon(tool.title, tool.category)}
+                                    </div>
+                                    
+                                    <div className="space-y-2 flex-1 flex flex-col">
+                                      <h3 className="text-[#382f29] font-semibold text-sm leading-tight">{tool.title}</h3>
+                                      <p className="text-[#5a5a5a] text-xs leading-relaxed flex-1 px-1" style={{
+                                        display: '-webkit-box',
+                                        WebkitLineClamp: 3,
+                                        WebkitBoxOrient: 'vertical',
+                                        overflow: 'hidden'
+                                      }}>{tool.description}</p>
+                                      <span className="inline-block px-2 py-1 text-xs font-medium bg-[#e67722]/20 text-[#8b3a00] rounded border border-[#e67722]/30 mt-auto">
+                                        {tool.category}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Desktop Indicators */}
+              <div className="flex items-center justify-center gap-1 mt-6">
+                {Array.from({ length: totalSlides }).map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => goToSlide(index)}
+                    className={`h-1.5 rounded-full transition-all duration-200 ${
+                      index === currentIndex 
+                        ? 'bg-[#e67722] w-6' 
+                        : 'bg-white/50 hover:bg-white/70 w-1.5'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Subtle pause indicator */}
+          {!isPlaying && (
+            <div className="absolute top-2 right-2 bg-white/70 backdrop-blur-sm rounded px-2 py-1 text-xs text-[#382f29]/70">
+              Paused
+            </div>
+          )}
+        </div>
+      );
+  };
+
   // Function to get icon for each tool category/type - same as ToolsPage
   const getToolIcon = (title: string, category: string) => {
     const iconClass = "w-6 h-6 text-[#382f29]";
@@ -72,6 +580,14 @@ const LandingPage: React.FC = () => {
         </svg>
       );
     }
+    if (title.includes('Notes') || title.includes('Journal')) {
+      return (
+        <svg className={iconClass} fill="currentColor" viewBox="0 0 24 24">
+          <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+          <path d="M16.5 4.5l1.5 1.5-1.5 1.5-1.5-1.5z" opacity="0.5"/>
+        </svg>
+      );
+    }
     
     // Default icon for any other tools
     return (
@@ -98,12 +614,14 @@ const LandingPage: React.FC = () => {
         
         <div className="layout-container flex h-full grow flex-col relative z-10">
         <Navbar />
-        <div className="px-2 sm:px-4 md:px-10 lg:px-20 flex flex-1 justify-center py-2 sm:py-5">
-          <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
+        {/* Spacer for fixed navbar */}
+        <div className="h-16 sm:h-20"></div>
+        <div className="px-0 sm:px-4 md:px-10 lg:px-20 flex flex-1 justify-center py-2 sm:py-5">
+          <div className="layout-content-container flex flex-col w-full sm:max-w-[960px] flex-1">
             <div className="@container">
-              <div className="p-2 sm:p-4">
+              <div className="p-4 sm:p-4">
                 <div
-                  className="relative flex min-h-[320px] sm:min-h-[400px] md:min-h-[480px] flex-col gap-4 sm:gap-6 md:gap-8 sm:rounded-xl items-center justify-center p-2 sm:p-4 overflow-hidden"
+                  className="relative flex min-h-[300px] sm:min-h-[400px] md:min-h-[480px] flex-col gap-6 sm:gap-6 md:gap-8 rounded-xl items-center justify-center p-6 sm:p-4 overflow-hidden"
                 >
                   {/* Overlay for better text readability */}
                   <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-black/40 sm:rounded-xl"></div>
@@ -112,87 +630,46 @@ const LandingPage: React.FC = () => {
                   <div className="relative z-10 flex flex-col gap-4 sm:gap-6 md:gap-8 items-center justify-center">
                   <div className="flex flex-col gap-2 text-center">
                     <h1
-                      className="text-[#2F4F4F] text-2xl font-black leading-tight tracking-[-0.02em] sm:text-3xl md:text-4xl lg:text-5xl sm:tracking-[-0.033em]"
-                      style={{ textShadow: '0px 0px 5px white, 0px 0px 5px white' }}
+                      className="text-[#2F4F4F] text-xl font-bold leading-tight tracking-[-0.01em] sm:text-2xl md:text-3xl lg:text-4xl break-words whitespace-normal px-2"
+                      style={{ 
+                        textShadow: '0px 0px 6px white, 0px 0px 8px white',
+                        fontFamily: '"Roboto", "Arial", sans-serif'
+                      }}
                     >
-                      Unleash the Power of Randomness with Entropy Suite
+                      Unleash the Power of Random tools in the palm of your hand
                     </h1>
                     <h2 
-                      className="text-[#2F4F4F] text-base font-normal leading-normal sm:text-lg md:text-xl lg:text-2xl max-w-xl mx-auto"
-                      style={{ textShadow: '0px 0px 5px white, 0px 0px 10px white' }}
+                      className="text-[#2F4F4F] text-base font-normal leading-normal sm:text-lg md:text-xl max-w-xl mx-auto"
+                      style={{ 
+                        textShadow: '0px 0px 4px white, 0px 0px 6px white',
+                        fontFamily: '"Roboto", "Arial", sans-serif'
+                      }}
                     >
-                      Spend your time on what Matters.
+                      Spend your time on what actually Matters... living
                     </h2>
                   </div>
-                  <button
-                    className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 @[480px]:h-12 @[480px]:px-5 bg-[#e67722] text-[#382f29] text-sm font-bold leading-normal tracking-[0.015em] @[480px]:text-base @[480px]:font-bold @[480px]:leading-normal @[480px]:tracking-[0.015em]"
+                  <Link
+                    to="/tools"
+                    className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 @[480px]:h-12 @[480px]:px-5 bg-[#e67722] text-[#382f29] text-sm font-bold leading-normal tracking-[0.015em] @[480px]:text-base @[480px]:font-bold @[480px]:leading-normal @[480px]:tracking-[0.015em] hover:bg-[#d66320] transition-colors duration-200"
                   >
                     <span className="truncate">Explore our suite</span>
-                  </button>
+                  </Link>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="flex flex-col gap-10 px-4 py-10 @container">
-              <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-8 sm:gap-8 md:gap-10 px-0 sm:px-4 py-8 sm:py-8 md:py-10 @container">
+              <div className="flex flex-col gap-4 px-4 sm:px-0">
                 <h1
-                  className="text-[#382f29] tracking-light text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] max-w-[720px]"
+                  className="text-[#382f29] tracking-light text-3xl sm:text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] max-w-[720px]"
                 >
                   Your Daily Dose of Useful Randomness
                 </h1>
-                <p className="text-[#382f29] text-base font-normal leading-normal max-w-[720px]">
+                <p className="text-[#382f29] text-base sm:text-base font-normal leading-normal max-w-[720px]">
                   Entropy Suite provides a wide array of AI-driven utilities to simplify your daily tasks and spark creativity.
                 </p>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 p-0">
-                <Link to="/editor" style={{ textDecoration: 'none' }}>
-                  <div className="flex flex-1 gap-3 rounded-lg border border-[#53463c] bg-white/20 backdrop-blur-sm p-4 flex-col hover:ring-2 hover:ring-[#e67722] hover:bg-white/30 transition-all duration-300">
-                    <div className="text-[#382f29]">
-                      {getToolIcon("Text to Presentation", "AI")}
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <h2 className="text-[#382f29] text-base font-bold leading-tight">Text to Presentation</h2>
-                      <p className="text-[#5a5a5a] text-sm font-normal leading-normal">Transform text into engaging presentations with AI-powered design.</p>
-                    </div>
-                  </div>
-                </Link>
-                
-                <Link to="/chatbot" style={{ textDecoration: 'none' }}>
-                  <div className="flex flex-1 gap-3 rounded-lg border border-[#53463c] bg-white/20 backdrop-blur-sm p-4 flex-col hover:ring-2 hover:ring-[#e67722] hover:bg-white/30 transition-all duration-300">
-                    <div className="text-[#382f29]">
-                      {getToolIcon("AI Chatbot", "AI")}
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <h2 className="text-[#382f29] text-base font-bold leading-tight">AI Chatbot</h2>
-                      <p className="text-[#5a5a5a] text-sm font-normal leading-normal">Engage with an intelligent AI chatbot for various tasks and assistance.</p>
-                    </div>
-                  </div>
-                </Link>
-                
-                <Link to="/converter" style={{ textDecoration: 'none' }}>
-                  <div className="flex flex-1 gap-3 rounded-lg border border-[#53463c] bg-white/20 backdrop-blur-sm p-4 flex-col hover:ring-2 hover:ring-[#e67722] hover:bg-white/30 transition-all duration-300">
-                    <div className="text-[#382f29]">
-                      {getToolIcon("File Converter", "Documents")}
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <h2 className="text-[#382f29] text-base font-bold leading-tight">File Converter</h2>
-                      <p className="text-[#5a5a5a] text-sm font-normal leading-normal">Convert documents, images, and files between different formats seamlessly.</p>
-                    </div>
-                  </div>
-                </Link>
-                
-                <Link to="/real-terminal" style={{ textDecoration: 'none' }}>
-                  <div className="flex flex-1 gap-3 rounded-lg border border-[#53463c] bg-white/20 backdrop-blur-sm p-4 flex-col hover:ring-2 hover:ring-[#e67722] hover:bg-white/30 transition-all duration-300">
-                    <div className="text-[#382f29]">
-                      {getToolIcon("Real Terminal", "Terminal")}
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <h2 className="text-[#382f29] text-base font-bold leading-tight">Real Terminal</h2>
-                      <p className="text-[#5a5a5a] text-sm font-normal leading-normal">Full development environment with Python, Node.js, Git & AI integration.</p>
-                    </div>
-                  </div>
-                </Link>
-              </div>
+              <ToolsSlideshow />
             </div>
             <div className="flex flex-col gap-10 px-4 py-10 @container">
               <div className="flex flex-col gap-4">
@@ -263,7 +740,8 @@ const LandingPage: React.FC = () => {
                 <div className="flex flex-1 justify-center">
                   <div className="flex justify-center">
                     <button
-                      className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 @[480px]:h-12 @[480px]:px-5 bg-[#e67722] text-[#382f29] text-sm font-bold leading-normal tracking-[0.015em] @[480px]:text-base @[480px]:font-bold @[480px]:leading-normal @[480px]:tracking-[0.015em] grow"
+                      onClick={handleGetStarted}
+                      className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 @[480px]:h-12 @[480px]:px-5 bg-[#e67722] text-[#382f29] text-sm font-bold leading-normal tracking-[0.015em] @[480px]:text-base @[480px]:font-bold @[480px]:leading-normal @[480px]:tracking-[0.015em] grow hover:bg-[#d66320] transition-colors duration-200"
                     >
                       <span className="truncate">Get Started</span>
                     </button>
@@ -273,16 +751,41 @@ const LandingPage: React.FC = () => {
             </div>
           </div>
         </div>
-        <footer className="flex justify-center">
+        
+        {/* Subtle separator line */}
+        <div className="w-full border-t border-[#b8a99d]/30"></div>
+        
+        <footer className="flex justify-center px-4">
           <div className="flex max-w-[960px] flex-1 flex-col">
-            <footer className="flex flex-col gap-6 px-5 py-10 text-center @container">
-              <div className="flex flex-wrap items-center justify-center gap-6 @[480px]:flex-row @[480px]:justify-around">
-                <a className="text-[#b8a99d] text-base font-normal leading-normal min-w-40" href="#">About</a>
-                <a className="text-[#b8a99d] text-base font-normal leading-normal min-w-40" href="#">Contact</a>
-                <a className="text-[#b8a99d] text-base font-normal leading-normal min-w-40" href="#">Privacy Policy</a>
-                <a className="text-[#b8a99d] text-base font-normal leading-normal min-w-40" href="#">Terms of Service</a>
+            <footer className="flex flex-col gap-6 py-10 text-center @container">
+              {/* Translucent card for footer content */}
+              <div className="bg-white/20 backdrop-blur-sm rounded-xl border border-white/30 p-6 mx-4">
+                <div className="flex flex-wrap items-center justify-center gap-6 @[480px]:flex-row @[480px]:justify-around mb-6">
+                  <Link to="/about" className="text-[#382f29] text-base font-medium leading-normal min-w-40 hover:text-[#e67722] transition-colors duration-200">About</Link>
+                  <Link to="/contact" className="text-[#382f29] text-base font-medium leading-normal min-w-40 hover:text-[#e67722] transition-colors duration-200">Contact</Link>
+                  <Link to="/privacy-policy" className="text-[#382f29] text-base font-medium leading-normal min-w-40 hover:text-[#e67722] transition-colors duration-200">Privacy Policy</Link>
+                  <Link to="/terms-of-service" className="text-[#382f29] text-base font-medium leading-normal min-w-40 hover:text-[#e67722] transition-colors duration-200">Terms of Service</Link>
+                </div>
+                <div className="flex flex-col gap-4 items-center">
+                  <p className="text-[#382f29] text-base font-normal leading-normal">© 2025 Entropy Suite. All rights reserved.</p>
+                  
+                  {/* Styled Boondock Labs button */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-[#382f29] text-sm font-normal">Powered by</span>
+                    <a 
+                      href="https://boondocklabs.co.za" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#e67722] to-[#d66320] text-white text-sm font-semibold rounded-lg hover:from-[#d66320] hover:to-[#c55a1e] transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                    >
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2L2 7v10c0 5.55 3.84 9.74 9 11 5.16-1.26 9-5.45 9-11V7l-10-5z"/>
+                      </svg>
+                      Boondock Labs
+                    </a>
+                  </div>
+                </div>
               </div>
-              <p className="text-[#b8a99d] text-base font-normal leading-normal">© 2025 Entropy Suite. All rights reserved.</p>
             </footer>
           </div>
         </footer>

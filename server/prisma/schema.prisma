@@ -45,4 +45,96 @@ enum RunStatus {
   RUNNING
   COMPLETED
   FAILED
+}
+
+model User {
+  id               String            @id @default(uuid())
+  email            String            @unique
+  name             String?
+  subscriptionTier SubscriptionTier  @default(FREE)
+  subscriptionEnds DateTime?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  
+  // Relations
+  usedCoupons      CouponCode[]
+  apiKeys          ApiKey[]
+  notes            Note[]
+
+  @@map("users")
+}
+
+model ApiKey {
+  id        String   @id @default(uuid())
+  userId    String
+  name      String   // User-friendly name for the key
+  service   String   // Service provider (openai, anthropic, etc.)
+  key       String   // Encrypted API key
+  lastUsed  DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("api_keys")
+}
+
+model CouponCode {
+  id          String       @id @default(uuid())
+  code        String       @unique
+  tier        SubscriptionTier
+  duration    Int          // Duration in days
+  used        Boolean      @default(false)
+  usedBy      String?      // User ID who used it
+  usedAt      DateTime?
+  createdAt   DateTime     @default(now())
+  expiresAt   DateTime?
+  
+  // Relations
+  user        User?        @relation(fields: [usedBy], references: [id])
+  
+  @@map("coupon_codes")
+}
+
+model Purchase {
+  id              String   @id @default(uuid())
+  bmcTransactionId String? @unique // BuyMeACoffee transaction ID
+  supporterEmail  String
+  supporterName   String?
+  amount          Float
+  currency        String   @default("USD")
+  tier            SubscriptionTier
+  couponCodeId    String?
+  processed       Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  
+  @@map("purchases")
+}
+
+model Note {
+  id         String   @id @default(uuid())
+  userId     String
+  title      String
+  content    String   @db.Text
+  category   String   @default("personal")
+  tags       String[] @default([])
+  isFavorite Boolean  @default(false) @map("is_favorite")
+  mood       String?
+  weather    String?
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notes")
+}
+
+enum SubscriptionTier {
+  FREE
+  BASIC      // 1 month - $5
+  PRO        // 3 months - $12
+  PREMIUM    // 6 months - $20
+  LIFETIME   // Forever - $50
 } 

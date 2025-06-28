@@ -29,6 +29,19 @@ import TherapyAgentPage from '../../pages/TherapyAgentPage';
 import RealTerminalPageNew from '../../pages/RealTerminalPageNew';
 import BackgroundRemoverPage from '../../pages/BackgroundRemoverPage';
 import PlagiarismCheckerPage from '../../pages/PlagiarismCheckerPage';
+import ActivatePage from '../../pages/ActivatePage';
+import AdminPage from '../../pages/AdminPage';
+import AboutPage from '../../pages/AboutPage';
+import ContactPage from '../../pages/ContactPage';
+import PrivacyPolicyPage from '../../pages/PrivacyPolicyPage';
+import TermsOfServicePage from '../../pages/TermsOfServicePage';
+import YouTubeDownloaderPage from '../../pages/YouTubeDownloaderPage';
+import ImageGeneratorPage from '../../pages/ImageGeneratorPage';
+import VideoGeneratorPage from '../../pages/VideoGeneratorPage';
+import MusicGeneratorPage from '../../pages/MusicGeneratorPage';
+import AISearchEnginePage from '../../pages/AISearchEnginePage';
+import DashboardPage from '../../pages/DashboardPage';
+import NotesPage from '../../pages/NotesPage';
 import PptxGenJS from 'pptxgenjs';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -704,8 +717,21 @@ const App: React.FC = () => (
           <Route path="/real-terminal" element={<RealTerminalPageNew />} />
       <Route path="/background-remover" element={<BackgroundRemoverPage />} />
       <Route path="/plagiarism-checker" element={<PlagiarismCheckerPage />} />
+      <Route path="/activate" element={<ActivatePage />} />
+      <Route path="/admin" element={<AdminPage />} />
+      <Route path="/about" element={<AboutPage />} />
+      <Route path="/contact" element={<ContactPage />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+      <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+              <Route path="/youtube-downloader" element={<YouTubeDownloaderPage />} />
+                  <Route path="/image-generator" element={<ImageGeneratorPage />} />
+          <Route path="/video-generator" element={<VideoGeneratorPage />} />
+                <Route path="/music-generator" element={<MusicGeneratorPage />} />
+      <Route path="/ai-search-engine" element={<AISearchEnginePage />} />
+      <Route path="/dashboard" element={<DashboardPage />} />
+      <Route path="/notes" element={<NotesPage />} />
       <Route path="/login" element={<LoginPage />} />
-    </Routes>
+      </Routes>
   </BrowserRouter>
 );
 

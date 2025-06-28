@@ -181,7 +181,7 @@ const FileCompressorPage: React.FC = () => {
     <div className="min-h-screen bg-[#f6f0e4]">
       <Navbar />
       
-      <div className="pt-16 px-4 sm:px-6 lg:px-8">
+      <div className="pt-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold text-[#382f29] mb-4">File Compressor</h1>

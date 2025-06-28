@@ -42,6 +42,14 @@ const ToolsPage: React.FC = () => {
         </svg>
       );
     }
+    if (title.includes('Image') && title.includes('Generator')) {
+      return (
+        <svg className={iconClass} fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2zm0 4.24l-1.34 2.69-2.95.43 2.15 2.1-.51 2.95L12 13.77l2.65 1.39-.51-2.95 2.15-2.1-2.95-.43L12 6.24z"/>
+          <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" opacity="0.5"/>
+        </svg>
+      );
+    }
     if (title.includes('Image') || title.includes('Resizer')) {
       return (
         <svg className={iconClass} fill="currentColor" viewBox="0 0 24 24">
@@ -49,10 +57,26 @@ const ToolsPage: React.FC = () => {
         </svg>
       );
     }
+    if (title.includes('Video') && title.includes('Generator')) {
+      return (
+        <svg className={iconClass} fill="currentColor" viewBox="0 0 24 24">
+          <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" opacity="0.3"/>
+        </svg>
+      );
+    }
     if (title.includes('Video') || title.includes('Trimmer')) {
       return (
         <svg className={iconClass} fill="currentColor" viewBox="0 0 24 24">
           <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+        </svg>
+      );
+    }
+    if (title.includes('Music') && title.includes('Generator')) {
+      return (
+        <svg className={iconClass} fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" opacity="0.3"/>
         </svg>
       );
     }
@@ -156,6 +180,14 @@ const ToolsPage: React.FC = () => {
         </svg>
       );
     }
+    if (title.includes('Search') && title.includes('Engine')) {
+      return (
+        <svg className={iconClass} fill="currentColor" viewBox="0 0 24 24">
+          <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" opacity="0.3"/>
+        </svg>
+      );
+    }
     
     // Default icon for any other tools
     return (
@@ -199,6 +231,13 @@ const ToolsPage: React.FC = () => {
       description: 'Plan your day and manage your tasks effectively.',
       imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBkLfWyE2PRFPPEuEAmmK1BDPi1wEhEThoHPOj0dnNdjwlGb_C1tkN69K6QEgIfWPucrCwUEKfF4zVQbFt3Mqabl8CwOobfoNxgZWehzwcQRuH_FO-JdtCVSdE8_ZbBYQlptKkwvgO4MiW6_gu72w56rI8qQnfZasZq-D_GOUMrNRsnHUAPYxHArq7MFpC4nD5HhFiRWvKF_l_LCZ2BDcGzHC6LqfIX_7pdGPpDMAYNI6hKkccSJCrSLkdkW0UaE6oU5OAzWuQtoiM5',
       link: '/productivity-planner',
+      category: 'Productivity'
+    },
+    {
+      title: 'Notes & Journal',
+      description: 'Capture your thoughts, ideas, and daily reflections with a beautiful journaling tool.',
+      imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBkLfWyE2PRFPPEuEAmmK1BDPi1wEhEThoHPOj0dnNdjwlGb_C1tkN69K6QEgIfWPucrCwUEKfF4zVQbFt3Mqabl8CwOobfoNxgZWehzwcQRuH_FO-JdtCVSdE8_ZbBYQlptKkwvgO4MiW6_gu72w56rI8qQnfZasZq-D_GOUMrNRsnHUAPYxHArq7MFpC4nD5HhFiRWvKF_l_LCZ2BDcGzHC6LqfIX_7pdGPpDMAYNI6hKkccSJCrSLkdkW0UaE6oU5OAzWuQtoiM5',
+      link: '/notes',
       category: 'Productivity'
     },
     {
@@ -340,6 +379,48 @@ const ToolsPage: React.FC = () => {
       imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCdMBIpSpvqCKgB3kDcMoLopk5OT9gz5JsaMTSQ0F1kcFoL4IqGF60PZbu1Zof1LWtgQmgf3DxspVDIEQ0AVL83B2xw7eZ-rKpO6HzCz99Z_hgQmhJF5fIf1xfsGKyhLP6Pxahwxj47Cc976FQA0qw7bRV-V4kLtVwXcjI4aGZt4iCasPT762z0Szik8kbAkOGidSlIveaREVbHaYxIcs3zUaa0Zgt8mmVYm0pKkJtwtIO5T7vEMnhTXPhvfj16pscPds9F8A98U4L2',
       link: '/plagiarism-checker',
       category: 'Text'
+    },
+    {
+      title: 'YouTube Downloader',
+      description: 'Download YouTube videos in various qualities and formats.',
+      imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDYNsNyQx6n-3RkY70qBNWVscPxNXEfeFWFRuEUl79ggsiYvW2WmZduwbNKNr5KgwJM35zuc2xg41ABqvXzN4afMPEeeaFSQC1HSBcdeq-q_pCsstNmCZhR4pZtqU8VWq2nD_DFiMGpe8yeVAXw4sf5SLXC42HCdty0DDZfW-CeKFeJnJNX4P7bwGFO8DGJQ2r1ElY8vOTRV6rteNZfzQQ-OUy5GcsC87gyy934BUdxzAKFtP1hfjJcQ-ni-tydcr7UJ2ko1KHRL_5e',
+      link: '/youtube-downloader',
+      category: 'Media'
+    },
+    {
+      title: 'AI Image Generator',
+      description: 'Create stunning images with FLUX.1, DALL-E 3, Midjourney, and other AI models.',
+      imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB2TYajeOA8xvQvxqTZVDSy9Jd9brT-Spz3vuTf2C1oyDE3f2ZoPRxp2XxBN3jduoL3KYVVRWi4B_ZaD9Fla4bVMuECUVsL9USuoZbgHhEzb6p8AfgAIP3jXOHMtWaE1nbJAQ_L0wlz750b0ClIM_HvGEidhO7O5bqCf5gVmPs-45xcQkY65d96tMM2OKjouI8MPVI9H97UE1f6xAxThciSg1bWHM1ceb_A3bbwGu6s2suafqO1dzamqws68REgJlGuwC7XlqfX25xE',
+      link: '/image-generator',
+      category: 'AI'
+    },
+    {
+      title: 'AI Video Generator',
+      description: 'Generate professional videos from text or images using Runway Gen-4, Sora, and Kling AI.',
+      imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDYNsNyQx6n-3RkY70qBNWVscPxNXEfeFWFRuEUl79ggsiYvW2WmZduwbNKNr5KgwJM35zuc2xg41ABqvXzN4afMPEeeaFSQC1HSBcdeq-q_pCsstNmCZhR4pZtqU8VWq2nD_DFiMGpe8yeVAXw4sf5SLXC42HCdty0DDZfW-CeKFeJnJNX4P7bwGFO8DGJQ2r1ElY8vOTRV6rteNZfzQQ-OUy5GcsC87gyy934BUdxzAKFtP1hfjJcQ-ni-tydcr7UJ2ko1KHRL_5e',
+      link: '/video-generator',
+      category: 'AI'
+    },
+    {
+      title: 'AI Music Generator',
+      description: 'Create songs and music with Suno AI v4.5, Udio v2, and other advanced music generation models.',
+      imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDe6aECZ0shVbpHcTYimjNfgSu7YDdSBL6ZL0nF6dyTmlF1uzSLMYF09AcwDhflHC3xg5jOcniyi_IqyKZ1IwNgjyBiN_pKLAOtuGZXTQAJtqfv2qwE6Ks6MNX_hwV6TquuuSMKMGaDI1j8e89DkUJRVv0RltTc8qf3grkRLV9CJAh5Mh45AEzwy3MshlPzlmUu-1oY9FVPhcJtUVAkewvk3hFB4bBYZj93PVyepVGk-16tAPKH3heBUOpMrhAbOA6W5136sehF4IeQ',
+      link: '/music-generator',
+      category: 'AI'
+    },
+    {
+      title: 'AI Search Engine',
+      description: 'Next-generation intelligent search powered by Perplexity Pro 2025, SearchGPT-4, Grok 3.0, and Claude Search with real-time results and source verification.',
+      imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCBYTCEG-uu12NKmCQYHeDOO4w3yG1BlnH4TxVoqP5tgSpY1X1AeloG6KibodwbVhdiFTA4s3canYMiKHbgpu7r53zDgnde2awzp_jKgslfgbyfNrz426cU_vV21_WnZAo8BWGZTgmR48ifYkkQJ8V0XlyDxTvLkmpvvG4voyYcDVIhfICXZCKGaegjhcA3lAEoEEiPJ6YSoFDgXCJZf8vSRlRL9HcK_e2pNBxIEVXpie8nLFnk_RK1p3vyr6MI3t8TF2vixkXltYHE',
+      link: '/ai-search-engine',
+      category: 'AI'
+    },
+    {
+      title: 'Notes & Journal',
+      description: 'Capture your thoughts, ideas, and daily reflections with a beautiful journaling tool featuring mood tracking and categories.',
+      imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCdMBIpSpvqCKgB3kDcMoLopk5OT9gz5JsaMTSQ0F1kcFoL4IqGF60PZbu1Zof1LWtgQmgf3DxspVDIEQ0AVL83B2xw7eZ-rKpO6HzCz99Z_hgQmhJF5fIf1xfsGKyhLP6Pxahwxj47Cc976FQA0qw7bRV-V4kLtVwXcjI4aGZt4iCasPT762z0Szik8kbAkOGidSlIveaREVbHaYxIcs3zUaa0Zgt8mmVYm0pKkJtwtIO5T7vEMnhTXPhvfj16pscPds9F8A98U4L2',
+      link: '/notes',
+      category: 'Productivity'
     }
   ];
 
@@ -360,7 +441,7 @@ const ToolsPage: React.FC = () => {
       
       <div className="relative z-10">
         <Navbar />
-      <main className="px-4 sm:px-10 md:px-20 lg:px-40 flex flex-1 justify-center py-5">
+      <main className="px-4 sm:px-10 md:px-20 lg:px-40 flex flex-1 justify-center py-5 pt-20">
           <div className="layout-content-container flex flex-col w-full max-w-[960px] flex-1">
             <div className="flex flex-wrap justify-between gap-3 p-4">
               <div className="bg-white/30 backdrop-blur-sm rounded-lg p-4 border border-white/40 shadow-lg">

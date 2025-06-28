@@ -5,6 +5,9 @@ import { PrismaClient } from '@prisma/client';
 import { supabase } from './supabaseAdmin';
 import { buildQueue } from './buildQueue.js';
 import authPlugin from './authMiddleware.js';
+import subscriptionRoutes from './routes/subscription.js';
+import plagiarismRoutes from './routes/plagiarism.js';
+import youtubeRoutes from './routes/youtube.js';
 
 const prisma = new PrismaClient();
 const app = Fastify({ logger: true });
@@ -12,6 +15,9 @@ const app = Fastify({ logger: true });
 await app.register(cors, { origin: true });
 await app.register(websocket);
 await app.register(authPlugin);
+await app.register(subscriptionRoutes);
+await app.register(plagiarismRoutes, { prefix: '/api/plagiarism' });
+await app.register(youtubeRoutes);
 
 // Health
 app.get('/health', async () => ({ status: 'ok' }));
