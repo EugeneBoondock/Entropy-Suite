@@ -104,14 +104,33 @@ const AboutPage: React.FC = () => {
                     <h2 className="text-[#382f29] text-2xl font-bold mb-4">About the Creator</h2>
                     <div className="flex flex-col md:flex-row gap-6 items-start">
                       <div className="flex-shrink-0">
-                        <div className="w-24 h-24 bg-gradient-to-r from-[#e67722] to-[#d66320] rounded-full flex items-center justify-center">
-                          <span className="text-white text-2xl font-bold">EB</span>
+                        <div className="w-48 h-56 rounded-full overflow-hidden border-4 border-[#e67722]/50 shadow-lg bg-white/10" style={{ borderRadius: '50% 50% 50% 50% / 42% 42% 58% 58%' }}>
+                          <img 
+                            src="/images/eugene.png" 
+                            alt="Eugene Boondock" 
+                            className="w-full h-full object-cover object-top"
+                            onError={(e) => {
+                              // Fallback to initials if image fails to load
+                              const target = e.target as HTMLImageElement;
+                              const container = target.parentElement;
+                              if (container) {
+                                container.innerHTML = '<div class="w-full h-full bg-gradient-to-r from-[#e67722] to-[#d66320] flex items-center justify-center"><span class="text-white text-4xl font-bold">EB</span></div>';
+                              }
+                            }}
+                          />
                         </div>
                       </div>
                       <div className="flex-1">
                         <h3 className="text-[#382f29] text-xl font-semibold mb-2">Eugene Boondock</h3>
                         <p className="text-[#382f29] text-base leading-relaxed mb-4">
-                          Eugene is the founder and visionary behind Entropy Suite and Boondock Labs. With a passion for AI technology 
+                          Eugene is the founder and visionary behind Entropy Suite and <a 
+                            href="https://boondocklabs.co.za" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-[#e67722] hover:text-[#d66320] transition-colors duration-200 font-semibold"
+                          >
+                            Boondock Labs
+                          </a>. With a passion for AI technology 
                           and a belief that the best solutions often come from unexpected places, Eugene created this suite of tools 
                           to help people break free from conventional workflows.
                         </p>
