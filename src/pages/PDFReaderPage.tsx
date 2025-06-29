@@ -377,6 +377,23 @@ const PDFReaderPage: React.FC = () => {
           display: flex !important;
           flex-direction: column !important;
         }
+
+        /* Mobile tweaks */
+        @media (max-width: 640px) {
+          .pdf-controls {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 0.5rem !important;
+          }
+
+          .pdf-controls input[type="number"] {
+            width: 4rem !important;
+          }
+
+          .pdf-viewer-fullscreen .pdf-content {
+            padding: 0.5rem !important;
+          }
+        }
       `}</style>
 
       {/* Background overlay */}
@@ -490,7 +507,7 @@ const PDFReaderPage: React.FC = () => {
                 
                 <div className="pdf-content">
                   {selectedDoc && (
-                    <div className="bg-white shadow-2xl rounded-lg overflow-hidden max-w-full max-h-full">
+                    <div className="bg-white shadow-2xl rounded-lg overflow-hidden w-full h-full max-w-full max-h-full">
                       <Document
                         file={selectedDoc.url}
                         onLoadSuccess={onDocumentLoadSuccess}
@@ -558,7 +575,7 @@ const PDFReaderPage: React.FC = () => {
                   <div className="space-y-6">
                     {/* Top Controls */}
                     <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4 shadow-xl">
-                      <div className="flex flex-wrap items-center justify-between gap-4">
+                      <div className="flex flex-wrap items-center justify-between gap-4 overflow-x-auto sm:overflow-visible whitespace-nowrap">
                         {/* Document Info */}
                         <div className="flex items-center gap-4">
                           <div>
@@ -688,7 +705,7 @@ const PDFReaderPage: React.FC = () => {
 
                     {/* PDF Viewer */}
                     <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl overflow-hidden">
-                      <div className="p-6 bg-gray-900/20 min-h-[600px] flex items-center justify-center">
+                      <div className="p-4 bg-gray-900/20 sm:min-h-[600px] min-h-[300px] flex items-center justify-center">
                         <div className="bg-white shadow-2xl rounded-lg overflow-hidden max-w-full">
                           <Document
                             file={selectedDoc.url}
