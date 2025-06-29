@@ -291,7 +291,7 @@ const PDFReaderPage: React.FC = () => {
     <div 
       ref={mainContainerRef}
       className="min-h-screen bg-cover bg-center bg-fixed"
-      style={{
+      style={{ 
         backgroundImage: "url('/images/bg_image.png')",
         fontFamily: '"Space Grotesk", "Noto Sans", sans-serif'
       }}
@@ -403,7 +403,7 @@ const PDFReaderPage: React.FC = () => {
         {/* Spacer for fixed navbar */}
         {!isFullscreen && <div className="h-16"></div>}
         
-        <div>
+                    <div>
           <main className={isFullscreen ? "pdf-viewer-fullscreen" : "px-4 sm:px-10 md:px-20 lg:px-40 py-8"}>
             {isFullscreen ? (
               <>
@@ -676,9 +676,9 @@ const PDFReaderPage: React.FC = () => {
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V6a2 2 0 012-2h2M4 16v2a2 2 0 002 2h2M16 4h2a2 2 0 012 2v2M16 20h2a2 2 0 002-2v-2" />
-                              </svg>
-                            </button>
-                            
+                      </svg>
+                    </button>
+
                             <button
                               onClick={downloadPDF}
                               className="p-2 bg-green-600/80 backdrop-blur-md text-white rounded-xl hover:bg-green-700/80 transition-all duration-300 shadow-lg"
@@ -689,177 +689,177 @@ const PDFReaderPage: React.FC = () => {
                               </svg>
                             </button>
 
-                            <button
-                              onClick={() => fileInputRef.current?.click()}
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
                               className="p-2 bg-purple-600/80 backdrop-blur-md text-white rounded-xl hover:bg-purple-700/80 transition-all duration-300 shadow-lg"
-                              title="Upload New PDF"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                              </svg>
-                            </button>
+                      title="Upload New PDF"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                    </button>
                           </div>
-                        </div>
-                      </div>
-                    </div>
+                  </div>
+                </div>
+              </div>
 
-                    {/* PDF Viewer */}
+              {/* PDF Viewer */}
                     <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl overflow-hidden">
                       <div className="p-4 bg-gray-900/20 sm:min-h-[600px] min-h-[300px] flex items-center justify-center">
-                        <div className="bg-white shadow-2xl rounded-lg overflow-hidden max-w-full">
-                          <Document
-                            file={selectedDoc.url}
-                            onLoadSuccess={onDocumentLoadSuccess}
-                            onLoadError={onDocumentLoadError}
-                            loading={
-                              <div className="flex flex-col items-center justify-center p-8">
-                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+                  <div className="bg-white shadow-2xl rounded-lg overflow-hidden max-w-full">
+                    <Document
+                      file={selectedDoc.url}
+                      onLoadSuccess={onDocumentLoadSuccess}
+                      onLoadError={onDocumentLoadError}
+                      loading={
+                        <div className="flex flex-col items-center justify-center p-8">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
                                 <p className="text-white">Loading PDF...</p>
-                              </div>
-                            }
-                            error={
-                              <div className="flex flex-col items-center justify-center p-8">
-                                <svg className="w-12 h-12 text-red-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                                </svg>
-                                <p className="text-red-400">Failed to load PDF</p>
-                              </div>
-                            }
-                          >
-                            <Page
-                              pageNumber={currentPage}
-                              scale={scale}
-                              renderTextLayer={false}
-                              renderAnnotationLayer={false}
-                              loading={
-                                <div className="flex items-center justify-center p-8">
-                                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                                </div>
-                              }
-                              error={
-                                <div className="flex items-center justify-center p-8">
-                                  <p className="text-red-600">Failed to load page</p>
-                                </div>
-                              }
-                            />
-                          </Document>
                         </div>
-                      </div>
-                    </div>
+                      }
+                      error={
+                        <div className="flex flex-col items-center justify-center p-8">
+                                <svg className="w-12 h-12 text-red-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                          </svg>
+                                <p className="text-red-400">Failed to load PDF</p>
+                        </div>
+                      }
+                    >
+                      <Page
+                        pageNumber={currentPage}
+                        scale={scale}
+                        renderTextLayer={false}
+                        renderAnnotationLayer={false}
+                        loading={
+                          <div className="flex items-center justify-center p-8">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                          </div>
+                        }
+                        error={
+                          <div className="flex items-center justify-center p-8">
+                            <p className="text-red-600">Failed to load page</p>
+                          </div>
+                        }
+                      />
+                    </Document>
+                  </div>
+                </div>
+              </div>
 
-                    {/* Document List */}
-                    {documents.length > 1 && (
+              {/* Document List */}
+              {documents.length > 1 && (
                       <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 shadow-xl">
                         <h3 className="text-lg font-semibold text-white mb-4">📚 Your Documents</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {documents.map(doc => (
-                            <div
-                              key={doc.id}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {documents.map(doc => (
+                      <div
+                        key={doc.id}
                               className={`p-4 border rounded-xl cursor-pointer transition-all duration-300 ${
-                                selectedDoc?.id === doc.id
+                          selectedDoc?.id === doc.id
                                   ? 'border-blue-400 bg-blue-500/20 shadow-lg'
                                   : 'border-white/30 hover:border-blue-400/50 hover:bg-white/10'
-                              }`}
-                              onClick={() => {
-                                setSelectedDoc(doc);
-                                setCurrentPage(1);
-                                setError(null);
-                              }}
-                            >
-                              <div className="flex justify-between items-start">
-                                <div className="flex-1 min-w-0">
+                        }`}
+                        onClick={() => {
+                          setSelectedDoc(doc);
+                          setCurrentPage(1);
+                          setError(null);
+                        }}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1 min-w-0">
                                   <h4 className="font-medium text-white truncate text-sm">{doc.name}</h4>
                                   <p className="text-xs text-white/60">
-                                    {doc.pageCount > 0 ? `${doc.pageCount} pages` : 'Loading...'}
-                                  </p>
-                                </div>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    deleteDocument(doc.id);
-                                  }}
+                              {doc.pageCount > 0 ? `${doc.pageCount} pages` : 'Loading...'}
+                            </p>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteDocument(doc.id);
+                            }}
                                   className="p-1 text-red-400 hover:bg-red-500/20 rounded-lg transition-all duration-300"
-                                >
-                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                  </svg>
-                                </button>
-                              </div>
-                            </div>
-                          ))}
+                          >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
                         </div>
                       </div>
-                    )}
+                    ))}
                   </div>
-                ) : (
-                  /* Upload Area */
-                  <div className="max-w-4xl mx-auto">
-                    <div
+                </div>
+              )}
+            </div>
+          ) : (
+            /* Upload Area */
+            <div className="max-w-4xl mx-auto">
+              <div
                       className={`border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-300 bg-white/10 backdrop-blur-md shadow-xl border-white/30 ${
-                        dragActive 
+                  dragActive 
                           ? 'border-blue-400 bg-blue-500/20 scale-105' 
                           : 'hover:border-blue-400/50 hover:bg-white/20'
-                      }`}
-                      onDragEnter={handleDrag}
-                      onDragLeave={handleDrag}
-                      onDragOver={handleDrag}
-                      onDrop={handleDrop}
-                    >
-                      <div className="text-6xl mb-6">📄</div>
+                }`}
+                onDragEnter={handleDrag}
+                onDragLeave={handleDrag}
+                onDragOver={handleDrag}
+                onDrop={handleDrop}
+              >
+                <div className="text-6xl mb-6">📄</div>
                       <h3 className="text-2xl font-semibold text-white mb-4">
-                        {isLoading ? 'Processing PDF...' : 'Upload Your PDF'}
-                      </h3>
+                  {isLoading ? 'Processing PDF...' : 'Upload Your PDF'}
+                </h3>
                       <p className="text-white/70 mb-6 text-lg">
-                        Drop your PDF file here or click to browse
-                      </p>
-                      
-                      {isLoading ? (
-                        <div className="flex items-center justify-center">
+                  Drop your PDF file here or click to browse
+                </p>
+                
+                {isLoading ? (
+                  <div className="flex items-center justify-center">
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mr-3"></div>
                           <span className="text-white">Loading PDF...</span>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => fileInputRef.current?.click()}
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
                           className="px-8 py-4 bg-blue-600/80 backdrop-blur-md hover:bg-blue-700/80 text-white rounded-xl font-medium transition-all duration-300 text-lg shadow-lg"
-                        >
-                          Choose PDF File
-                        </button>
-                      )}
-                      
+                  >
+                    Choose PDF File
+                  </button>
+                )}
+                
                       <div className="mt-6 text-sm text-white/50">
                         Supports PDF files up to 50MB • Use keyboard shortcuts: ← → for navigation, Ctrl+F for fullscreen
-                      </div>
-                    </div>
-                  </div>
-                )}
+                </div>
+              </div>
+            </div>
+          )}
 
-                {/* Features Section */}
+          {/* Features Section */}
                 <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8 shadow-xl mt-8">
                   <h2 className="text-2xl font-bold text-white mb-6 text-center">✨ Features</h2>
-                  <div className="grid md:grid-cols-4 gap-6">
-                    <div className="text-center">
-                      <div className="text-4xl mb-3">📄</div>
+            <div className="grid md:grid-cols-4 gap-6">
+              <div className="text-center">
+                <div className="text-4xl mb-3">📄</div>
                       <h3 className="font-semibold text-white mb-2">High Quality Rendering</h3>
                       <p className="text-white/60 text-sm">Crystal clear PDF display with text selection support</p>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-4xl mb-3">🔍</div>
+              </div>
+              <div className="text-center">
+                <div className="text-4xl mb-3">🔍</div>
                       <h3 className="font-semibold text-white mb-2">Advanced Zoom</h3>
                       <p className="text-white/60 text-sm">Multiple zoom levels and fit-to-width option</p>
-                    </div>
-                    <div className="text-center">
+              </div>
+              <div className="text-center">
                       <div className="text-4xl mb-3">⌨️</div>
                       <h3 className="font-semibold text-white mb-2">Keyboard Shortcuts</h3>
                       <p className="text-white/60 text-sm">Navigate with arrow keys, zoom with Ctrl+/-, fullscreen with Ctrl+F</p>
-                    </div>
-                    <div className="text-center">
+              </div>
+              <div className="text-center">
                       <div className="text-4xl mb-3">🖥️</div>
                       <h3 className="font-semibold text-white mb-2">Fullscreen Mode</h3>
                       <p className="text-white/60 text-sm">Immersive reading experience with fullscreen viewer</p>
-                    </div>
-                  </div>
-                </div>
+              </div>
+            </div>
+          </div>
               </div>
             )}
           </main>
