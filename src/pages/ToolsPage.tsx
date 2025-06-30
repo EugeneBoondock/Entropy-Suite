@@ -436,6 +436,13 @@ const ToolsPage: React.FC = () => {
       imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCdMBIpSpvqCKgB3kDcMoLopk5OT9gz5JsaMTSQ0F1kcFoL4IqGF60PZbu1Zof1LWtgQmgf3DxspVDIEQ0AVL83B2xw7eZ-rKpO6HzCz99Z_hgQmhJF5fIf1xfsGKyhLP6Pxahwxj47Cc976FQA0qw7bRV-V4kLtVwXcjI4aGZt4iCasPT762z0Szik8kbAkOGidSlIveaREVbHaYxIcs3zUaa0Zgt8mmVYm0pKkJtwtIO5T7vEMnhTXPhvfj16pscPds9F8A98U4L2',
       link: '/notes',
       category: 'Productivity'
+    },
+    {
+      title: 'Unihelper',
+      description: 'AI-powered university application, NSFAS, and scholarship assistant for South African students.',
+      imageUrl: 'https://cdn-icons-png.flaticon.com/512/3135/3135755.png', // Placeholder, replace with your own if needed
+      link: '/unihelper',
+      category: 'AI'
     }
   ];
 

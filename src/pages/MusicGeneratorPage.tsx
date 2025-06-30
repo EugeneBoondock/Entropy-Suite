@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Music, Sparkles, Play, Download, Pause, SkipBack, SkipForward, Volume2, Settings, Clock, Mic, Guitar, Music2 } from 'lucide-react';
+import { Music, Sparkles, Play, Download, Pause, SkipBack, SkipForward, Volume2, Settings, Clock, Mic, Music2 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 
 interface MusicOptions {
@@ -214,7 +214,7 @@ const MusicGeneratorPage: React.FC = () => {
                       }`}
                     >
                       <div className="flex flex-col items-center gap-1">
-                        <Guitar className="w-4 h-4" />
+                        <Music2 className="w-4 h-4" />
                         <span className="text-xs">Instrumental</span>
                       </div>
                     </button>
@@ -479,7 +479,7 @@ const MusicGeneratorPage: React.FC = () => {
             {generatedTracks.length === 0 ? (
               <div className="bg-white/40 backdrop-blur-md border border-white/50 rounded-xl shadow-xl p-12 text-center">
                 <div className="w-24 h-24 bg-green-100/80 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4 border border-green-200/50">
-                  <Guitar className="w-12 h-12 text-green-600" />
+                  <Music2 className="w-12 h-12 text-green-600" />
                 </div>
                 <h3 className="text-lg font-semibold text-[#1a1a1a] mb-3 drop-shadow-sm">No music generated yet</h3>
                 <p className="text-[#2a2a2a] mb-6 drop-shadow-sm">Create your first AI track by describing the music you want or adding lyrics</p>

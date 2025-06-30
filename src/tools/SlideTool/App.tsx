@@ -58,6 +58,7 @@ import { generateSlidesFromAI, generateMoreSlidesFromAI } from './services/gemin
 import { videoExportService } from './services/videoExportService';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { renderSlideForExport } from './utils/renderSlideForExport';
+import UnihelperPage from '../../pages/UnihelperPage';
 
 export type Theme = 'light' | 'dark';
 const LOCAL_STORAGE_SLIDES_KEY = 'entropy-tools-slides';
@@ -770,7 +771,8 @@ const App: React.FC = () => (
       <Route path="/blog/edit/:id" element={<BlogPage />} />
       <Route path="/blog/:id" element={<BlogPostPage />} />
       <Route path="/login" element={<LoginPage />} />
-      </Routes>
+      <Route path="/unihelper" element={<UnihelperPage />} />
+    </Routes>
   </BrowserRouter>
 );
 

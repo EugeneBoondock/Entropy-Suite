@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only --node-args=\"--loader ts-node/esm\" src/index.ts",
+    "dev": "node --loader ts-node/esm src/index.ts",
     "build": "tsc -p .",
     "start": "node dist/index.js",
     "prisma:generate": "prisma generate",
@@ -30,14 +30,18 @@
     "nodemailer": "^7.0.3",
     "python-shell": "^5.0.0",
     "tar-fs": "^2.1.1",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "@google/generative-ai": "^0.21.0",
+    "mime-types": "^2.1.35"
   },
   "devDependencies": {
     "@types/dockerode": "^3.3.41",
     "@types/jsonwebtoken": "^9.0.2",
+    "@types/mime-types": "^3.0.1",
     "@types/tar-fs": "^2.0.1",
     "dockerode": "^4.0.7",
     "prisma": "^6.10.1",
+    "ts-node": "^10.9.0",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.4.5"
   }

@@ -1,16 +1,15 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import websocket from '@fastify/websocket';
-import { PrismaClient } from '@prisma/client';
-import { supabase } from './supabaseAdmin';
+// import { PrismaClient } from '@prisma/client';
+import { supabase } from './supabaseAdmin.js';
 import { buildQueue } from './buildQueue.js';
 import authPlugin from './authMiddleware.js';
 import subscriptionRoutes from './routes/subscription.js';
 import plagiarismRoutes from './routes/plagiarism.js';
 import youtubeRoutes from './routes/youtube.js';
 import cryptoSubscriptionRoutes from './routes/cryptoSubscription.js';
-
-const prisma = new PrismaClient();
+// const prisma = new PrismaClient();
 const app = Fastify({ logger: true });
 
 await app.register(cors, { origin: true });
@@ -24,7 +23,8 @@ await app.register(cryptoSubscriptionRoutes);
 // Health
 app.get('/health', async () => ({ status: 'ok' }));
 
-// MCP CRUD (very minimal for now)
+// MCP CRUD (commented out - requires Prisma)
+/*
 app.get('/v1/mcps', async (req: any, reply) => {
   const userId = req.userId as string;
   const list = await prisma.mCP.findMany({ where: { userId } });
@@ -46,6 +46,7 @@ app.get('/v1/mcps/:id', async (req: any, reply) => {
   if (!mcp) return reply.status(404).send({ error: 'not found' });
   return mcp;
 });
+*/
 
 // WebSocket for build logs
 app.register(async (fastify) => {

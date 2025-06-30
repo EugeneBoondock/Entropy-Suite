@@ -17,6 +17,8 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
+        'onnxruntime-web': path.resolve(__dirname, 'src/empty-module.js'),
+        'onnxruntime-web/webgpu': path.resolve(__dirname, 'src/empty-module.js'),
       }
     },
     server: {
@@ -24,11 +26,15 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
       hmr: {
         overlay: false
-      }
+      },
+      proxy: {
+        '/api': 'http://localhost:4001',
+      },
     },
     build: {
       sourcemap: mode === 'development',
       rollupOptions: {
+        external: ['onnxruntime-web', 'onnxruntime-web/webgpu'],
         output: {
           manualChunks: {
             react: ['react', 'react-dom'],
@@ -48,11 +54,11 @@ export default defineConfig(({ mode }) => {
         '@ffmpeg/core',
         'html-to-image'
       ],
-      exclude: ['@ffmpeg/ffmpeg', '@ffmpeg/core']
+      exclude: ['@ffmpeg/ffmpeg', '@ffmpeg/core', 'onnxruntime-web', 'onnxruntime-web/webgpu', '@imgly/background-removal']
     },
     worker: {
       format: 'es',
-      plugins: () => [
+      plugins: [
         nodePolyfills({
           protocolImports: true,
         }),

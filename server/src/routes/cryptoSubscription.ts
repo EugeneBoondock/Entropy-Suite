@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { ethers } from 'ethers';
-import { supabase } from '../supabaseAdmin';
+import { supabase } from '../supabaseAdmin.js';
 
 // Earth 2 Essence Token Contract Address
 const ESSENCE_TOKEN_ADDRESS = '0x2c0687215Aca7F5e2792d956E170325e92A02aCA';
