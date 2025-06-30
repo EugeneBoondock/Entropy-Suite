@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { generateUniversityContext, shouldUseProspectusFiles, detectRelevantUniversities } from "./prospectusManager";
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
@@ -15,46 +16,66 @@ export type Message = {
 
 export type ChatHistory = Message[];
 
-const SYSTEM_PROMPT_TEXT = `You are Unihelper, an expert AI assistant for South African university applicants. You help students choose what to apply for, and guide them through NSFAS and scholarship applications. 
+const SYSTEM_PROMPT_TEXT = `You are Unihelper, an expert AI assistant for South African university applicants. You help students choose what to apply for, and guide them through NSFAS and scholarship applications.
 
-You have knowledge of South African universities and their requirements, NSFAS application processes, scholarship opportunities, and admission criteria. Be concise, friendly, and clear in your responses. 
+You have comprehensive knowledge of South African universities and their requirements, NSFAS application processes, scholarship opportunities, and admission criteria. You are knowledgeable about all 24 major South African universities and can provide specific guidance based on their 2026 prospectuses.
 
-Key areas you help with:
-- University application guidance
-- Course and program recommendations
-- NSFAS application assistance
-- Scholarship information
-- Admission requirements
-- Application deadlines
+Key areas you excel in:
+- University application guidance and deadlines
+- Course and program recommendations with admission requirements
+- Detailed NSFAS application assistance and eligibility criteria  
+- Scholarship information and application procedures
+- Admission requirements and academic prerequisites
+- Application deadlines and important dates
 - Career guidance related to university choices
+- Fee structures and financial planning
+- Contact information and campus details
 
-Always provide helpful, accurate information and ask clarifying questions when needed. If you don't know something specific, say so and suggest where they might find that information.`;
+Always provide helpful, accurate, and up-to-date information. When discussing specific universities, mention their official names, locations, and relevant details. If you need clarification about a student's specific situation, ask targeted questions to provide the most relevant guidance.
+
+Be encouraging and supportive - applying to university can be stressful, so maintain a positive, helpful tone while being thorough and informative.`;
 
 export const sendUnihelperMessage = async (messages: ChatHistory): Promise<string> => {
   if (!messages || messages.length === 0) {
-    return "Please ask me a question about university applications, NSFAS, or scholarships!";
+    return "Hello! I'm Unihelper, your AI assistant for South African university applications, NSFAS, and scholarships. How can I help you today?";
   }
 
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
 
   try {
-    // Convert our messages to Gemini format with system prompt
+    // Get the latest message
+    const latestMessage = messages[messages.length - 1];
+    if (!latestMessage || latestMessage.role !== 'user') {
+      return "I need a question from you to help with!";
+    }
+
+    // Check if we should include university context
+    const universityContext = generateUniversityContext(latestMessage.content);
+    const relevantUniversities = detectRelevantUniversities(latestMessage.content);
+    
+    // Enhance system prompt with detected university context
+    let enhancedSystemPrompt = SYSTEM_PROMPT_TEXT;
+    
+    if (shouldUseProspectusFiles(latestMessage.content)) {
+      enhancedSystemPrompt += universityContext;
+      
+      if (relevantUniversities.length > 0) {
+        console.log(`🎯 Detected relevant universities for query:`, relevantUniversities.map(u => u.name));
+        enhancedSystemPrompt += `\n\n🔍 QUERY ANALYSIS: This question appears to be about ${relevantUniversities.map(u => u.name).join(', ')}. Provide specific, detailed information about these institutions.`;
+      }
+    }
+
+    // Convert messages to Gemini format with enhanced system prompt
     const conversationHistory = [
-      { role: 'user' as const, parts: [{ text: SYSTEM_PROMPT_TEXT }] },
-      { role: 'model' as const, parts: [{ text: "I understand. I'm Unihelper, and I'll help with university applications, NSFAS, and scholarship guidance for South African students." }] },
+      { role: 'user' as const, parts: [{ text: enhancedSystemPrompt }] },
+      { role: 'model' as const, parts: [{ text: "I understand. I'm Unihelper, and I'll provide comprehensive guidance about South African universities, NSFAS, and scholarships with specific details from the 2026 prospectuses." }] },
       ...messages.map(msg => ({
         role: msg.role as 'user' | 'model',
         parts: [{ text: msg.content }]
       }))
     ];
 
-    // Get the latest message to send
-    const latestMessage = messages[messages.length - 1];
-    if (!latestMessage || latestMessage.role !== 'user') {
-      return "I need a question from you to help with!";
-    }
-
-    // If we have conversation history, use chat session
+    // Use chat session for conversation history
     if (messages.length > 1) {
       // Remove the latest message from history since we'll send it separately
       const historyWithoutLatest = conversationHistory.slice(0, -1);
@@ -67,8 +88,8 @@ export const sendUnihelperMessage = async (messages: ChatHistory): Promise<strin
       const response = await result.response;
       return response.text();
     } else {
-      // Single message with system prompt
-      const fullPrompt = `${SYSTEM_PROMPT_TEXT}\n\nUser: ${latestMessage.content}`;
+      // Single message with enhanced system prompt
+      const fullPrompt = `${enhancedSystemPrompt}\n\nUser: ${latestMessage.content}`;
       const result = await model.generateContent(fullPrompt);
       const response = await result.response;
       return response.text();
