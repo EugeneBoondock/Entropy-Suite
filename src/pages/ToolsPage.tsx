@@ -354,13 +354,6 @@ const ToolsPage: React.FC = () => {
       category: 'AI'
     },
     {
-      title: 'Terminal',
-      description: 'Web-based terminal emulator with filesystem simulation.',
-      imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBgRPVp5d2qWk2Qf0zGY_H55dMnziI9ah7d31W-0XzeLogjhuQuWY8dgjrSb_wFFVbRg80L3kkyVVJMX61vQ5LojFWQN2jok9mu8ZIF9Xj3-kiWGlWjlXB2Lan10sU6VtpuO58RrS3nC8ALJVSjwmphd60T6MCTZ9NohKYOsoAiw2IlahXC9M9QjzTCqf13PXeccHNq3EacpTHr0619xrJBRDeiF7U30zdz-V0Qci0sC8qcs7kNPIQAEVlVPA5eFBLpN-QEColA8cM_',
-      link: '/terminal',
-      category: 'Developer'
-    },
-    {
       title: 'Basic Agent',
       description: 'Intelligent AI assistant for complex tasks and analysis.',
       imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCBYTCEG-uu12NKmCQYHeDOO4w3yG1BlnH4TxVoqP5tgSpY1X1AeloG6KibodwbVhdiFTA4s3canYMiKHbgpu7r53zDgnde2awzp_jKgslfgbyfNrz426cU_vV21_WnZAo8BWGZTgmR48ifYkkQJ8V0XlyDxTvLkmpvvG4voyYcDVIhfICXZCKGaegjhcA3lAEoEEiPJ6YSoFDgXCJZf8vSRlRL9HcK_e2pNBxIEVXpie8nLFnk_RK1p3vyr6MI3t8TF2vixkXltYHE',
@@ -429,13 +422,6 @@ const ToolsPage: React.FC = () => {
       imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCBYTCEG-uu12NKmCQYHeDOO4w3yG1BlnH4TxVoqP5tgSpY1X1AeloG6KibodwbVhdiFTA4s3canYMiKHbgpu7r53zDgnde2awzp_jKgslfgbyfNrz426cU_vV21_WnZAo8BWGZTgmR48ifYkkQJ8V0XlyDxTvLkmpvvG4voyYcDVIhfICXZCKGaegjhcA3lAEoEEiPJ6YSoFDgXCJZf8vSRlRL9HcK_e2pNBxIEVXpie8nLFnk_RK1p3vyr6MI3t8TF2vixkXltYHE',
       link: '/ai-search-engine',
       category: 'AI'
-    },
-    {
-      title: 'Notes & Journal',
-      description: 'Capture your thoughts, ideas, and daily reflections with a beautiful journaling tool featuring mood tracking and categories.',
-      imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCdMBIpSpvqCKgB3kDcMoLopk5OT9gz5JsaMTSQ0F1kcFoL4IqGF60PZbu1Zof1LWtgQmgf3DxspVDIEQ0AVL83B2xw7eZ-rKpO6HzCz99Z_hgQmhJF5fIf1xfsGKyhLP6Pxahwxj47Cc976FQA0qw7bRV-V4kLtVwXcjI4aGZt4iCasPT762z0Szik8kbAkOGidSlIveaREVbHaYxIcs3zUaa0Zgt8mmVYm0pKkJtwtIO5T7vEMnhTXPhvfj16pscPds9F8A98U4L2',
-      link: '/notes',
-      category: 'Productivity'
     },
     {
       title: 'Unihelper',
