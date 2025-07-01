@@ -500,7 +500,7 @@ const UnihelperPage: React.FC = () => {
           </div>
           {/* Mobile Sidebar */}
           <div className={`fixed left-0 top-0 z-50 w-72 bg-white/60 backdrop-blur-lg shadow-xl transition-transform duration-300 transform h-full overflow-y-auto ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-              <div className="p-4 pb-24">
+              <div className="p-4 pb-32">
                 <button
                   className="absolute top-2 right-2 p-2 rounded-full hover:bg-gray-200/50 transition-colors z-50"
                   onClick={() => setSidebarOpen(false)}
