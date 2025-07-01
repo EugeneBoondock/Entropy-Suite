@@ -44,7 +44,7 @@ export const sendUnihelperMessage = async (messages: ChatHistory): Promise<strin
     return "Hello! I'm Unihelper, your AI assistant for South African university applications, NSFAS, and scholarships. How can I help you today?";
   }
 
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
 
   try {
     // Get the latest message
