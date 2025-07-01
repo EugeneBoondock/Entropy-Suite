@@ -36,6 +36,101 @@ const AudioTranscriberPage: React.FC = () => {
     { code: 'ar-SA', name: 'Arabic' }
   ];
 
+  // Helper function to convert an AudioBuffer to a WAV file Blob
+  const bufferToWave = (abuffer: AudioBuffer): Blob => {
+    const numOfChan = abuffer.numberOfChannels;
+    const length = abuffer.length * numOfChan * 2 + 44;
+    const buffer = new ArrayBuffer(length);
+    const view = new DataView(buffer);
+    const channels = [];
+    let i = 0;
+    let sample = 0;
+    let offset = 0;
+    let pos = 0;
+
+    // Write WAVE header
+    const setUint16 = (data: number) => {
+      view.setUint16(pos, data, true);
+      pos += 2;
+    };
+    const setUint32 = (data: number) => {
+      view.setUint32(pos, data, true);
+      pos += 4;
+    };
+
+    setUint32(0x46464952); // "RIFF"
+    setUint32(length - 8); // file length - 8
+    setUint32(0x45564157); // "WAVE"
+    setUint32(0x20746d66); // "fmt " chunk
+    setUint32(16); // length = 16
+    setUint16(1); // PCM (uncompressed)
+    setUint16(numOfChan);
+    setUint32(abuffer.sampleRate);
+    setUint32(abuffer.sampleRate * 2 * numOfChan); // avg. bytes/sec
+    setUint16(numOfChan * 2); // block-align
+    setUint16(16); // 16-bit
+    setUint32(0x61746164); // "data" - chunk
+    setUint32(length - pos - 4); // chunk length
+
+    // Write interleaved data
+    for (i = 0; i < abuffer.numberOfChannels; i++) {
+      channels.push(abuffer.getChannelData(i));
+    }
+
+    while (pos < length) {
+      for (i = 0; i < numOfChan; i++) {
+        sample = Math.max(-1, Math.min(1, channels[i][pos])); // clamp
+        sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767) | 0; // scale to 16-bit signed int
+        view.setInt16(offset, sample, true); // write 16-bit sample
+        offset += 2;
+      }
+      pos++;
+    }
+    
+    // Safety check for buffer length
+    if (offset > length) {
+      // This should not happen, but as a fallback, return a truncated blob
+      return new Blob([view.buffer.slice(0, offset)], { type: "audio/wav" });
+    }
+
+    return new Blob([view], { type: "audio/wav" });
+  };
+
+  // Pre-processes audio files by converting them to WAV for better compatibility
+  const convertToWav = (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (!event.target?.result) {
+          return reject(new Error('Failed to read file.'));
+        }
+        const arrayBuffer = event.target.result as ArrayBuffer;
+        
+        const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+        if (!AudioContext) {
+            return reject(new Error('Browser does not support AudioContext. Cannot process file.'));
+        }
+        const audioContext = new AudioContext();
+
+        audioContext.decodeAudioData(arrayBuffer)
+          .then(audioBuffer => {
+            const wavBlob = bufferToWave(audioBuffer);
+            const wavFile = new File([wavBlob], file.name.replace(/\.[^/.]+$/, "") + ".wav", { type: 'audio/wav' });
+            resolve(wavFile);
+          })
+          .catch(e => {
+            console.error('Error decoding audio data:', e);
+            reject(new Error('Could not decode audio file. It may be corrupt or in an unsupported format.'));
+          })
+          .finally(() => {
+            audioContext.close();
+          });
+      };
+      reader.onerror = (error) => reject(error);
+      reader.readAsArrayBuffer(file);
+    });
+  };
+
   const transcribeAudio = async (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       // Check if browser supports Web Speech API
@@ -139,7 +234,7 @@ const AudioTranscriberPage: React.FC = () => {
     setError(null);
     
     const audioFiles = Array.from(files).filter(file => 
-      file.type.startsWith('audio/') || file.type === 'video/mp4' || file.type === 'video/webm'
+      file.type.startsWith('audio/') || file.type.startsWith('video/')
     );
 
     if (audioFiles.length === 0) {
@@ -174,7 +269,9 @@ const AudioTranscriberPage: React.FC = () => {
       setTranscriptions(prev => [...prev, newTranscription]);
 
       try {
-        const transcript = await transcribeAudio(file);
+        // Convert to WAV first for better compatibility
+        const wavFile = await convertToWav(file);
+        const transcript = await transcribeAudio(wavFile);
         
         setTranscriptions(prev => prev.map(t => 
           t.id === transcriptionId 
