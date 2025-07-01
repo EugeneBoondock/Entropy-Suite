@@ -30,6 +30,11 @@ const TypingIndicator: React.FC = () => (
   </div>
 );
 
+// Utility to detect mobile devices
+function isMobileDevice() {
+  return /Mobi|Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+}
+
 const UnihelperPage: React.FC = () => {
   const [chatSessions, setChatSessions] = useState<ChatSession[]>(() => {
     const saved = localStorage.getItem('unihelper-chat-sessions');
@@ -82,9 +87,11 @@ const UnihelperPage: React.FC = () => {
     localStorage.setItem('unihelper-chat-sessions', JSON.stringify(chatSessions));
   }, [chatSessions]);
 
-  // Focus input when session changes, after sending, or on mount
+  // Focus input when session changes, after sending, or on mount (desktop only)
   useEffect(() => {
-    inputRef.current?.focus();
+    if (!isMobileDevice()) {
+      inputRef.current?.focus();
+    }
   }, [currentSessionId, loading]);
 
   useEffect(() => {
@@ -377,9 +384,9 @@ const UnihelperPage: React.FC = () => {
                 <div className="fixed inset-0 bg-black/30 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />
               )}
               {/* Main Chat Area: always full width on mobile */}
-              <div className="flex-1 flex flex-col order-1 lg:order-none">
+              <div className="flex-1 flex flex-col order-1 lg:order-none relative" style={{ height: isMobileDevice() ? '100dvh' : undefined }}>
                 {/* Chat Header */}
-                <div className="bg-white/30 backdrop-blur-md border border-white/30 rounded-t-xl shadow-xl px-2 py-2 sm:px-4 sm:py-3 mb-2 sm:mb-3">
+                <div className="bg-white/30 backdrop-blur-md border border-white/30 rounded-t-xl shadow-xl px-2 py-2 sm:px-4 sm:py-3 mb-2 sm:mb-3 sticky top-0 z-20">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
                     <div className="flex flex-row sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
                       {/* Sidebar toggle button for mobile */}
@@ -407,8 +414,8 @@ const UnihelperPage: React.FC = () => {
                   </div>
                 </div>
                 {/* Messages Container */}
-                <div className="bg-white/30 backdrop-blur-md border border-white/30 rounded-b-xl shadow-xl overflow-hidden flex flex-col h-[60vh] sm:h-[75vh]">
-                  <div className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-2 sm:space-y-3 scrollbar-none lg:scrollbar-thin lg:scrollbar-thumb-white/40 lg:scrollbar-track-white/10">
+                <div className="bg-white/30 backdrop-blur-md border border-white/30 rounded-b-xl shadow-xl overflow-hidden flex flex-col" style={{ height: isMobileDevice() ? 'calc(100dvh - 120px)' : '60vh', maxHeight: isMobileDevice() ? 'calc(100dvh - 120px)' : '75vh' }}>
+                  <div className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-2 sm:space-y-3 scrollbar-none lg:scrollbar-thin lg:scrollbar-thumb-white/40 lg:scrollbar-track-white/10" style={{ WebkitOverflowScrolling: 'touch' }}>
                     {currentSession.messages.map((message, index) => (
                       <div
                         key={index}
@@ -469,7 +476,7 @@ const UnihelperPage: React.FC = () => {
                     </div>
                   )}
                   {/* Input Area */}
-                  <div className="p-2 sm:p-4 border-t border-white/20">
+                  <div className="p-2 sm:p-4 border-t border-white/20 sticky bottom-0 z-20 bg-white/30 backdrop-blur-md">
                     <div className="flex gap-3">
                       <div className="flex-1">
                         <textarea
@@ -481,7 +488,6 @@ const UnihelperPage: React.FC = () => {
                           className="w-full p-3 bg-white/60 border border-white/30 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/30 placeholder-gray-500 text-sm"
                           rows={2}
                           disabled={loading}
-                          autoFocus
                         />
                       </div>
                       <button
