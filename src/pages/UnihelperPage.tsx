@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import { sendUnihelperMessage, Message, ChatHistory } from "../tools/SummarizerTool/unihelperService";
-import { GraduationCap, Send, Plus, Trash2, MessageCircle, BookOpen, MapPin, Calendar, DollarSign, Users, Award } from "lucide-react";
+import { GraduationCap, Send, Plus, Trash2, MessageCircle, BookOpen, MapPin, Calendar, DollarSign, Users, Award, X } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -60,6 +60,18 @@ const UnihelperPage: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('unihelper-chat-sessions', JSON.stringify(chatSessions));
   }, [chatSessions]);
+
+  // Focus input when session changes, after sending, or on mount
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, [currentSessionId, loading]);
+
+  useEffect(() => {
+    // Only scroll when there are actual messages, not during loading
+    if (currentSession.messages.length > 1) {
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [currentSession.messages, currentSessionId]);
 
   const createNewChat = () => {
     const newSession: ChatSession = {
@@ -159,18 +171,28 @@ const UnihelperPage: React.FC = () => {
 
   return (
     <div 
-      className="min-h-screen bg-cover bg-center bg-fixed"
+      className="h-screen overflow-hidden bg-cover bg-center bg-fixed"
       style={{ backgroundImage: 'url(/images/bg_image.png)' }}
     >
       <div className="min-h-screen bg-black/10">
         <Navbar />
         
         <main className="pt-20 pb-8">
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="flex gap-4 justify-center">
-              <div className="flex flex-col gap-4">
+          <div className="max-w-7xl mx-auto px-2 sm:px-4">
+            <div className="flex flex-col lg:flex-row gap-2 lg:gap-4 justify-center">
+              {/* Sidebar: hidden on mobile, overlay when open; always visible on lg+ */}
+              <div className={`fixed left-0 top-[4rem] z-50 w-64 bg-white/30 border border-white/30 backdrop-blur-md shadow-xl transition-transform duration-300 transform h-[calc(100vh-4rem)] max-h-[100vh] lg:max-h-[80vh] overflow-y-auto scrollbar-none lg:scrollbar-thin lg:scrollbar-thumb-white/40 lg:scrollbar-track-white/10 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:static lg:top-0 lg:translate-x-0 lg:w-64 lg:bg-white/30 lg:border lg:border-white/30 lg:backdrop-blur-md lg:shadow-xl lg:rounded-xl flex flex-col gap-2 p-2 sm:p-4`}>
+                {/* Close button for mobile sidebar */}
+                <button
+                  className="block lg:hidden absolute top-2 right-2 p-2 rounded-full hover:bg-gray-200 transition-colors z-50"
+                  onClick={() => setSidebarOpen(false)}
+                  aria-label="Close sidebar"
+                >
+                  <X className="w-5 h-5 text-gray-700" />
+                </button>
+                {/* Sidebar content: Chat History + University Websites */}
                 {/* Chat History Sidebar */}
-                <div className="bg-white/80 backdrop-blur-md border border-white/30 rounded-xl shadow-xl">
+                <div className="bg-white/30 backdrop-blur-md border border-white/30 rounded-xl shadow-xl mb-2 lg:mb-0 p-2 sm:p-4">
                   {/* Header */}
                   <div className="px-4 py-3 border-b border-white/20">
                     <div className="flex items-center gap-2 mb-3">
@@ -193,7 +215,7 @@ const UnihelperPage: React.FC = () => {
                   </div>
 
                   {/* Chat Sessions */}
-                  <div className="max-h-[30vh] overflow-y-auto px-4 py-2">
+                  <div className="max-h-[30vh] overflow-y-auto scrollbar-none lg:scrollbar-thin lg:scrollbar-thumb-white/40 lg:scrollbar-track-white/10 px-4 py-2">
                     {chatSessions.map((session) => (
                       <div
                         key={session.id}
@@ -227,14 +249,13 @@ const UnihelperPage: React.FC = () => {
                     ))}
                   </div>
                 </div>
-
                 {/* University Websites Card */}
-                <div className="bg-white/80 backdrop-blur-md border border-white/30 rounded-xl shadow-xl p-4">
+                <div className="bg-white/30 backdrop-blur-md border border-white/30 rounded-xl shadow-xl p-2 sm:p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <MapPin className="w-4 h-4 text-purple-600" />
                     <h3 className="text-sm font-bold text-gray-800">University Websites</h3>
                   </div>
-                  <div className="space-y-2 max-h-[30vh] overflow-y-auto">
+                  <div className="space-y-2 max-h-[30vh] overflow-y-auto scrollbar-none lg:scrollbar-thin lg:scrollbar-thumb-white/40 lg:scrollbar-track-white/10">
                     {[
                       { name: 'Cape Peninsula University of Technology', url: 'https://www.cput.ac.za' },
                       { name: 'Central University of Technology', url: 'https://www.cut.ac.za' },
@@ -279,165 +300,181 @@ const UnihelperPage: React.FC = () => {
                     ))}
                   </div>
                 </div>
-              </div>
-
-                {/* Main Chat Area */}
-                <div className="flex-1 flex flex-col">
-                  {/* Chat Header */}
-                  <div className="bg-white/80 backdrop-blur-md border border-white/30 rounded-t-xl shadow-xl px-4 py-3 mb-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => setSidebarOpen(!sidebarOpen)}
-                          className="lg:hidden p-1.5 hover:bg-white/50 rounded-lg transition-colors"
-                        >
-                          <MessageCircle className="w-4 h-4" />
-                        </button>
-                        <div className="p-1.5 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg">
-                          <GraduationCap className="w-4 h-4 text-blue-600" />
-                        </div>
-                        <div>
-                          <h2 className="text-base font-bold text-gray-800">University Guidance Assistant</h2>
-                          <p className="text-xs text-gray-600">Comprehensive South African university information</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <div className="px-2 py-0.5 bg-green-500/20 text-green-700 rounded-full text-xs font-medium">
-                          24 Universities
-                        </div>
-                        <div className="px-2 py-0.5 bg-blue-500/20 text-blue-700 rounded-full text-xs font-medium">
-                          2026 Prospectus
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Messages Container */}
-                  <div className="bg-white/80 backdrop-blur-md border border-white/30 rounded-b-xl shadow-xl overflow-hidden flex flex-col h-[75vh]">
-                                 <div className="flex-1 overflow-y-auto p-3 space-y-3">
-                   {currentSession.messages.map((message, index) => (
-                     <div
-                       key={index}
-                       className={`flex gap-2 ${message.role === "user" ? "flex-row-reverse" : "flex-row"}`}
-                     >
-                       <div className={`flex-shrink-0 w-6 h-6 rounded-md flex items-center justify-center ${
-                         message.role === "user" 
-                           ? "bg-blue-500/20 text-blue-600" 
-                           : "bg-gradient-to-br from-purple-500/20 to-blue-500/20 text-purple-600"
-                       }`}>
-                         {message.role === "user" ? (
-                           <Users className="w-3 h-3" />
-                         ) : (
-                           <GraduationCap className="w-3 h-3" />
-                         )}
-                       </div>
-                       <div className={`flex-1 max-w-lg ${message.role === "user" ? "text-right" : "text-left"}`}>
-                         <div className={`inline-block p-2 rounded-lg ${
-                           message.role === "user"
-                             ? "bg-blue-500/20 text-gray-800 rounded-tr-sm"
-                             : "bg-white/60 text-gray-800 rounded-tl-sm border border-white/30"
-                         }`}>
-                           <div className="whitespace-pre-wrap leading-relaxed text-sm">
-                             <ReactMarkdown 
-                               remarkPlugins={[remarkGfm]}
-                               components={{
-                                 a: ({node, ...props}) => <a {...props} className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer" />
-                               }}
-                             >
-                               {message.content}
-                             </ReactMarkdown>
-                           </div>
-                         </div>
-              </div>
-            </div>
-          ))}
-
-          {loading && (
-                    <div className="flex gap-4">
-                      <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
-                        <GraduationCap className="w-5 h-5 text-purple-600" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="inline-block p-4 bg-white/60 rounded-2xl rounded-tl-md border border-white/30">
-                          <div className="flex items-center gap-2">
-                            <div className="flex gap-1">
-                              <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
-                              <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                              <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                            </div>
-                            <span className="text-sm text-gray-600">Analyzing your query...</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {error && (
-                    <div className="flex justify-center">
-                      <div className="bg-red-500/20 border border-red-500/30 text-red-700 px-4 py-3 rounded-xl max-w-md text-center">
-                        <p className="font-medium">Error</p>
-                        <p className="text-sm">{error}</p>
-              </div>
-            </div>
-          )}
-
-          <div ref={chatEndRef} />
-        </div>
-
-                                 {/* Quick Actions */}
-                 {currentSession.messages.length === 1 && (
-                   <div className="px-4 py-2 border-t border-white/20">
-                     <p className="text-xs font-medium text-gray-600 mb-2">Quick Questions:</p>
-                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-1.5">
-                       {quickActions.map((action, index) => (
-                         <button
-                           key={index}
-                           onClick={() => setInput(action.query)}
-                           className="flex flex-col items-center gap-0.5 p-1.5 bg-white/40 hover:bg-white/60 rounded-md transition-colors text-center border border-white/20 hover:border-white/40 min-w-0"
-                         >
-                           <action.icon className="w-3 h-3 text-blue-600 flex-shrink-0" />
-                           <span className="text-xs font-medium text-gray-700 leading-tight truncate w-full">{action.text}</span>
-                         </button>
-                       ))}
-                     </div>
-                   </div>
-                 )}
-
-                {/* Input Area */}
-                <div className="p-4 border-t border-white/20">
-                  <div className="flex gap-3">
-                    <div className="flex-1">
-                      <textarea
-                        ref={inputRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-                        onKeyPress={handleKeyPress}
-                        placeholder="Ask about universities, NSFAS, scholarships, or any admission guidance..."
-                        className="w-full p-3 bg-white/60 border border-white/30 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/30 placeholder-gray-500 text-sm"
-                        rows={2}
-            disabled={loading}
-          />
-                    </div>
-          <button
-            onClick={handleSend}
-                      disabled={!input.trim() || loading}
-                      className="self-end p-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 disabled:from-gray-400 disabled:to-gray-400 text-white rounded-xl transition-all disabled:cursor-not-allowed shadow-lg"
-          >
-                      <Send className="w-4 h-4" />
-          </button>
-        </div>
-                </div>
-                  </div>
-                </div>
-
-              {/* Right Sidebar - Prospectus Downloads */}
-              <div className="hidden lg:block w-64 space-y-4">
-                <div className="bg-white/80 backdrop-blur-md border border-white/30 rounded-xl shadow-xl p-4">
+                {/* University Prospectuses Card (mobile only) */}
+                <div className="block lg:hidden bg-white/30 backdrop-blur-md border border-white/30 rounded-xl shadow-xl p-2 sm:p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <BookOpen className="w-4 h-4 text-green-600" />
                     <h3 className="text-sm font-bold text-gray-800">University Prospectuses</h3>
                   </div>
-                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                  <div className="space-y-2 max-h-96 overflow-y-auto scrollbar-none lg:scrollbar-thin lg:scrollbar-thumb-white/40 lg:scrollbar-track-white/10">
+                    {[
+                      { code: 'cpu-2026.pdf', name: 'Cape Peninsula University of Technology' },
+                      { code: 'cut-2026.pdf', name: 'Central University of Technology' },
+                      { code: 'dut-2026.pdf', name: 'Durban University of Technology' },
+                      { code: 'mut-2026.pdf', name: 'Mangosuthu University of Technology' },
+                      { code: 'nmu-2026.pdf', name: 'Nelson Mandela University' },
+                      { code: 'nwu-2026.pdf', name: 'North-West University' },
+                      { code: 'ru-2026.pdf', name: 'Rhodes University' },
+                      { code: 'SMu-Prospectus-2025_2026.pdf', name: 'Sefako Makgatho Health Sciences University' },
+                      { code: 'sol-plaatje-2026.pdf', name: 'Sol Plaatje University' },
+                      { code: 'su-2026.pdf', name: 'Stellenbosch University' },
+                      { code: 'tut-2026.pdf', name: 'Tshwane University of Technology' },
+                      { code: 'uct-2026.pdf', name: 'University of Cape Town' },
+                      { code: 'ufh-2025.pdf', name: 'University of Fort Hare' },
+                      { code: 'ufs-2026.pdf', name: 'University of the Free State' },
+                      { code: 'uj-2026.pdf', name: 'University of Johannesburg' },
+                      { code: 'ukzn-2026.pdf', name: 'University of KwaZulu-Natal' },
+                      { code: 'ump-2026.pdf', name: 'University of Mpumalanga' },
+                      { code: 'unisa-2026.pdf', name: 'University of South Africa' },
+                      { code: 'univen-2026.pdf', name: 'University of Venda' },
+                      { code: 'up-2026.pdf', name: 'University of Pretoria' },
+                      { code: 'vut-2026.pdf', name: 'Vaal University of Technology' },
+                      { code: 'wits-2026.pdf', name: 'University of the Witwatersrand' },
+                      { code: 'wsu-2026.pdf', name: 'Walter Sisulu University' },
+                      { code: 'zululand-2026.pdf', name: 'University of Zululand' }
+                    ].map((uni) => (
+                      <a
+                        key={uni.code}
+                        href={`/prospectuses/${uni.code}`}
+                        download
+                        className="block p-2 bg-white/40 hover:bg-white/60 rounded-lg transition-colors border border-white/20 hover:border-white/40"
+                      >
+                        <p className="text-xs font-medium text-gray-800 leading-tight">{uni.name}</p>
+                        <p className="text-xs text-gray-600">2026 Prospectus</p>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              {/* Sidebar overlay for mobile */}
+              {sidebarOpen && (
+                <div className="fixed inset-0 bg-black/30 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />
+              )}
+              {/* Main Chat Area: always full width on mobile */}
+              <div className="flex-1 flex flex-col order-1 lg:order-none">
+                {/* Chat Header */}
+                <div className="bg-white/30 backdrop-blur-md border border-white/30 rounded-t-xl shadow-xl px-2 py-2 sm:px-4 sm:py-3 mb-2 sm:mb-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+                    <div className="flex flex-row sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+                      {/* Sidebar toggle button for mobile */}
+                      <button
+                        onClick={() => setSidebarOpen(true)}
+                        className="block lg:hidden p-1.5 mr-1 rounded-lg hover:bg-gray-100 transition-colors"
+                        aria-label="Open sidebar"
+                      >
+                        <MessageCircle className="w-5 h-5 text-blue-600" />
+                      </button>
+                      <div className="flex flex-col items-center justify-center">
+                        <div className="p-1.5 bg-blue-500/20 rounded-lg mb-1 sm:mb-0">
+                          <GraduationCap className="w-5 h-5 text-blue-600" />
+                        </div>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-bold text-base sm:text-xl leading-tight text-gray-900">University<br className="hidden sm:block"/> Guidance<br className="hidden sm:block"/> Assistant</span>
+                        <span className="text-xs sm:text-sm text-gray-600 mt-1">Comprehensive South African university information</span>
+                      </div>
+                    </div>
+                    <div className="flex flex-row gap-2 mt-2 sm:mt-0">
+                      <span className="px-2 py-1 rounded-full bg-green-100 text-green-800 text-xs font-semibold">24 Universities</span>
+                      <span className="px-2 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-semibold">2026 Prospectus</span>
+                    </div>
+                  </div>
+                </div>
+                {/* Messages Container */}
+                <div className="bg-white/30 backdrop-blur-md border border-white/30 rounded-b-xl shadow-xl overflow-hidden flex flex-col h-[60vh] sm:h-[75vh]">
+                  <div className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-2 sm:space-y-3 scrollbar-none lg:scrollbar-thin lg:scrollbar-thumb-white/40 lg:scrollbar-track-white/10">
+                    {currentSession.messages.map((message, index) => (
+                      <div
+                        key={index}
+                        className={`flex gap-2 ${message.role === "user" ? "flex-row-reverse" : "flex-row"}`}
+                      >
+                        <div className={`flex-shrink-0 w-6 h-6 rounded-md flex items-center justify-center ${
+                          message.role === "user" 
+                            ? "bg-blue-500/20 text-blue-600" 
+                            : "bg-gradient-to-br from-purple-500/20 to-blue-500/20 text-purple-600"
+                        }`}>
+                          {message.role === "user" ? (
+                            <Users className="w-3 h-3" />
+                          ) : (
+                            <GraduationCap className="w-3 h-3" />
+                          )}
+                        </div>
+                        <div className={`flex-1 max-w-lg ${message.role === "user" ? "text-right" : "text-left"}`}>
+                          <div className={`inline-block p-2 rounded-lg ${
+                            message.role === "user"
+                              ? "bg-blue-500/20 text-gray-800 rounded-tr-sm"
+                              : "bg-white/60 text-gray-800 rounded-tl-sm border border-white/30"
+                          }`}>
+                            <div className="whitespace-pre-wrap leading-relaxed text-sm">
+                              <ReactMarkdown 
+                                remarkPlugins={[remarkGfm]}
+                                components={{
+                                  a: ({node, ...props}) => <a {...props} className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer" />
+                                }}
+                              >
+                                {message.content}
+                              </ReactMarkdown>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {/* Always keep this at the end for auto-scroll */}
+                    <div ref={chatEndRef} />
+                  </div>
+                  {/* Quick Actions */}
+                  {currentSession.messages.length === 1 && (
+                    <div className="px-2 py-1 sm:px-4 sm:py-2 border-t border-white/20">
+                      <p className="text-xs font-medium text-gray-600 mb-1 sm:mb-2">Quick Questions:</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-1.5">
+                        {quickActions.map((action, index) => (
+                          <button
+                            key={index}
+                            onClick={() => setInput(action.query)}
+                            className="flex flex-col items-center gap-0.5 p-1.5 bg-white/40 hover:bg-white/60 rounded-md transition-colors text-center border border-white/20 hover:border-white/40 min-w-0"
+                          >
+                            <action.icon className="w-3 h-3 text-blue-600 flex-shrink-0" />
+                            <span className="text-xs font-medium text-gray-700 leading-tight truncate w-full">{action.text}</span>
+                          </button>
+                        ))}
+              </div>
+            </div>
+          )}
+                  {/* Input Area */}
+                  <div className="p-2 sm:p-4 border-t border-white/20">
+                    <div className="flex gap-3">
+                      <div className="flex-1">
+                        <textarea
+                          ref={inputRef}
+                          value={input}
+                          onChange={(e) => setInput(e.target.value)}
+                          onKeyPress={handleKeyPress}
+                          placeholder="Ask about universities, NSFAS, scholarships, or any admission guidance..."
+                          className="w-full p-3 bg-white/60 border border-white/30 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/30 placeholder-gray-500 text-sm"
+                          rows={2}
+                          disabled={loading}
+                          autoFocus
+                        />
+                      </div>
+          <button
+            onClick={handleSend}
+                        disabled={!input.trim() || loading}
+                        className="self-end p-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 disabled:from-gray-400 disabled:to-gray-400 text-white rounded-xl transition-all disabled:cursor-not-allowed shadow-lg"
+          >
+                        <Send className="w-4 h-4" />
+          </button>
+        </div>
+                  </div>
+                </div>
+              </div>
+              {/* University Prospectuses Card (desktop only, right sidebar) */}
+              <div className="hidden lg:block w-64 space-y-4">
+                <div className="bg-white/30 backdrop-blur-md border border-white/30 rounded-xl shadow-xl p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <BookOpen className="w-4 h-4 text-green-600" />
+                    <h3 className="text-sm font-bold text-gray-800">University Prospectuses</h3>
+                  </div>
+                  <div className="space-y-2 max-h-96 overflow-y-auto scrollbar-none lg:scrollbar-thin lg:scrollbar-thumb-white/40 lg:scrollbar-track-white/10">
                     {[
                       { code: 'cpu-2026.pdf', name: 'Cape Peninsula University of Technology' },
                       { code: 'cut-2026.pdf', name: 'Central University of Technology' },
@@ -481,14 +518,6 @@ const UnihelperPage: React.FC = () => {
           </div>
         </main>
       </div>
-
-      {/* Sidebar overlay for mobile */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/20 z-30 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
     </div>
   );
 };

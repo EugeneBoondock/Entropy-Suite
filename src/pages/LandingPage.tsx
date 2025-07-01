@@ -353,7 +353,7 @@ const LandingPage: React.FC = () => {
                           to={tool.link} 
                           className="block w-full"
                         >
-                          <div className="bg-white/70 backdrop-blur-md border border-white/50 rounded-3xl p-8 shadow-2xl active:scale-98 transition-all duration-200 hover:shadow-3xl">
+                          <div className="bg-white/30 backdrop-blur-md border border-white/30 rounded-3xl p-8 shadow-2xl active:scale-98 transition-all duration-200 hover:shadow-3xl">
                             {/* Mobile Card - Vertical Layout */}
                             <div className="flex flex-col items-center text-center space-y-6">
                               {/* Large Icon */}
@@ -454,7 +454,7 @@ const LandingPage: React.FC = () => {
                                 to={tool.link} 
                                 className="group block"
                               >
-                                <div className="bg-white/40 backdrop-blur-sm border border-white/30 rounded-lg p-4 hover:bg-white/60 hover:border-white/50 transition-all duration-200 group-hover:scale-[1.02] shadow-sm hover:shadow-md h-full min-h-[180px] flex flex-col">
+                                <div className="bg-white/30 backdrop-blur-md border border-white/30 rounded-lg p-4 hover:bg-white/50 hover:border-white/50 transition-all duration-200 group-hover:scale-[1.02] shadow-sm hover:shadow-md h-full min-h-[180px] flex flex-col">
                                   <div className="flex flex-col items-center text-center gap-3 flex-1">
                                     <div className="flex items-center justify-center w-12 h-12 bg-white/50 rounded-lg border border-white/30 group-hover:bg-white/70 transition-all duration-200">
                                       {getToolIcon(tool.title, tool.category)}
@@ -658,12 +658,14 @@ const LandingPage: React.FC = () => {
                 </div>
               </div>
             </div>
-            <div className="w-full max-w-3xl mx-auto mt-8 mb-8 p-6 bg-gradient-to-r from-blue-400/80 via-purple-400/80 to-pink-400/80 rounded-3xl shadow-2xl flex flex-col sm:flex-row items-center gap-6 border border-white/30 backdrop-blur-md">
-              <img src="https://cdn-icons-png.flaticon.com/512/3135/3135755.png" alt="Unihelper" className="w-20 h-20 rounded-full shadow-lg border-4 border-white/40" />
-              <div className="flex-1">
-                <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2 drop-shadow">Introducing Unihelper</h2>
-                <p className="text-white/90 mb-3 text-lg">AI-powered assistant for university applications, NSFAS, and scholarships. Get personalized help using real university prospectuses!</p>
-                <Link to="/unihelper" className="inline-block px-6 py-2 rounded-2xl bg-white/90 text-blue-700 font-semibold shadow hover:bg-white transition text-lg">Try Unihelper</Link>
+            <div className="container mx-auto px-4">
+              <div className="max-w-lg w-full mx-auto sm:max-w-3xl mt-8 mb-8 p-3 sm:p-6 bg-white/30 rounded-3xl shadow-2xl flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6 border border-white/30 backdrop-blur-md">
+                <img src="https://cdn-icons-png.flaticon.com/512/3135/3135755.png" alt="Unihelper" className="w-14 h-14 sm:w-20 sm:h-20 rounded-full shadow-lg border-4 border-white/40" />
+                <div>
+                  <h2 className="text-lg sm:text-2xl font-bold text-[#382f29] mb-1 sm:mb-2 drop-shadow">Introducing Unihelper</h2>
+                  <p className="text-sm sm:text-lg text-[#2F4F4F] mb-2 sm:mb-3">AI-powered assistant for university applications, NSFAS, and scholarships. Get personalized help using real university data!</p>
+                  <Link to="/unihelper" className="inline-block px-4 py-2 sm:px-6 sm:py-2 rounded-2xl bg-white/90 text-blue-700 font-semibold shadow hover:bg-white transition text-base sm:text-lg">Try Unihelper</Link>
+                </div>
               </div>
             </div>
             <div className="flex flex-col gap-8 sm:gap-8 md:gap-10 px-0 sm:px-4 py-8 sm:py-8 md:py-10 @container">
