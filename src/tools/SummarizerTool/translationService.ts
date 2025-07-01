@@ -13,7 +13,7 @@ export const translateText = async (text: string, sourceLanguage: string, target
     return "";
   }
 
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
 
   const languageNames: Record<string, string> = {
     'en': 'English',
