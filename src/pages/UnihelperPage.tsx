@@ -338,7 +338,14 @@ const UnihelperPage: React.FC = () => {
                              : "bg-white/60 text-gray-800 rounded-tl-sm border border-white/30"
                          }`}>
                            <div className="whitespace-pre-wrap leading-relaxed text-sm">
-                             <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
+                             <ReactMarkdown 
+                               remarkPlugins={[remarkGfm]}
+                               components={{
+                                 a: ({node, ...props}) => <a {...props} className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer" />
+                               }}
+                             >
+                               {message.content}
+                             </ReactMarkdown>
                            </div>
                          </div>
               </div>
