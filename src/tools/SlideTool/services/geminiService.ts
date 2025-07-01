@@ -18,7 +18,7 @@ if (!API_KEY) {
 
 const ai = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
 
-const MODEL_NAME = 'gemini-1.5-pro-latest';
+const MODEL_NAME = 'gemini-2.0-flash-lite';
 
 // Define safety settings for content generation
 const safetySettings: SafetySetting[] = [
