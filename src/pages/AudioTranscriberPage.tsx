@@ -1,5 +1,8 @@
 import React, { useState, useRef } from 'react';
 import Navbar from '../components/Navbar';
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
 interface TranscriptionResult {
   id: string;
@@ -10,7 +13,6 @@ interface TranscriptionResult {
   status: 'pending' | 'processing' | 'completed' | 'error';
   timestamp: Date;
   language: string;
-  confidence?: number;
 }
 
 const AudioTranscriberPage: React.FC = () => {
@@ -18,23 +20,18 @@ const AudioTranscriberPage: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedLanguage, setSelectedLanguage] = useState('en-US');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const supportedLanguages = [
-    { code: 'en-US', name: 'English (US)' },
-    { code: 'en-GB', name: 'English (UK)' },
-    { code: 'es-ES', name: 'Spanish' },
-    { code: 'fr-FR', name: 'French' },
-    { code: 'de-DE', name: 'German' },
-    { code: 'it-IT', name: 'Italian' },
-    { code: 'pt-BR', name: 'Portuguese' },
-    { code: 'ru-RU', name: 'Russian' },
-    { code: 'ja-JP', name: 'Japanese' },
-    { code: 'ko-KR', name: 'Korean' },
-    { code: 'zh-CN', name: 'Chinese (Simplified)' },
-    { code: 'ar-SA', name: 'Arabic' }
-  ];
+  if (!API_KEY) {
+    const errorMsg = "VITE_GEMINI_API_KEY is not set. Please add it to your .env file to enable transcription.";
+    console.error(errorMsg);
+    // Display error in the component if it hasn't been shown yet
+    if (error !== errorMsg) {
+        setError(errorMsg);
+    }
+  }
+
+  const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
 
   // Helper function to convert an AudioBuffer to a WAV file Blob
   const bufferToWave = (audioBuffer: AudioBuffer): Blob => {
@@ -126,102 +123,39 @@ const AudioTranscriberPage: React.FC = () => {
     });
   };
 
-  const transcribeAudio = async (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      // Check if browser supports Web Speech API
-      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-        reject(new Error('Speech recognition not supported in this browser. Please use Chrome, Edge, or Safari.'));
-        return;
-      }
-
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      const recognition = new SpeechRecognition();
-      
-      recognition.continuous = true;
-      recognition.interimResults = false;
-      recognition.lang = selectedLanguage;
-      recognition.maxAlternatives = 1;
-
-      let transcript = '';
-      let hasResults = false;
-      let timeoutId: NodeJS.Timeout;
-
-      recognition.onresult = (event: any) => {
-        hasResults = true;
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          if (event.results[i].isFinal) {
-            transcript += event.results[i][0].transcript + ' ';
-          }
-        }
-        // Reset timeout when we get results
-        clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => {
-          recognition.stop();
-        }, 3000);
-      };
-
-      recognition.onerror = (event: any) => {
-        clearTimeout(timeoutId);
-        let errorMessage = 'Speech recognition error';
-        switch (event.error) {
-          case 'no-speech':
-            errorMessage = 'No speech detected in the audio';
-            break;
-          case 'audio-capture':
-            errorMessage = 'Audio capture failed';
-            break;
-          case 'not-allowed':
-            errorMessage = 'Microphone access denied';
-            break;
-          case 'network':
-            errorMessage = 'Network error occurred';
-            break;
-          case 'service-not-allowed':
-            errorMessage = 'Speech recognition service not allowed';
-            break;
-          default:
-            errorMessage = `Speech recognition error: ${event.error}`;
-        }
-        reject(new Error(errorMessage));
-      };
-
-      recognition.onend = () => {
-        clearTimeout(timeoutId);
-        if (hasResults && transcript.trim()) {
-          resolve(transcript.trim());
+  // Helper function to convert a File object to a GoogleGenerativeAI.Part
+  const fileToGenerativePart = async (file: File) => {
+    const base64EncodedData = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (reader.result) {
+          resolve((reader.result as string).split(',')[1]);
         } else {
-          reject(new Error('No speech detected in the audio. Please ensure the audio contains clear speech.'));
+          reject(new Error("Failed to read file for base64 encoding."));
         }
       };
-
-      // Create audio element to play the file for transcription
-      const audio = new Audio(URL.createObjectURL(file));
-      
-      audio.oncanplaythrough = () => {
-        recognition.start();
-        audio.play();
-        
-        // Set a timeout to stop recognition after audio ends
-        timeoutId = setTimeout(() => {
-          recognition.stop();
-        }, (audio.duration + 2) * 1000); // Audio duration + 2 seconds buffer
-      };
-
-      audio.onended = () => {
-        // Give some time for final speech recognition
-        setTimeout(() => {
-          recognition.stop();
-        }, 2000);
-      };
-
-      audio.onerror = () => {
-        clearTimeout(timeoutId);
-        reject(new Error('Failed to load audio file. Please ensure the file is a valid audio format.'));
-      };
-
-      // Set volume to 0 to avoid playing audio through speakers
-      audio.volume = 0;
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
     });
+  
+    return {
+      inlineData: { data: base64EncodedData, mimeType: file.type },
+    };
+  }
+
+  const transcribeAudio = async (file: File): Promise<string> => {
+    if (!genAI) {
+      throw new Error("Gemini API key not configured. Cannot transcribe.");
+    }
+
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+    const audioPart = await fileToGenerativePart(file);
+    const prompt = "Transcribe the following audio file. Provide only the transcribed text and nothing else.";
+
+    const result = await model.generateContent([prompt, audioPart]);
+    const response = await result.response;
+
+    return response.text();
   };
 
   const handleFiles = async (files: FileList) => {
@@ -258,7 +192,7 @@ const AudioTranscriberPage: React.FC = () => {
         transcript: '',
         status: 'processing',
         timestamp: new Date(),
-        language: selectedLanguage
+        language: 'auto-detected'
       };
 
       setTranscriptions(prev => [...prev, newTranscription]);
@@ -270,7 +204,7 @@ const AudioTranscriberPage: React.FC = () => {
         
         setTranscriptions(prev => prev.map(t => 
           t.id === transcriptionId 
-            ? { ...t, transcript, status: 'completed' as const, confidence: 0.85 }
+            ? { ...t, transcript, status: 'completed' as const }
             : t
         ));
       } catch (err) {
@@ -349,298 +283,152 @@ const AudioTranscriberPage: React.FC = () => {
     setError(null);
   };
 
-  const formatFileSize = (bytes: number) => {
+  const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const isSpeechRecognitionSupported = () => {
-    return ('webkitSpeechRecognition' in window) || ('SpeechRecognition' in window);
-  };
-
   return (
     <div 
-      className="min-h-screen bg-cover bg-center bg-fixed"
-      style={{
-        backgroundImage: "url('/images/bg_image.png')",
-        fontFamily: '"Space Grotesk", "Noto Sans", sans-serif'
+      className="flex size-full min-h-screen flex-col bg-[#f6f0e4] group/design-root overflow-x-hidden" 
+      style={{ 
+        fontFamily: '"Space Grotesk", "Noto Sans", sans-serif',
+        backgroundImage: 'url("/images/bg_image.png")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed'
       }}
     >
-      {/* Background overlay */}
-      <div className="min-h-screen bg-black/10">
+      <div className="absolute inset-0 bg-black/15 pointer-events-none"></div>
+      
+      <div className="relative z-10">
         <Navbar />
-        
-        {/* Spacer for fixed navbar */}
-        <div className="h-16"></div>
-        
-        <main className="px-4 sm:px-10 md:px-20 lg:px-40 py-8">
-          <div className="max-w-6xl mx-auto">
-            {/* Header */}
-            <div className="flex justify-between items-center mb-8">
-              <div className="bg-white/20 backdrop-blur-md border border-white/30 rounded-2xl p-6 shadow-xl">
-                <h1 className="text-white text-3xl font-bold mb-2">Audio Transcriber</h1>
-                <p className="text-white/80 text-lg">Transcribe audio files into text with AI-powered speech recognition</p>
-              </div>
-              
-              {transcriptions.length > 0 && (
-                <button
-                  onClick={clearAll}
-                  className="bg-white/20 backdrop-blur-md border border-white/30 rounded-2xl px-6 py-3 text-white hover:bg-white/30 transition-all duration-300 flex items-center gap-3 shadow-xl"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                  Clear All
-                </button>
-              )}
+        <main className="px-4 sm:px-10 md:px-20 lg:px-40 flex flex-1 justify-center py-5 pt-28">
+          <div className="layout-content-container flex flex-col w-full max-w-4xl flex-1">
+            <div className="flex flex-col items-center gap-4 p-4 text-center">
+                <div className="p-3 bg-white/30 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg inline-block">
+                    <svg className="w-10 h-10 text-slate-800 drop-shadow-md" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2c1.1 0 2 .9 2 2v6c0 1.1-.9 2-2 2s-2-.9-2-2V4c0-1.1.9-2 2-2zm5.3 6c0 3-2.54 5.1-5.3 5.1S6.7 11 6.7 8H5c0 3.41 2.72 6.23 6 6.72V17h-2v2h6v-2h-2v-2.28c3.28-.49 6-3.31 6-6.72h-1.7z"/>
+                    </svg>
+                </div>
+                <h1 className="text-3xl font-bold text-slate-800 drop-shadow-lg tracking-tight">Audio Transcriber</h1>
+                <p className="max-w-2xl text-slate-700 drop-shadow-sm font-medium">
+                    Upload audio or video files to get a fast, accurate transcription. Powered by Google's Gemini AI for high-quality results.
+                </p>
             </div>
-
-            {/* Language Selection */}
-            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 mb-8 shadow-xl">
-              <h2 className="text-xl font-semibold text-white mb-6">Transcription Settings</h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                  <label className="block text-sm font-medium text-white mb-3">Language</label>
-                  <select
-                    value={selectedLanguage}
-                    onChange={(e) => setSelectedLanguage(e.target.value)}
-                    className="w-full bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50"
-                  >
-                    {supportedLanguages.map(lang => (
-                      <option key={lang.code} value={lang.code} className="bg-gray-800 text-white">
-                        {lang.name}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-xs text-white/60 mt-2">Select the primary language of your audio</p>
-                </div>
-
-                <div className="flex items-end">
-                  <div className="text-sm text-white/70">
-                    <p className="mb-3 font-medium text-white">Supported formats:</p>
-                    <p className="mb-1">• Audio: MP3, WAV, M4A, OGG</p>
-                    <p className="mb-1">• Video: MP4, WebM (audio track)</p>
-                    <p className="mt-3 text-xs">
-                      <strong className="text-white">Note:</strong> Uses browser speech recognition
-                    </p>
-                  </div>
-                </div>
+            
+            <div 
+              id="drop-zone"
+              onDrop={handleDrop} 
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onClick={() => fileInputRef.current?.click()}
+              className={`mt-6 p-8 border-4 border-dashed rounded-2xl text-center cursor-pointer transition-all duration-300
+                ${dragActive ? 'border-blue-500 bg-blue-500/10 scale-105' : 'border-gray-400/50 hover:border-blue-400 hover:bg-white/20'}
+                bg-white/10 backdrop-blur-sm shadow-inner`
+              }
+            >
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={(e) => e.target.files && handleFiles(e.target.files)} 
+                multiple
+                accept="audio/*,video/mp4,video/webm"
+                className="hidden"
+              />
+              <div className="flex flex-col items-center justify-center gap-4 text-slate-600">
+                <svg className="w-12 h-12 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3-3 3m0 0l-3 3m3-3v12" />
+                </svg>
+                <p className="text-lg font-semibold">Drag & drop your files here or <span className="text-blue-600">click to browse</span></p>
+                <p className="text-sm text-gray-500">Supports all major audio formats and MP4/WebM video. Max 100MB per file.</p>
               </div>
             </div>
 
-            {/* Browser Compatibility Warning */}
-            {!isSpeechRecognitionSupported() && (
-              <div className="bg-yellow-500/20 backdrop-blur-md border border-yellow-400/30 text-yellow-100 px-6 py-4 rounded-2xl mb-8 shadow-xl">
-                <div className="flex items-center gap-3">
-                  <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.232 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                  </svg>
-                  <span>Speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari for the best experience.</span>
-                </div>
-              </div>
-            )}
-
-            {/* Upload Area */}
-            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-12 mb-8 shadow-xl">
-              <div
-                className={`border-2 border-dashed rounded-xl p-12 text-center transition-all duration-300 ${
-                  dragActive 
-                    ? 'border-white/60 bg-white/10' 
-                    : 'border-white/30 hover:border-white/50 hover:bg-white/5'
-                }`}
-                onDrop={handleDrop}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-              >
-                <div className="space-y-6">
-                  <svg className="mx-auto w-16 h-16 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                  </svg>
-                  
-                  <div>
-                    <p className="text-xl font-semibold text-white mb-3">
-                      {dragActive ? 'Drop audio files here' : 'Drag and drop audio files here'}
-                    </p>
-                    <p className="text-white/70 mb-6">or</p>
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={isProcessing || !isSpeechRecognitionSupported()}
-                      className="bg-white/20 backdrop-blur-md border border-white/30 rounded-xl px-8 py-4 text-white hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-medium"
-                    >
-                      {isProcessing ? 'Processing...' : 'Select Audio Files'}
-                    </button>
-                  </div>
-                  
-                  <p className="text-sm text-white/60">
-                    Multiple files supported • Max 100MB per file
-                  </p>
-                </div>
-                
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept="audio/*,video/mp4,video/webm"
-                  onChange={(e) => e.target.files && handleFiles(e.target.files)}
-                  className="hidden"
-                />
-              </div>
-            </div>
-
-            {/* Error Display */}
             {error && (
-              <div className="bg-red-500/20 backdrop-blur-md border border-red-500/30 text-white px-6 py-4 rounded-2xl mb-8 flex items-center justify-between shadow-xl">
-                <div className="flex items-center gap-3">
-                  <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  {error}
-                </div>
-                <button 
-                  onClick={() => setError(null)} 
-                  className="text-white/70 hover:text-white transition-colors"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+              <div className="mt-4 bg-red-100 border-l-4 border-red-500 text-red-800 p-4 rounded-r-lg shadow" role="alert">
+                <p className="font-bold">An Error Occurred</p>
+                <p>{error}</p>
               </div>
             )}
-
-            {/* Transcriptions List */}
-            {transcriptions.length > 0 && (
-              <div>
-                <h2 className="text-xl font-semibold text-white mb-6">
-                  Transcriptions ({transcriptions.length})
-                </h2>
-                
-                <div className="space-y-6">
-                  {transcriptions.map(transcription => (
-                    <div key={transcription.id} className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl overflow-hidden shadow-xl">
-                      {/* File Info Header */}
-                      <div className="p-6 border-b border-white/10">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-white text-lg mb-2">{transcription.fileName}</h3>
-                            <div className="flex items-center gap-4 text-sm text-white/70">
-                              <span>{formatFileSize(transcription.audioFile.size)}</span>
-                              <span className="capitalize">{supportedLanguages.find(l => l.code === transcription.language)?.name || transcription.language}</span>
-                              <span>{transcription.timestamp.toLocaleString()}</span>
-                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                transcription.status === 'completed' ? 'bg-green-500/20 text-green-100 border border-green-400/30' :
-                                transcription.status === 'processing' ? 'bg-blue-500/20 text-blue-100 border border-blue-400/30' :
-                                transcription.status === 'error' ? 'bg-red-500/20 text-red-100 border border-red-400/30' :
-                                'bg-gray-500/20 text-gray-100 border border-gray-400/30'
-                              }`}>
-                                {transcription.status}
-                              </span>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center gap-2">
-                            {transcription.status === 'completed' && (
-                              <>
-                                <button
-                                  onClick={() => copyToClipboard(transcription.transcript)}
-                                  className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-3 text-white hover:bg-white/20 transition-all duration-300"
-                                  title="Copy to clipboard"
-                                >
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                  </svg>
-                                </button>
-                                <button
-                                  onClick={() => downloadTranscript(transcription)}
-                                  className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-3 text-white hover:bg-white/20 transition-all duration-300"
-                                  title="Download transcript"
-                                >
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                  </svg>
-                                </button>
-                              </>
-                            )}
-                            <button
-                              onClick={() => deleteTranscription(transcription.id)}
-                              className="bg-red-500/20 backdrop-blur-md border border-red-400/30 rounded-xl p-3 text-red-100 hover:bg-red-500/30 transition-all duration-300"
-                              title="Delete transcription"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                            </button>
+            
+            <div className="mt-8">
+              {transcriptions.length > 0 && (
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-slate-800">Transcription History</h2>
+                  <button 
+                    onClick={clearAll}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-700 rounded-lg transition-colors text-sm font-medium"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                    Clear All
+                  </button>
+                </div>
+              )}
+              
+              <div className="space-y-4">
+                {transcriptions.map((transcription) => (
+                  <div key={transcription.id} className="bg-white/50 backdrop-blur-md border border-white/30 rounded-xl shadow-lg transition-shadow hover:shadow-xl">
+                    <div className="p-4 border-b border-white/20">
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="font-semibold text-slate-800 truncate" title={transcription.fileName}>{transcription.fileName}</div>
+                        <div className="flex items-center gap-2 text-sm text-slate-600">
+                          <span>{formatFileSize(transcription.audioFile.size)}</span>
+                          <div className={`px-2 py-0.5 rounded-full text-xs font-medium border
+                            ${transcription.status === 'completed' ? 'bg-green-500/10 text-green-800 border-green-500/20' : ''}
+                            ${transcription.status === 'processing' ? 'bg-yellow-500/10 text-yellow-800 border-yellow-500/20' : ''}
+                            ${transcription.status === 'error' ? 'bg-red-500/10 text-red-800 border-red-500/20' : ''}
+                          `}>
+                            {transcription.status}
                           </div>
                         </div>
                       </div>
-
-                      {/* Audio Player */}
-                      <div className="p-6 border-b border-white/10">
-                        <audio 
-                          src={transcription.audioUrl} 
-                          controls 
-                          className="w-full h-12 bg-white/10 backdrop-blur-md rounded-xl"
-                        />
-                      </div>
-
-                      {/* Transcript Content */}
-                      <div className="p-6">
-                        {transcription.status === 'processing' && (
-                          <div className="flex items-center justify-center py-12">
-                            <div className="flex items-center gap-4">
-                              <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                              <span className="text-white font-medium">Transcribing audio...</span>
-                            </div>
-                          </div>
-                        )}
-
-                        {transcription.status === 'error' && (
-                          <div className="bg-red-500/20 backdrop-blur-md border border-red-400/30 text-red-100 px-6 py-4 rounded-xl">
-                            {transcription.transcript}
-                          </div>
-                        )}
-
-                        {transcription.status === 'completed' && (
-                          <div>
-                            <div className="flex justify-between items-center mb-4">
-                              <label className="text-sm font-medium text-white">Transcript</label>
-                              {transcription.confidence && (
-                                <span className="text-xs text-white/60 bg-white/10 backdrop-blur-md px-3 py-1 rounded-full">
-                                  Confidence: {Math.round(transcription.confidence * 100)}%
-                                </span>
-                              )}
-                            </div>
-                            <textarea
-                              value={transcription.transcript}
-                              onChange={(e) => updateTranscript(transcription.id, e.target.value)}
-                              className="w-full bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-4 py-4 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 min-h-[120px] resize-y"
-                              placeholder="Transcript will appear here..."
-                            />
-                            <p className="text-xs text-white/60 mt-3">
-                              {transcription.transcript.split(' ').filter(word => word.length > 0).length} words • {transcription.transcript.length} characters
-                            </p>
-                          </div>
-                        )}
-                      </div>
                     </div>
-                  ))}
-                </div>
+                    <div className="p-4">
+                      {transcription.status === 'processing' ? (
+                        <div className="flex items-center justify-center p-8">
+                          <div className="flex flex-col items-center gap-2">
+                            <svg className="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span className="text-slate-600 font-medium">Processing...</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <textarea
+                          readOnly={transcription.status !== 'completed'}
+                          value={transcription.transcript}
+                          onChange={(e) => updateTranscript(transcription.id, e.target.value)}
+                          className="w-full h-32 p-2 bg-slate-50/50 border border-gray-300/50 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                          placeholder={transcription.status === 'error' ? 'Transcription failed.' : 'No transcript available.'}
+                        />
+                      )}
+                    </div>
+                    <div className="px-4 py-3 bg-white/20 border-t border-white/20 flex flex-wrap items-center justify-between gap-2">
+                       <div className="flex items-center gap-2">
+                          <audio controls src={transcription.audioUrl} className="h-8 max-w-xs"></audio>
+                       </div>
+                       <div className="flex items-center gap-2">
+                         <button onClick={() => downloadTranscript(transcription)} className="p-2 rounded-md hover:bg-gray-400/20 transition-colors" title="Download TXT">
+                           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-download-cloud"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m8 17 4 4 4-4"/></svg>
+                         </button>
+                         <button onClick={() => copyToClipboard(transcription.transcript)} className="p-2 rounded-md hover:bg-gray-400/20 transition-colors" title="Copy to Clipboard">
+                           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                         </button>
+                         <button onClick={() => deleteTranscription(transcription.id)} className="p-2 rounded-md text-red-600 hover:bg-red-500/10 transition-colors" title="Delete">
+                           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                         </button>
+                       </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            )}
-
-            {/* Empty State */}
-            {transcriptions.length === 0 && !isProcessing && (
-              <div className="text-center py-16">
-                <svg className="mx-auto w-16 h-16 text-white/50 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                </svg>
-                <p className="text-white/70 text-lg">Upload audio files to start transcribing</p>
-                <p className="text-white/50 text-sm mt-2">Supports multiple languages and formats</p>
-              </div>
-            )}
+            </div>
           </div>
         </main>
       </div>
