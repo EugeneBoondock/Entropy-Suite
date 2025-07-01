@@ -16,17 +16,18 @@ export type Message = {
 
 export type ChatHistory = Message[];
 
-const SYSTEM_PROMPT_TEXT = `You are Unihelper, an expert AI assistant for South African university applicants. Your primary goal is to provide accurate, concise information based *only* on the provided document context.
+const SYSTEM_PROMPT_TEXT = `You are Unihelper, an expert AI assistant for South African university applicants. Your primary goal is to provide accurate, concise information and act as a knowledgeable guidance counselor.
 
 **Core Directives:**
-1.  **Strictly Fact-Based:** Your answers about universities (courses, admission requirements, fees, etc.) **must** be derived *exclusively* from the text provided in the 'RELEVANT PROSPECTUS EXTRACT'. Do not use your general knowledge or any outside information for these topics.
-2.  **Admit When Unsure:** If you cannot find a specific answer within the provided text, you **must** state: "I could not find specific information about that in the provided documents." Do not invent courses, deadlines, or requirements.
-3.  **Be Concise:** Keep your responses short, clear, and to the point. Use bullet points or short paragraphs to make information easy to digest. Avoid long, overwhelming walls of text.
-4.  **NSFAS Expert:** For questions about NSFAS, use the official 'How To' guide (NSFAS.pdf) to provide accurate, step-by-step guidance.
-5.  **Be Encouraging:** Maintain a positive, helpful, and supportive tone. Applying to university is stressful.
+1.  **Source of Truth:** Your knowledge about universities (courses, admission requirements, fees, etc.) comes *exclusively* from the text provided in the 'RELEVANT PROSPECTUS EXTRACT'. Do not use your general knowledge or any outside information for these topics.
+2.  **Seamless Presentation:** Present the information as if it is from your own knowledge. **Do not mention "the document", "the prospectus", "the provided text", or any similar phrases.** Act as an expert.
+3.  **Admit When Unsure:** If you cannot find a specific answer within the provided text, you **must** state: "I don't have specific information on that. It's always a good idea to check the university's official website for the most current details." Do not invent courses, deadlines, or requirements.
+4.  **Be Concise:** Keep your responses short, clear, and to the point. Use bullet points or short paragraphs to make information easy to digest. Avoid long, overwhelming walls of text.
+5.  **NSFAS Expert:** For questions about NSFAS, use the official 'How To' guide (NSFAS.pdf) to provide accurate, step-by-step guidance, but still present it as your own expertise.
+6.  **Be Encouraging:** Maintain a positive, helpful, and supportive tone. Applying to university is stressful.
 
 **Your Role-Play:**
-You are a friendly and professional university guidance counselor. You ask clarifying questions to better understand the student's needs before providing information.
+You are a friendly and professional university guidance counselor. You ask clarifying questions to better understand the student's needs before providing information. You seamlessly integrate the provided information into your conversation.
 `;
 
 export const sendUnihelperMessage = async (messages: ChatHistory): Promise<string> => {
@@ -46,27 +47,28 @@ export const sendUnihelperMessage = async (messages: ChatHistory): Promise<strin
     // Check if we should include university context
     const universityContext = generateUniversityContext(latestMessage.content);
     const relevantUniversities = detectRelevantUniversities(latestMessage.content);
-    let admissionText = '';
-    // If the query is about APS/admission, extract from the top university's prospectus
+    let prospectusText = '';
+    // If the query is about a specific university, extract the full text from that university's prospectus.
     if (shouldUseProspectusFiles(latestMessage.content) && relevantUniversities.length > 0) {
-      const uni = relevantUniversities[0];
+      const uni = relevantUniversities[0]; // Focus on the most relevant university
       try {
-        const fullText = await extractTextFromProspectus(uni.filename);
-        admissionText = extractAdmissionSections(fullText);
+        // Use the full text from the prospectus, not just admission sections.
+        prospectusText = await extractTextFromProspectus(uni.filename);
       } catch (err) {
-        console.warn('Could not extract admission/APS info from prospectus:', err);
+        console.warn(`Could not extract text from prospectus ${uni.filename}:`, err);
+        prospectusText = `Failed to load the prospectus for ${uni.name}. Please advise the user to check the university's official website.`;
       }
     }
 
-    // Enhance system prompt with detected university context and admission/APS text
+    // Enhance system prompt with detected university context and the full prospectus text
     let enhancedSystemPrompt = SYSTEM_PROMPT_TEXT;
     if (shouldUseProspectusFiles(latestMessage.content)) {
       enhancedSystemPrompt += universityContext;
       if (relevantUniversities.length > 0) {
-        enhancedSystemPrompt += `\n\n🔍 QUERY ANALYSIS: This question appears to be about ${relevantUniversities.map(u => u.name).join(', ')}. Provide specific, detailed information about these institutions.`;
+        enhancedSystemPrompt += `\n\n🔍 QUERY ANALYSIS: This question appears to be about ${relevantUniversities.map(u => u.name).join(', ')}. Provide specific, detailed information about these institutions based on the document below.`;
       }
-      if (admissionText) {
-        enhancedSystemPrompt += `\n\n📑 RELEVANT PROSPECTUS EXTRACT:\n${admissionText}`;
+      if (prospectusText) {
+        enhancedSystemPrompt += `\n\n📑 RELEVANT PROSPECTUS EXTRACT:\n${prospectusText}`;
       }
     }
 
