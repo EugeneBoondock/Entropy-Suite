@@ -103,12 +103,6 @@ const SummarizerPage: React.FC = () => {
     },
   });
 
-  useEffect(() => {
-    if (editor) {
-      outputRef.current = editor.view.dom as HTMLDivElement;
-    }
-  }, [editor]);
-
   const handleSummarize = async () => {
     if (!inputText.trim() || !editor) {
       setError('Please enter some text to summarize.');
@@ -204,7 +198,7 @@ const SummarizerPage: React.FC = () => {
                 <h3 className="text-lg font-semibold text-[#1a1a1a] mb-4 drop-shadow-sm">Summary Output</h3>
             <EditorToolbar editor={editor} />
               </div>
-              <div className="relative flex-grow bg-white/60 backdrop-blur-sm overflow-hidden">
+              <div className="relative flex-grow bg-white/60 backdrop-blur-sm overflow-hidden" ref={outputRef}>
                 <EditorContent editor={editor} className="h-full overflow-y-auto p-4" />
               {isLoading && (
                   <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/75 backdrop-blur-sm">
