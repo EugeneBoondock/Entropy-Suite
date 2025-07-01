@@ -65,12 +65,17 @@ const UnihelperPage: React.FC = () => {
 
   const currentSession = chatSessions.find(session => session.id === currentSessionId) || chatSessions[0];
 
+  // Only scroll when a new message is added, not when switching sessions
+  const prevSessionId = useRef(currentSessionId);
   useEffect(() => {
-    // Only scroll when there are actual messages, not during loading
-    if (currentSession.messages.length > 1) {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (
+      prevSessionId.current === currentSessionId &&
+      currentSession.messages.length > 1
+    ) {
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
-  }, [currentSession.messages]);
+    prevSessionId.current = currentSessionId;
+  }, [currentSession.messages, currentSessionId]);
 
   // Save chat sessions to localStorage
   useEffect(() => {
@@ -81,13 +86,6 @@ const UnihelperPage: React.FC = () => {
   useEffect(() => {
     inputRef.current?.focus();
   }, [currentSessionId, loading]);
-
-  useEffect(() => {
-    // Only scroll when there are actual messages, not during loading
-    if (currentSession.messages.length > 1) {
-      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [currentSession.messages, currentSessionId]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -220,7 +218,7 @@ const UnihelperPage: React.FC = () => {
                 </button>
                 {/* Sidebar content: Chat History + University Websites */}
                 {/* Chat History Sidebar */}
-                <div className="bg-white/30 backdrop-blur-md border border-white/30 rounded-xl shadow-xl mb-2 lg:mb-0 p-2 sm:p-4">
+                <div className="bg-white/30 backdrop-blur-md border border-white/30 rounded-xl shadow-xl mb-2 lg:mb-0 p-2 sm:p-4 h-full flex flex-col">
                   {/* Header */}
                   <div className="px-4 py-3 border-b border-white/20">
                     <div className="flex items-center gap-2 mb-3">
@@ -243,7 +241,7 @@ const UnihelperPage: React.FC = () => {
                   </div>
 
                   {/* Chat Sessions */}
-                  <div className="max-h-[30vh] overflow-y-auto scrollbar-none lg:scrollbar-thin lg:scrollbar-thumb-white/40 lg:scrollbar-track-white/10 px-4 py-2">
+                  <div className="flex-1 min-h-0 overflow-y-auto scrollbar-none lg:scrollbar-thin lg:scrollbar-thumb-white/40 lg:scrollbar-track-white/10 px-4 py-2">
                     {chatSessions.map((session) => (
                       <div
                         key={session.id}
@@ -444,9 +442,9 @@ const UnihelperPage: React.FC = () => {
                               </ReactMarkdown>
                             </div>
                           </div>
-              </div>
-            </div>
-          ))}
+                        </div>
+                      </div>
+                    ))}
                     {/* Typing indicator when loading */}
                     {loading && <TypingIndicator />}
                     {/* Always keep this at the end for auto-scroll */}
@@ -467,33 +465,33 @@ const UnihelperPage: React.FC = () => {
                             <span className="text-xs font-medium text-gray-700 leading-tight truncate w-full">{action.text}</span>
                           </button>
                         ))}
-              </div>
-            </div>
-          )}
+                      </div>
+                    </div>
+                  )}
                   {/* Input Area */}
                   <div className="p-2 sm:p-4 border-t border-white/20">
                     <div className="flex gap-3">
                       <div className="flex-1">
                         <textarea
                           ref={inputRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
+                          value={input}
+                          onChange={(e) => setInput(e.target.value)}
                           onKeyPress={handleKeyPress}
                           placeholder="Ask about universities, NSFAS, scholarships, or any admission guidance..."
                           className="w-full p-3 bg-white/60 border border-white/30 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/30 placeholder-gray-500 text-sm"
                           rows={2}
-            disabled={loading}
-            autoFocus
-          />
+                          disabled={loading}
+                          autoFocus
+                        />
                       </div>
-          <button
-            onClick={handleSend}
+                      <button
+                        onClick={handleSend}
                         disabled={!input.trim() || loading}
                         className="self-end p-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 disabled:from-gray-400 disabled:to-gray-400 text-white rounded-xl transition-all disabled:cursor-not-allowed shadow-lg"
-          >
+                      >
                         <Send className="w-4 h-4" />
-          </button>
-        </div>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
