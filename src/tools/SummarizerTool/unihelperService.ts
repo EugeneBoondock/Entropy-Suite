@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { generateUniversityContext, shouldUseProspectusFiles, detectRelevantUniversities } from "./prospectusManager";
+import { generateUniversityContext, shouldUseProspectusFiles, detectRelevantUniversities, extractTextFromProspectus, extractAdmissionSections } from "./prospectusManager";
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
@@ -56,16 +56,27 @@ export const sendUnihelperMessage = async (messages: ChatHistory): Promise<strin
     // Check if we should include university context
     const universityContext = generateUniversityContext(latestMessage.content);
     const relevantUniversities = detectRelevantUniversities(latestMessage.content);
-    
-    // Enhance system prompt with detected university context
+    let admissionText = '';
+    // If the query is about APS/admission, extract from the top university's prospectus
+    if (shouldUseProspectusFiles(latestMessage.content) && relevantUniversities.length > 0) {
+      const uni = relevantUniversities[0];
+      try {
+        const fullText = await extractTextFromProspectus(uni.filename);
+        admissionText = extractAdmissionSections(fullText);
+      } catch (err) {
+        console.warn('Could not extract admission/APS info from prospectus:', err);
+      }
+    }
+
+    // Enhance system prompt with detected university context and admission/APS text
     let enhancedSystemPrompt = SYSTEM_PROMPT_TEXT;
-    
     if (shouldUseProspectusFiles(latestMessage.content)) {
       enhancedSystemPrompt += universityContext;
-      
       if (relevantUniversities.length > 0) {
-        console.log(`🎯 Detected relevant universities for query:`, relevantUniversities.map(u => u.name));
         enhancedSystemPrompt += `\n\n🔍 QUERY ANALYSIS: This question appears to be about ${relevantUniversities.map(u => u.name).join(', ')}. Provide specific, detailed information about these institutions.`;
+      }
+      if (admissionText) {
+        enhancedSystemPrompt += `\n\n📑 RELEVANT PROSPECTUS EXTRACT:\n${admissionText}`;
       }
     }
 
@@ -83,11 +94,9 @@ export const sendUnihelperMessage = async (messages: ChatHistory): Promise<strin
     if (messages.length > 1) {
       // Remove the latest message from history since we'll send it separately
       const historyWithoutLatest = conversationHistory.slice(0, -1);
-      
       const chat = model.startChat({
         history: historyWithoutLatest,
       });
-      
       const result = await chat.sendMessage(latestMessage.content);
       const response = await result.response;
       return response.text();

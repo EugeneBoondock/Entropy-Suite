@@ -1,6 +1,9 @@
 // University detection and context generation for prospectus information
 // This module provides intelligent university detection without file uploads
 
+import * as pdfjsLib from 'pdfjs-dist/build/pdf';
+pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+
 // University mapping with comprehensive aliases and keywords
 export interface UniversityInfo {
   code: string;
@@ -324,4 +327,128 @@ I have detailed prospectus information for these universities including:
 - Faculty information and academic calendars
 
 Please ask specific questions about any of these areas and I'll provide accurate, up-to-date information from their 2026 prospectuses.`;
+}
+
+// Extract all text from a PDF file in public/prospectuses
+export async function extractTextFromProspectus(filename: string): Promise<string> {
+  const url = `/prospectuses/${filename}`;
+  const response = await fetch(url);
+  const arrayBuffer = await response.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer, disableWorker: true }).promise;
+  let fullText = '';
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const textContent = await page.getTextContent();
+    const pageText = textContent.items.map((item: any) => item.str).join(' ');
+    fullText += pageText + '\n';
+  }
+  return fullText.trim();
+}
+
+// Extract all admission/APS-related sections from a PDF's text
+export function extractAdmissionSections(text: string): string {
+  // Look for sections containing these keywords
+  const keywords = [
+    'admission requirements',
+    'minimum requirements',
+    'aps',
+    'admission point score',
+    'entry requirements',
+    'requirements for admission',
+    'eligibility',
+    'selection criteria',
+    'programme requirements',
+    'qualification requirements',
+    'subject requirements',
+    'matric requirements',
+    'bachelor requirements',
+    'diploma requirements',
+    'degree requirements',
+    'points required',
+    'aps score',
+    'aps minimum',
+    'aps needed',
+    'aps for',
+    'aps of',
+    'aps is',
+    'aps must',
+    'aps requirement',
+    'aps value',
+    'aps calculation',
+    'aps table',
+    'aps breakdown',
+    'aps for admission',
+    'aps for registration',
+    'aps for selection',
+    'aps for programme',
+    'aps for course',
+    'aps for degree',
+    'aps for diploma',
+    'aps for certificate',
+    'aps for law',
+    'aps for engineering',
+    'aps for medicine',
+    'aps for science',
+    'aps for commerce',
+    'aps for education',
+    'aps for arts',
+    'aps for management',
+    'aps for accounting',
+    'aps for nursing',
+    'aps for psychology',
+    'aps for social work',
+    'aps for computer science',
+    'aps for information technology',
+    'aps for business',
+    'aps for economics',
+    'aps for finance',
+    'aps for marketing',
+    'aps for public administration',
+    'aps for political science',
+    'aps for international relations',
+    'aps for journalism',
+    'aps for communication',
+    'aps for law degree',
+    'aps for llb',
+    'aps for bcom law',
+    'aps for ba law',
+    'aps for bsc',
+    'aps for bcom',
+    'aps for ba',
+    'aps for bed',
+    'aps for bacc',
+    'aps for bsc it',
+    'aps for bsc computer science',
+    'aps for bsc engineering',
+    'aps for bsc medicine',
+    'aps for bsc nursing',
+    'aps for bsc psychology',
+    'aps for bsc social work',
+    'aps for bsc education',
+    'aps for bsc accounting',
+    'aps for bsc management',
+    'aps for bsc economics',
+    'aps for bsc finance',
+    'aps for bsc marketing',
+    'aps for bsc public administration',
+    'aps for bsc political science',
+    'aps for bsc international relations',
+    'aps for bsc journalism',
+    'aps for bsc communication',
+  ];
+  const lower = text.toLowerCase();
+  let result = '';
+  for (const keyword of keywords) {
+    let idx = lower.indexOf(keyword);
+    while (idx !== -1) {
+      // Extract a chunk around the keyword (e.g., 1000 chars before and after)
+      const start = Math.max(0, idx - 1000);
+      const end = Math.min(text.length, idx + 2000);
+      result += text.slice(start, end) + '\n\n';
+      idx = lower.indexOf(keyword, idx + 1);
+    }
+  }
+  // If nothing found, return the first 3000 chars as fallback
+  if (!result.trim()) return text.slice(0, 3000);
+  return result.trim();
 } 

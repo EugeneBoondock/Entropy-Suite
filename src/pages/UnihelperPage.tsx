@@ -444,9 +444,9 @@ const UnihelperPage: React.FC = () => {
                               </ReactMarkdown>
                             </div>
                           </div>
-                        </div>
-                      </div>
-                    ))}
+              </div>
+            </div>
+          ))}
                     {/* Typing indicator when loading */}
                     {loading && <TypingIndicator />}
                     {/* Always keep this at the end for auto-scroll */}
@@ -476,15 +476,15 @@ const UnihelperPage: React.FC = () => {
                       <div className="flex-1">
                         <textarea
                           ref={inputRef}
-                          value={input}
-                          onChange={(e) => setInput(e.target.value)}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
                           onKeyPress={handleKeyPress}
                           placeholder="Ask about universities, NSFAS, scholarships, or any admission guidance..."
                           className="w-full p-3 bg-white/60 border border-white/30 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/30 placeholder-gray-500 text-sm"
                           rows={2}
-                          disabled={loading}
-                          autoFocus
-                        />
+            disabled={loading}
+            autoFocus
+          />
                       </div>
           <button
             onClick={handleSend}
