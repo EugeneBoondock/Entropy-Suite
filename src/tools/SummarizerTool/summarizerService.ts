@@ -13,7 +13,7 @@ export const summarizeText = async (text: string): Promise<string> => {
     return "";
   }
 
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
 
   const prompt = `Summarize the following text:\n\n${text}`;
 
