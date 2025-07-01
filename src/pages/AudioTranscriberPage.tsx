@@ -37,63 +37,58 @@ const AudioTranscriberPage: React.FC = () => {
   ];
 
   // Helper function to convert an AudioBuffer to a WAV file Blob
-  const bufferToWave = (abuffer: AudioBuffer): Blob => {
-    const numOfChan = abuffer.numberOfChannels;
-    const length = abuffer.length * numOfChan * 2 + 44;
-    const buffer = new ArrayBuffer(length);
+  const bufferToWave = (audioBuffer: AudioBuffer): Blob => {
+    const numChannels = audioBuffer.numberOfChannels;
+    const sampleRate = audioBuffer.sampleRate;
+    const numSamples = audioBuffer.length;
+    const dataLength = numSamples * numChannels * 2; // 2 bytes per sample (16-bit)
+    const buffer = new ArrayBuffer(44 + dataLength);
     const view = new DataView(buffer);
-    const channels = [];
-    let i = 0;
-    let sample = 0;
+
     let offset = 0;
-    let pos = 0;
 
-    // Write WAVE header
-    const setUint16 = (data: number) => {
-      view.setUint16(pos, data, true);
-      pos += 2;
-    };
-    const setUint32 = (data: number) => {
-      view.setUint32(pos, data, true);
-      pos += 4;
+    const writeString = (str: string) => {
+      for (let i = 0; i < str.length; i++) {
+        view.setUint8(offset + i, str.charCodeAt(i));
+      }
+      offset += str.length;
     };
 
-    setUint32(0x46464952); // "RIFF"
-    setUint32(length - 8); // file length - 8
-    setUint32(0x45564157); // "WAVE"
-    setUint32(0x20746d66); // "fmt " chunk
-    setUint32(16); // length = 16
-    setUint16(1); // PCM (uncompressed)
-    setUint16(numOfChan);
-    setUint32(abuffer.sampleRate);
-    setUint32(abuffer.sampleRate * 2 * numOfChan); // avg. bytes/sec
-    setUint16(numOfChan * 2); // block-align
-    setUint16(16); // 16-bit
-    setUint32(0x61746164); // "data" - chunk
-    setUint32(length - pos - 4); // chunk length
+    // RIFF header
+    writeString('RIFF');
+    view.setUint32(offset, 36 + dataLength, true); offset += 4;
+    writeString('WAVE');
 
-    // Write interleaved data
-    for (i = 0; i < abuffer.numberOfChannels; i++) {
-      channels.push(abuffer.getChannelData(i));
+    // "fmt " sub-chunk
+    writeString('fmt ');
+    view.setUint32(offset, 16, true); offset += 4; // 16 for PCM
+    view.setUint16(offset, 1, true); offset += 2; // PCM is 1 (linear quantization)
+    view.setUint16(offset, numChannels, true); offset += 2;
+    view.setUint32(offset, sampleRate, true); offset += 4;
+    view.setUint32(offset, sampleRate * numChannels * 2, true); offset += 4; // byteRate
+    view.setUint16(offset, numChannels * 2, true); offset += 2; // blockAlign
+    view.setUint16(offset, 16, true); offset += 2; // bitsPerSample
+
+    // "data" sub-chunk
+    writeString('data');
+    view.setUint32(offset, dataLength, true); offset += 4;
+
+    // Write the PCM samples
+    const channels = [];
+    for (let i = 0; i < numChannels; i++) {
+      channels.push(audioBuffer.getChannelData(i));
     }
 
-    while (pos < length) {
-      for (i = 0; i < numOfChan; i++) {
-        sample = Math.max(-1, Math.min(1, channels[i][pos])); // clamp
-        sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767) | 0; // scale to 16-bit signed int
-        view.setInt16(offset, sample, true); // write 16-bit sample
+    for (let i = 0; i < numSamples; i++) {
+      for (let j = 0; j < numChannels; j++) {
+        const sample = Math.max(-1, Math.min(1, channels[j][i]));
+        const intSample = sample < 0 ? sample * 32768 : sample * 32767;
+        view.setInt16(offset, intSample, true);
         offset += 2;
       }
-      pos++;
-    }
-    
-    // Safety check for buffer length
-    if (offset > length) {
-      // This should not happen, but as a fallback, return a truncated blob
-      return new Blob([view.buffer.slice(0, offset)], { type: "audio/wav" });
     }
 
-    return new Blob([view], { type: "audio/wav" });
+    return new Blob([view], { type: 'audio/wav' });
   };
 
   // Pre-processes audio files by converting them to WAV for better compatibility
