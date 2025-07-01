@@ -244,7 +244,7 @@ export const generateMoreSlidesFromAI = async (existingSlides: Slide[], topic: s
       .join('\n');
 
     const genAI = new GoogleGenerativeAI(API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite' });
 
     const prompt = `You are a helpful assistant that generates presentation slides.
     
