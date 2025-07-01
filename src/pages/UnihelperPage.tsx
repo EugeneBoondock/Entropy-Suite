@@ -12,7 +12,23 @@ interface ChatSession {
   lastUpdated: Date;
 }
 
-
+// Typing indicator with animated floaty dots
+const TypingIndicator: React.FC = () => (
+  <div className="flex items-center gap-2">
+    <div className="flex-shrink-0 w-6 h-6 rounded-md flex items-center justify-center bg-gradient-to-br from-purple-500/20 to-blue-500/20 text-purple-600">
+      <GraduationCap className="w-3 h-3" />
+    </div>
+    <div className="flex-1 max-w-lg text-left">
+      <div className="inline-block p-2 rounded-lg bg-white/60 text-gray-800 rounded-tl-sm border border-white/30">
+        <div className="flex items-center space-x-1 h-4">
+          <span className="dot dot1 bg-purple-400 inline-block w-1.5 h-1.5 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></span>
+          <span className="dot dot2 bg-purple-400 inline-block w-1.5 h-1.5 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></span>
+          <span className="dot dot3 bg-purple-400 inline-block w-1.5 h-1.5 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></span>
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 const UnihelperPage: React.FC = () => {
   const [chatSessions, setChatSessions] = useState<ChatSession[]>(() => {
@@ -72,6 +88,18 @@ const UnihelperPage: React.FC = () => {
       chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [currentSession.messages, currentSessionId]);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
+    // Lock scroll after initial render, do not scroll the page
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
 
   const createNewChat = () => {
     const newSession: ChatSession = {
@@ -171,7 +199,7 @@ const UnihelperPage: React.FC = () => {
 
   return (
     <div 
-      className="h-screen overflow-hidden bg-cover bg-center bg-fixed"
+      className="h-screen bg-cover bg-center bg-fixed"
       style={{ backgroundImage: 'url(/images/bg_image.png)' }}
     >
       <div className="min-h-screen bg-black/10">
@@ -419,6 +447,8 @@ const UnihelperPage: React.FC = () => {
                         </div>
                       </div>
                     ))}
+                    {/* Typing indicator when loading */}
+                    {loading && <TypingIndicator />}
                     {/* Always keep this at the end for auto-scroll */}
                     <div ref={chatEndRef} />
                   </div>

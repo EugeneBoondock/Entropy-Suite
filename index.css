@@ -186,4 +186,15 @@ body {
   .glass-input {
     font-size: 16px; /* Prevent zoom on iOS */
   }
+}
+
+@layer utilities {
+  .animate-bounce {
+    animation: bounce 1s infinite;
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-6px); }
+    60% { transform: translateY(0); }
+  }
 } 
