@@ -37,7 +37,6 @@ export default defineConfig(({ mode }) => {
         output: {
           manualChunks(id) {
             if (id.includes('node_modules')) {
-              if (id.includes('react') || id.includes('react-dom')) return 'react';
               if (id.includes('@google/generative-ai')) return 'google-genai';
               return 'vendor';
             }
@@ -51,6 +50,8 @@ export default defineConfig(({ mode }) => {
     },
     optimizeDeps: {
       include: [
+        'react',
+        'react-dom',
         '@google/generative-ai',
         '@ffmpeg/ffmpeg',
         '@ffmpeg/core',

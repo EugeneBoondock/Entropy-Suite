@@ -382,12 +382,23 @@ Remember: You are the **Entropy AI Agent** - the most advanced coding assistant 
       // For free tier, we need a real API key but can use the env one
       apiKey = this.freeGeminiKey || import.meta.env.VITE_GEMINI_API_KEY || '';
       if (!apiKey) {
-        throw new Error('Gemini API key required. Please set VITE_GEMINI_API_KEY in your environment or add a key via ai-config');
+        // Return a graceful error message instead of throwing
+        return {
+          content: "Gemini API service is currently unavailable. Please set up your API key or contact the administrator.",
+          usage: { input_tokens: 0, output_tokens: 0, cost: 0 },
+          model: this.currentModel,
+          provider: provider.name
+        };
       }
     } else {
       // Use paid tier - require real API key
       if (provider.apiKey === 'free-tier' || !this.freeGeminiKey) {
-        throw new Error(`API key required for ${this.currentModel}`);
+        return {
+          content: `API key required for ${this.currentModel}. Please configure your API key.`,
+          usage: { input_tokens: 0, output_tokens: 0, cost: 0 },
+          model: this.currentModel,
+          provider: provider.name
+        };
       }
       apiKey = this.freeGeminiKey;
     }
