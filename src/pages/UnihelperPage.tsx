@@ -465,7 +465,7 @@ const UnihelperPage: React.FC = () => {
               </div>
             </div>
             {/* Scrollable Message List */}
-            <div className="overflow-y-auto p-2 space-y-3 bg-white/30 mx-2 rounded-b-xl" style={{ height: 'calc(100vh - 12rem)' }}>
+            <div className="overflow-y-auto p-2 space-y-3 bg-white/30 mx-2 rounded-b-xl pb-4" style={{ height: 'calc(100vh - 15rem)' }}>
               {currentSession.messages.map((message, index) => (
                 <div key={index} className={`flex gap-2 ${message.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
                   <div className={`flex-shrink-0 w-6 h-6 rounded-md flex items-center justify-center ${message.role === "user" ? "bg-blue-500/20 text-blue-600" : "bg-gradient-to-br from-purple-500/20 to-blue-500/20 text-purple-600"}`}>
@@ -483,7 +483,7 @@ const UnihelperPage: React.FC = () => {
                 </div>
               ))}
               {loading && <TypingIndicator />}
-              <div ref={chatEndRef} />
+              <div ref={chatEndRef} className="pb-2" />
             </div>
             {/* Quick Actions */}
             {currentSession.messages.length === 1 && (
@@ -661,7 +661,7 @@ const UnihelperPage: React.FC = () => {
             <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setSidebarOpen(false)} />
           )}
           {/* Mobile Fixed Input */}
-          <div className="fixed left-0 bottom-0 w-full z-40 bg-white/30 backdrop-blur-md border-t border-white/20 p-2">
+          <div className="fixed left-0 bottom-0 w-full z-40 bg-white/30 backdrop-blur-md border-t border-white/20 p-2 mx-2 mb-4 rounded-xl">
             <div className="flex gap-2">
               <textarea
                 ref={inputRef}
