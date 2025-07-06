@@ -7,7 +7,13 @@ import { dirname, join } from 'path';
 import fs from 'fs';
 import dotenv from 'dotenv';
 
-dotenv.config({ path: '.env.local' });
+// Try to load .env.local for local development, but don't fail if it doesn't exist
+try {
+  dotenv.config({ path: '.env.local' });
+} catch (error) {
+  // Fallback to default .env loading - this is normal on Vercel
+  console.log('Note: .env.local not found, using environment variables from system');
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

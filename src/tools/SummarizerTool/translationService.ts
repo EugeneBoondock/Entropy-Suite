@@ -2,22 +2,28 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
-if (!API_KEY) {
-  throw new Error("VITE_GEMINI_API_KEY is not set in the environment variables. Please add it to your .env file.");
-}
+let genAI: GoogleGenerativeAI | null = null;
 
-const genAI = new GoogleGenerativeAI(API_KEY);
+if (!API_KEY) {
+  console.warn("VITE_GEMINI_API_KEY is not set in the environment variables. Translation features will be disabled.");
+} else {
+  genAI = new GoogleGenerativeAI(API_KEY);
+}
 
 export const translateText = async (text: string, sourceLanguage: string, targetLanguage: string): Promise<string> => {
   if (!text.trim()) {
-    return "";
+    return text;
+  }
+
+  if (!genAI) {
+    return "Translation service is currently unavailable due to missing API configuration.";
   }
 
   const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
 
   const languageNames: Record<string, string> = {
     'en': 'English',
-    'es': 'Spanish',
+    'es': 'Spanish', 
     'fr': 'French',
     'de': 'German',
     'it': 'Italian',
@@ -27,15 +33,24 @@ export const translateText = async (text: string, sourceLanguage: string, target
     'ko': 'Korean',
     'zh': 'Chinese',
     'ar': 'Arabic',
-    'auto': 'Auto-detect'
+    'hi': 'Hindi',
+    'af': 'Afrikaans',
+    'zu': 'Zulu',
+    'xh': 'Xhosa',
+    'st': 'Sesotho',
+    'tn': 'Setswana',
+    'ss': 'Siswati',
+    've': 'Tshivenda',
+    'ts': 'Xitsonga',
+    'nr': 'Ndebele'
   };
 
-  const sourceLangName = languageNames[sourceLanguage] || sourceLanguage;
-  const targetLangName = languageNames[targetLanguage] || targetLanguage;
+  const sourceLang = languageNames[sourceLanguage] || sourceLanguage;
+  const targetLang = languageNames[targetLanguage] || targetLanguage;
 
-  const prompt = sourceLanguage === 'auto' 
-    ? `Translate the following text to ${targetLangName}. Detect the source language automatically and provide an accurate translation:\n\n${text}`
-    : `Translate the following text from ${sourceLangName} to ${targetLangName}:\n\n${text}`;
+  const prompt = `Translate the following text from ${sourceLang} to ${targetLang}. Only return the translation, no explanations:
+
+${text}`;
 
   try {
     const result = await model.generateContent(prompt);
@@ -43,7 +58,7 @@ export const translateText = async (text: string, sourceLanguage: string, target
     const translation = response.text();
     return translation;
   } catch (error) {
-    console.error("Error translating text with Gemini API:", error);
+    console.error("Translation error:", error);
     throw new Error("Failed to translate text. Please try again.");
   }
 }; 

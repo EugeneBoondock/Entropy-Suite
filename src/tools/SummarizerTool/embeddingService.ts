@@ -2,10 +2,13 @@ import { supabase } from '../../utils/supabaseClient';
 import { GoogleGenerativeAI, TaskType } from "@google/generative-ai";
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+let genAI: GoogleGenerativeAI | null = null;
+
 if (!GEMINI_API_KEY) {
-  throw new Error("VITE_GEMINI_API_KEY is not set in the environment variables. Please add it to your .env file.");
+  console.warn("VITE_GEMINI_API_KEY is not set in the environment variables. Embedding features will be disabled.");
+} else {
+  genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 }
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 export interface KnowledgeChunk {
   id: string;
@@ -41,6 +44,10 @@ export function splitIntoChunks(text: string, chunkSize: number = 1000, overlap:
 // Generate embedding for text using Gemini text-embedding-004
 export async function generateEmbedding(text: string): Promise<number[]> {
   try {
+    if (!genAI) {
+      throw new Error("Gemini API not initialized - missing API key");
+    }
+    
     const embeddingModel = genAI.getGenerativeModel({ model: "text-embedding-004" });
     const result = await embeddingModel.embedContent({
       content: { role: "user", parts: [{ text }] },

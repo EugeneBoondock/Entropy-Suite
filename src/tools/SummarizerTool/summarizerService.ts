@@ -2,15 +2,21 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
-if (!API_KEY) {
-  throw new Error("VITE_GEMINI_API_KEY is not set in the environment variables. Please add it to your .env file.");
-}
+let genAI: GoogleGenerativeAI | null = null;
 
-const genAI = new GoogleGenerativeAI(API_KEY);
+if (!API_KEY) {
+  console.warn("VITE_GEMINI_API_KEY is not set in the environment variables. Summarizer features will be disabled.");
+} else {
+  genAI = new GoogleGenerativeAI(API_KEY);
+}
 
 export const summarizeText = async (text: string): Promise<string> => {
   if (!text.trim()) {
-    return "";
+    return "No text provided to summarize.";
+  }
+
+  if (!genAI) {
+    return "Summarizer service is currently unavailable due to missing API configuration.";
   }
 
   const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });

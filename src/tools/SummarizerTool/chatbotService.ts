@@ -2,15 +2,21 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
-if (!API_KEY) {
-  throw new Error("VITE_GEMINI_API_KEY is not set in the environment variables. Please add it to your .env file.");
-}
+let genAI: GoogleGenerativeAI | null = null;
 
-const genAI = new GoogleGenerativeAI(API_KEY);
+if (!API_KEY) {
+  console.warn("VITE_GEMINI_API_KEY is not set in the environment variables. Chatbot features will be disabled.");
+} else {
+  genAI = new GoogleGenerativeAI(API_KEY);
+}
 
 export const sendChatMessage = async (message: string, conversationHistory?: Array<{role: 'user' | 'model', parts: Array<{text: string}>}>): Promise<string> => {
   if (!message.trim()) {
-    return "";
+    return "Please provide a message.";
+  }
+
+  if (!genAI) {
+    return "Chatbot service is currently unavailable due to missing API configuration.";
   }
 
   const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
@@ -21,7 +27,6 @@ export const sendChatMessage = async (message: string, conversationHistory?: Arr
       const chat = model.startChat({
         history: conversationHistory,
       });
-      
       const result = await chat.sendMessage(message);
       const response = await result.response;
       return response.text();

@@ -9,11 +9,13 @@ import {
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
-if (!API_KEY) {
-  throw new Error("VITE_GEMINI_API_KEY is not set in the environment variables. Please add it to your .env file.");
-}
+let genAI: GoogleGenerativeAI | null = null;
 
-const genAI = new GoogleGenerativeAI(API_KEY);
+if (!API_KEY) {
+  console.warn("VITE_GEMINI_API_KEY is not set in the environment variables. Unihelper features will be disabled.");
+} else {
+  genAI = new GoogleGenerativeAI(API_KEY);
+}
 
 export type Message = {
   role: "user" | "model";
@@ -41,6 +43,10 @@ You were made by Eugene Ncube, dev name is Eugene Boondock, you're on a website 
 export const sendUnihelperMessage = async (messages: ChatHistory): Promise<string> => {
   if (!messages || messages.length === 0) {
     return "Hello! I'm Unihelper, your AI assistant for South African university applications, NSFAS, and scholarships. How can I help you today?";
+  }
+
+  if (!genAI) {
+    return "I'm sorry, but Unihelper is currently unavailable due to missing API configuration. Please contact the administrator.";
   }
 
   const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
