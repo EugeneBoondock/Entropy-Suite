@@ -14,10 +14,7 @@ import JSZip from 'jszip';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile } from '@ffmpeg/util';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.js',
-  import.meta.url,
-).toString();
+pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
 
 // FFmpeg setup for video conversion
 const getFFmpegCorePath = (filename: string) => {
@@ -717,23 +714,132 @@ const convertMarkdown = async (buffer: ArrayBuffer, format:string, name:string) 
 const convertPdf = async (buffer: ArrayBuffer, format: string, name: string) => {
     if (format === 'jpg' || format === 'png') {
         const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
-        const page = await pdf.getPage(1); // Convert first page only for simplicity
+        const page = await pdf.getPage(1); // Currently only converts the first page
         const viewport = page.getViewport({ scale: 2 });
-
         const canvas = document.createElement('canvas');
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
         const context = canvas.getContext('2d');
-        if(!context) throw new Error('Could not get canvas context');
-        
-        await page.render({ canvasContext: context, viewport: viewport }).promise;
-        
-        canvas.toBlob((blob) => {
-            if(blob) saveAs(blob, `${name}.${format}`);
-        }, `image/${format}`);
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        if (context) {
+            await page.render({ canvasContext: context, viewport: viewport }).promise;
+            canvas.toBlob(blob => {
+                if (blob) saveAs(blob, `${name}.${format}`);
+            }, `image/${format}`);
+        }
+    } else if (format === 'docx') {
+        const blob = await convertPdfToDocxBlob(buffer);
+        saveAs(blob, `${name}.docx`);
     } else {
-        throw new Error('PDF can only be converted to JPG or PNG currently.');
+        throw new Error(`Unsupported output format for PDF: ${format}`);
     }
+};
+
+const convertPdfToDocxBlob = async (buffer: ArrayBuffer): Promise<Blob> => {
+    const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+    let html = `<html><head><meta charset="UTF-8"><style>
+        body { font-family: 'Times New Roman', Times, serif; }
+        .page { page-break-after: always; }
+        p { margin: 0; padding: 0; }
+    </style></head><body>`;
+
+    for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const viewport = page.getViewport({ scale: 1.5 });
+        html += `<div class="page" style="width:${viewport.width}px; height:${viewport.height}px; position:relative;">`;
+
+        const textContent = await page.getTextContent({
+            normalizeWhitespace: true,
+        });
+
+        // Group text items by line
+        const lines: any[] = [];
+        if (textContent.items.length > 0) {
+            let currentLine: any[] = [];
+            let lastY = (textContent.items[0] as any).transform[5];
+            
+            for (const item of textContent.items) {
+                if ('str' in item) {
+                    const y = (item as any).transform[5];
+                    // A new line is detected if there's a significant jump in the Y-coordinate
+                    if (Math.abs(y - lastY) > 5) { // Threshold of 5px
+                        if (currentLine.length > 0) {
+                            lines.push(currentLine);
+                        }
+                        currentLine = [];
+                    }
+                    currentLine.push(item);
+                    lastY = y;
+                }
+            }
+            if (currentLine.length > 0) {
+                lines.push(currentLine);
+            }
+        }
+        
+        // Generate HTML from lines
+        for(const line of lines) {
+            // Sort items in the line by their x-coordinate
+            line.sort((a: any, b: any) => a.transform[4] - b.transform[4]);
+
+            html += `<p>`;
+            let lastX = line.length > 0 ? line[0].transform[4] : 0;
+
+            for(const item of line) {
+                // Add spaces for horizontal gaps
+                const spaceCount = Math.floor((item.transform[4] - lastX) / 4); // Approx space width
+                if (spaceCount > 2) {
+                    html += '&nbsp;'.repeat(spaceCount - 2);
+                }
+                
+                let style = '';
+                // Attempt to detect bold text
+                if (item.fontName.includes('Bold')) {
+                    style += 'font-weight: bold;';
+                }
+
+                html += `<span style="${style}">${(item as any).str.trim()}</span>`;
+                lastX = item.transform[4] + item.width;
+            }
+            html += `</p>`;
+        }
+        
+        html += `</div>`;
+    }
+
+    html += '</body></html>';
+    return htmlDocx.asBlob(html);
+};
+
+const convertPdfToBlob = async (buffer: ArrayBuffer, format: string, name: string): Promise<Blob> => {
+  if (format === 'jpg' || format === 'png') {
+    const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+    const page = await pdf.getPage(1); // Currently only converts the first page
+    const viewport = page.getViewport({ scale: 2 });
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    canvas.height = viewport.height;
+    canvas.width = viewport.width;
+
+    if (context) {
+        await page.render({ canvasContext: context, viewport: viewport }).promise;
+        return new Promise((resolve, reject) => {
+            canvas.toBlob(blob => {
+                if (blob) {
+                    resolve(blob);
+                } else {
+                    reject(new Error('Failed to create blob from canvas'));
+                }
+            }, `image/${format}`);
+        });
+    } else {
+        throw new Error('Could not get canvas context');
+    }
+  } else if (format === 'docx') {
+    return convertPdfToDocxBlob(buffer);
+  } else {
+    throw new Error(`Unsupported output format for PDF: ${format}`);
+  }
 };
 
 const convertXlsx = async (buffer: ArrayBuffer, format: string, name: string) => {
@@ -904,30 +1010,6 @@ const convertMarkdownToBlob = async (buffer: ArrayBuffer, format: string, name: 
         return new Blob([html], { type: 'text/html' });
     }
     throw new Error('Markdown can only be converted to HTML in blob mode.');
-};
-
-const convertPdfToBlob = async (buffer: ArrayBuffer, format: string, name: string): Promise<Blob> => {
-    if (format === 'jpg' || format === 'png') {
-        const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
-        const page = await pdf.getPage(1);
-        const viewport = page.getViewport({ scale: 2 });
-
-        const canvas = document.createElement('canvas');
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-        const context = canvas.getContext('2d');
-        if(!context) throw new Error('Could not get canvas context');
-        
-        await page.render({ canvasContext: context, viewport: viewport }).promise;
-        
-        return new Promise((resolve, reject) => {
-            canvas.toBlob((blob) => {
-                if(blob) resolve(blob);
-                else reject(new Error('Failed to convert PDF page'));
-            }, `image/${format}`);
-        });
-    }
-    throw new Error('PDF can only be converted to JPG or PNG in blob mode.');
 };
 
 const convertXlsxToBlob = async (buffer: ArrayBuffer, format: string, name: string): Promise<Blob> => {

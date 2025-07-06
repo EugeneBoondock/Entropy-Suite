@@ -449,7 +449,7 @@ const UnihelperPage: React.FC = () => {
         {/* --- MOBILE LAYOUT --- */}
         <main className="block lg:hidden">
           {/* Mobile Chat Viewport */}
-          <div style={{ position: 'fixed', top: '4rem', left: '0', right: '0', bottom: '0', zIndex: 40 }}>
+          <div style={{ position: 'fixed', top: '4rem', left: '0', right: '0', bottom: '0', zIndex: 30 }}>
             {/* Header */}
             <div className="bg-white/30 backdrop-blur-md border-b border-white/20 p-2 mx-2 mt-2 rounded-t-xl">
               <div className="flex items-center justify-between">
@@ -465,16 +465,18 @@ const UnihelperPage: React.FC = () => {
               </div>
             </div>
             {/* Scrollable Message List */}
-            <div className="overflow-y-auto p-2 space-y-3 bg-white/30 mx-2" style={{ height: 'calc(100% - 11rem)' }}>
+            <div className="overflow-y-auto p-2 space-y-3 bg-white/30 mx-2 rounded-b-xl" style={{ height: 'calc(100vh - 12rem)' }}>
               {currentSession.messages.map((message, index) => (
                 <div key={index} className={`flex gap-2 ${message.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
                   <div className={`flex-shrink-0 w-6 h-6 rounded-md flex items-center justify-center ${message.role === "user" ? "bg-blue-500/20 text-blue-600" : "bg-gradient-to-br from-purple-500/20 to-blue-500/20 text-purple-600"}`}>
                     {message.role === "user" ? <Users className="w-3 h-3" /> : <GraduationCap className="w-3 h-3" />}
                   </div>
                   <div className={`flex-1 max-w-lg ${message.role === "user" ? "text-right" : "text-left"}`}>
-                    <div className={`inline-block p-2 rounded-lg ${message.role === "user" ? "bg-blue-500/20 text-gray-800 rounded-tr-sm" : "bg-white/60 text-gray-800 rounded-tl-sm border border-white/30"}`}>
+                    <div className={`inline-block p-2 rounded-lg ${message.role === "user" ? "bg-blue-500/20 text-gray-800 rounded-tr-sm" : "bg-white/80 text-gray-800 rounded-tl-sm border border-white/30"}`}>
                       <div className="whitespace-pre-wrap leading-relaxed text-sm">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
+                        <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ a: ({node, ...props}) => <a {...props} className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer" /> }}>
+                          {message.content}
+                        </ReactMarkdown>
                       </div>
                     </div>
                   </div>
@@ -659,7 +661,7 @@ const UnihelperPage: React.FC = () => {
             <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setSidebarOpen(false)} />
           )}
           {/* Mobile Fixed Input */}
-          <div className="fixed left-0 bottom-0 w-full z-50 bg-white/30 backdrop-blur-md border-t border-white/20 p-2">
+          <div className="fixed left-0 bottom-0 w-full z-40 bg-white/30 backdrop-blur-md border-t border-white/20 p-2">
             <div className="flex gap-2">
               <textarea
                 ref={inputRef}
@@ -667,14 +669,14 @@ const UnihelperPage: React.FC = () => {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Ask a question..."
-                className="w-full p-3 bg-white/60 border border-white/30 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/50 placeholder-gray-500 text-sm"
+                className="w-full p-3 bg-white/60 border border-white/30 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/30 placeholder-gray-500 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 rows={1}
                 disabled={loading}
               />
               <button
                 onClick={handleSend}
                 disabled={!input.trim() || loading}
-                className="self-center p-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl"
+                className="self-center p-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 disabled:from-gray-400 disabled:to-gray-400 text-white rounded-xl transition-all disabled:cursor-not-allowed shadow-lg"
               >
                 <Send className="w-4 h-4" />
               </button>

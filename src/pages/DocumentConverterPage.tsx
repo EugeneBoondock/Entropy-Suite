@@ -50,7 +50,7 @@ const DocumentConverterPage: React.FC = () => {
             commonFormats = ['html', 'pdf'];
           break;
         case 'pdf':
-            commonFormats = ['jpg', 'png'];
+            commonFormats = ['jpg', 'png', 'docx'];
           break;
         case 'xlsx':
             commonFormats = ['csv'];
