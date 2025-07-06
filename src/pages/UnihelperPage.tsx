@@ -473,7 +473,7 @@ const UnihelperPage: React.FC = () => {
                       <button key={index} onClick={() => setInput(action.query)} className="glass-button flex items-center gap-2 text-xs">
                         <action.icon className="w-4 h-4 text-blue-600" />
                         {action.text}
-                      </button>
+                  </button>
                     ))}
                   </div>
                 </div>
@@ -511,8 +511,8 @@ const UnihelperPage: React.FC = () => {
                 >
                   <Send className="w-4 h-4" />
                 </button>
-              </div>
-            </div>
+                      </div>
+                      </div>
             {/* Mobile Sidebar */}
             {sidebarOpen && (
               <>
@@ -526,7 +526,7 @@ const UnihelperPage: React.FC = () => {
                     <button onClick={() => setSidebarOpen(false)} className="p-2 rounded-full hover:bg-gray-200 transition-colors">
                       <X className="w-5 h-5 text-gray-700" />
                     </button>
-                  </div>
+                </div>
                   <button
                     onClick={createNewChat}
                     className="glass-button w-[90%] mx-auto mt-4 mb-2 flex items-center gap-2 justify-center"
@@ -536,127 +536,127 @@ const UnihelperPage: React.FC = () => {
                   </button>
                   <div className="flex-1 overflow-y-auto px-4 py-2">
                     {/* Chat History */}
-                    {chatSessions.map((session) => (
-                      <div
-                        key={session.id}
+                {chatSessions.map((session) => (
+                  <div
+                    key={session.id}
                         onClick={() => { setCurrentSessionId(session.id); setSidebarOpen(false); }}
                         className={`flex items-center gap-3 p-3 mb-2 rounded-xl cursor-pointer transition-colors group ${currentSessionId === session.id ? 'bg-blue-100 border border-blue-300' : 'hover:bg-gray-100'}`}
+                  >
+                    <MessageCircle className="w-4 h-4 text-gray-600 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-800 truncate">{session.title}</p>
+                      <p className="text-xs text-gray-500">{session.lastUpdated.toLocaleDateString()}</p>
+                    </div>
+                    {chatSessions.length > 1 && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); deleteChat(session.id); }}
+                        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-500/20 rounded-lg transition-all"
                       >
-                        <MessageCircle className="w-4 h-4 text-gray-600 flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-800 truncate">{session.title}</p>
-                          <p className="text-xs text-gray-500">{session.lastUpdated.toLocaleDateString()}</p>
-                        </div>
-                        {chatSessions.length > 1 && (
-                          <button
-                            onClick={(e) => { e.stopPropagation(); deleteChat(session.id); }}
-                            className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-500/20 rounded-lg transition-all"
-                          >
-                            <Trash2 className="w-3 h-3 text-red-500" />
-                          </button>
-                        )}
-                      </div>
-                    ))}
+                        <Trash2 className="w-3 h-3 text-red-500" />
+                      </button>
+                    )}
+                  </div>
+                ))}
                     {/* University Websites */}
-                    <div className="mt-6">
-                      <div className="flex items-center gap-2 mb-3 px-1">
+                <div className="mt-6">
+                    <div className="flex items-center gap-2 mb-3 px-1">
                         <MapPin className="w-4 h-4 text-purple-600" />
                         <h3 className="text-sm font-bold text-gray-800">University Websites</h3>
-                      </div>
+                    </div>
                       <div className="space-y-2 max-h-[25vh] overflow-y-auto pr-2">
                         {[
-                          { name: 'Cape Peninsula University of Technology', url: 'https://www.cput.ac.za' },
-                          { name: 'Central University of Technology', url: 'https://www.cut.ac.za' },
-                          { name: 'Durban University of Technology', url: 'https://www.dut.ac.za' },
-                          { name: 'Mangosuthu University of Technology', url: 'https://www.mut.ac.za' },
-                          { name: 'Nelson Mandela University', url: 'https://www.mandela.ac.za' },
-                          { name: 'North-West University', url: 'https://www.nwu.ac.za' },
-                          { name: 'Rhodes University', url: 'https://www.ru.ac.za' },
-                          { name: 'Sefako Makgatho Health Sciences University', url: 'https://www.smu.ac.za' },
-                          { name: 'Sol Plaatje University', url: 'https://www.spu.ac.za' },
-                          { name: 'Stellenbosch University', url: 'https://www.sun.ac.za' },
-                          { name: 'Tshwane University of Technology', url: 'https://www.tut.ac.za' },
-                          { name: 'University of Cape Town', url: 'https://www.uct.ac.za' },
-                          { name: 'University of Fort Hare', url: 'https://www.ufh.ac.za' },
-                          { name: 'University of the Free State', url: 'https://www.ufs.ac.za' },
-                          { name: 'University of Johannesburg', url: 'https://www.uj.ac.za' },
-                          { name: 'University of KwaZulu-Natal', url: 'https://www.ukzn.ac.za' },
-                          { name: 'University of Mpumalanga', url: 'https://www.ump.ac.za' },
-                          { name: 'University of South Africa', url: 'https://www.unisa.ac.za' },
-                          { name: 'University of Venda', url: 'https://www.univen.ac.za' },
-                          { name: 'University of Pretoria', url: 'https://www.up.ac.za' },
-                          { name: 'Vaal University of Technology', url: 'https://www.vut.ac.za' },
-                          { name: 'University of the Witwatersrand', url: 'https://www.wits.ac.za' },
-                          { name: 'Walter Sisulu University', url: 'https://www.wsu.ac.za' },
-                          { name: 'University of Zululand', url: 'https://www.uzulu.ac.za' }
+                            { name: 'Cape Peninsula University of Technology', url: 'https://www.cput.ac.za' },
+                            { name: 'Central University of Technology', url: 'https://www.cut.ac.za' },
+                            { name: 'Durban University of Technology', url: 'https://www.dut.ac.za' },
+                            { name: 'Mangosuthu University of Technology', url: 'https://www.mut.ac.za' },
+                            { name: 'Nelson Mandela University', url: 'https://www.mandela.ac.za' },
+                            { name: 'North-West University', url: 'https://www.nwu.ac.za' },
+                            { name: 'Rhodes University', url: 'https://www.ru.ac.za' },
+                            { name: 'Sefako Makgatho Health Sciences University', url: 'https://www.smu.ac.za' },
+                            { name: 'Sol Plaatje University', url: 'https://www.spu.ac.za' },
+                            { name: 'Stellenbosch University', url: 'https://www.sun.ac.za' },
+                            { name: 'Tshwane University of Technology', url: 'https://www.tut.ac.za' },
+                            { name: 'University of Cape Town', url: 'https://www.uct.ac.za' },
+                            { name: 'University of Fort Hare', url: 'https://www.ufh.ac.za' },
+                            { name: 'University of the Free State', url: 'https://www.ufs.ac.za' },
+                            { name: 'University of Johannesburg', url: 'https://www.uj.ac.za' },
+                            { name: 'University of KwaZulu-Natal', url: 'https://www.ukzn.ac.za' },
+                            { name: 'University of Mpumalanga', url: 'https://www.ump.ac.za' },
+                            { name: 'University of South Africa', url: 'https://www.unisa.ac.za' },
+                            { name: 'University of Venda', url: 'https://www.univen.ac.za' },
+                            { name: 'University of Pretoria', url: 'https://www.up.ac.za' },
+                            { name: 'Vaal University of Technology', url: 'https://www.vut.ac.za' },
+                            { name: 'University of the Witwatersrand', url: 'https://www.wits.ac.za' },
+                            { name: 'Walter Sisulu University', url: 'https://www.wsu.ac.za' },
+                            { name: 'University of Zululand', url: 'https://www.uzulu.ac.za' }
                         ].map((uni) => (
-                          <a
+                        <a
                             key={uni.name}
                             href={uni.url}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="block p-2 bg-white/40 hover:bg-white/60 rounded-lg transition-colors border border-white/20 hover:border-white/40 group"
-                          >
+                        >
                             <div className="flex items-center justify-between">
-                              <div className="flex-1">
+                            <div className="flex-1">
                                 <p className="text-xs font-medium text-gray-800 leading-tight group-hover:text-purple-700">{uni.name}</p>
                                 <p className="text-xs text-gray-600">Official Website</p>
-                              </div>
-                              <MapPin className="w-3 h-3 text-purple-600 opacity-60 group-hover:opacity-100" />
                             </div>
-                          </a>
+                            <MapPin className="w-3 h-3 text-purple-600 opacity-60 group-hover:opacity-100" />
+                            </div>
+                        </a>
                         ))}
-                      </div>
                     </div>
+                </div>
                     {/* University Prospectuses */}
-                    <div className="mt-4">
-                      <div className="flex items-center gap-2 mb-3 px-1">
-                        <BookOpen className="w-4 h-4 text-green-600" />
-                        <h3 className="text-sm font-bold text-gray-800">University Prospectuses</h3>
-                      </div>
+                <div className="mt-4">
+                  <div className="flex items-center gap-2 mb-3 px-1">
+                    <BookOpen className="w-4 h-4 text-green-600" />
+                    <h3 className="text-sm font-bold text-gray-800">University Prospectuses</h3>
+                  </div>
                       <div className="space-y-2 max-h-[25vh] overflow-y-auto pr-2">
-                        {[
-                          { code: 'cpu-2026.pdf', name: 'Cape Peninsula University of Technology' },
-                          { code: 'cut-2026.pdf', name: 'Central University of Technology' },
-                          { code: 'dut-2026.pdf', name: 'Durban University of Technology' },
-                          { code: 'mut-2026.pdf', name: 'Mangosuthu University of Technology' },
-                          { code: 'nmu-2026.pdf', name: 'Nelson Mandela University' },
-                          { code: 'nwu-2026.pdf', name: 'North-West University' },
-                          { code: 'ru-2026.pdf', name: 'Rhodes University' },
-                          { code: 'SMu-Prospectus-2025_2026.pdf', name: 'Sefako Makgatho Health Sciences University' },
-                          { code: 'sol-plaatje-2026.pdf', name: 'Sol Plaatje University' },
-                          { code: 'su-2026.pdf', name: 'Stellenbosch University' },
-                          { code: 'tut-2026.pdf', name: 'Tshwane University of Technology' },
-                          { code: 'uct-2026.pdf', name: 'University of Cape Town' },
-                          { code: 'ufh-2025.pdf', name: 'University of Fort Hare' },
-                          { code: 'ufs-2026.pdf', name: 'University of the Free State' },
-                          { code: 'uj-2026.pdf', name: 'University of Johannesburg' },
-                          { code: 'ukzn-2026.pdf', name: 'University of KwaZulu-Natal' },
-                          { code: 'ump-2026.pdf', name: 'University of Mpumalanga' },
-                          { code: 'unisa-2026.pdf', name: 'University of South Africa' },
-                          { code: 'univen-2026.pdf', name: 'University of Venda' },
-                          { code: 'up-2026.pdf', name: 'University of Pretoria' },
-                          { code: 'vut-2026.pdf', name: 'Vaal University of Technology' },
-                          { code: 'wits-2026.pdf', name: 'University of the Witwatersrand' },
-                          { code: 'wsu-2026.pdf', name: 'Walter Sisulu University' },
-                          { name: 'zululand-2026.pdf', code: 'zululand-2026.pdf' }
-                        ].map((uni) => (
-                          <a
-                            key={uni.code}
-                            href={`/prospectuses/${uni.code}`}
-                            download
-                            className="block p-2 bg-white/40 hover:bg-white/60 rounded-lg transition-colors border border-white/20 hover:border-white/40"
-                          >
-                            <p className="text-xs font-medium text-gray-800 leading-tight">{uni.name}</p>
-                            <p className="text-xs text-gray-600">2026 Prospectus</p>
-                          </a>
-                        ))}
-                      </div>
-                    </div>
+                    {[
+                      { code: 'cpu-2026.pdf', name: 'Cape Peninsula University of Technology' },
+                      { code: 'cut-2026.pdf', name: 'Central University of Technology' },
+                      { code: 'dut-2026.pdf', name: 'Durban University of Technology' },
+                      { code: 'mut-2026.pdf', name: 'Mangosuthu University of Technology' },
+                      { code: 'nmu-2026.pdf', name: 'Nelson Mandela University' },
+                      { code: 'nwu-2026.pdf', name: 'North-West University' },
+                      { code: 'ru-2026.pdf', name: 'Rhodes University' },
+                      { code: 'SMu-Prospectus-2025_2026.pdf', name: 'Sefako Makgatho Health Sciences University' },
+                      { code: 'sol-plaatje-2026.pdf', name: 'Sol Plaatje University' },
+                      { code: 'su-2026.pdf', name: 'Stellenbosch University' },
+                      { code: 'tut-2026.pdf', name: 'Tshwane University of Technology' },
+                      { code: 'uct-2026.pdf', name: 'University of Cape Town' },
+                      { code: 'ufh-2025.pdf', name: 'University of Fort Hare' },
+                      { code: 'ufs-2026.pdf', name: 'University of the Free State' },
+                      { code: 'uj-2026.pdf', name: 'University of Johannesburg' },
+                      { code: 'ukzn-2026.pdf', name: 'University of KwaZulu-Natal' },
+                      { code: 'ump-2026.pdf', name: 'University of Mpumalanga' },
+                      { code: 'unisa-2026.pdf', name: 'University of South Africa' },
+                      { code: 'univen-2026.pdf', name: 'University of Venda' },
+                      { code: 'up-2026.pdf', name: 'University of Pretoria' },
+                      { code: 'vut-2026.pdf', name: 'Vaal University of Technology' },
+                      { code: 'wits-2026.pdf', name: 'University of the Witwatersrand' },
+                      { code: 'wsu-2026.pdf', name: 'Walter Sisulu University' },
+                      { name: 'zululand-2026.pdf', code: 'zululand-2026.pdf' }
+                    ].map((uni) => (
+                      <a
+                        key={uni.code}
+                        href={`/prospectuses/${uni.code}`}
+                        download
+                        className="block p-2 bg-white/40 hover:bg-white/60 rounded-lg transition-colors border border-white/20 hover:border-white/40"
+                      >
+                        <p className="text-xs font-medium text-gray-800 leading-tight">{uni.name}</p>
+                        <p className="text-xs text-gray-600">2026 Prospectus</p>
+                      </a>
+                    ))}
                   </div>
                 </div>
+              </div>
+          </div>
               </>
-            )}
+          )}
           </div>
         </main>
       </div>

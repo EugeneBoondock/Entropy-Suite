@@ -33,12 +33,16 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       sourcemap: mode === 'development',
+      chunkSizeWarningLimit: 1500,
       rollupOptions: {
         external: ['onnxruntime-web', 'onnxruntime-web/webgpu'],
         output: {
-          manualChunks: {
-            react: ['react', 'react-dom'],
-            vendor: ['@google/generative-ai']
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('react') || id.includes('react-dom')) return 'react';
+              if (id.includes('@google/generative-ai')) return 'google-genai';
+              return 'vendor';
+            }
           }
         }
       }
