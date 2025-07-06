@@ -1,7 +1,7 @@
+import { fileURLToPath, URL } from 'url';
 import path from 'path';
-import { defineConfig, loadEnv, type PluginOption } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
-import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
@@ -9,16 +9,14 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     define: {
-      'process.env': {
-        VITE_GEMINI_API_KEY: JSON.stringify(env.VITE_GEMINI_API_KEY),
-        VITE_PEXELS_API_KEY: JSON.stringify(env.VITE_PEXELS_API_KEY)
-      }
+      'process.env': env
     },
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, './src'),
-        'onnxruntime-web': path.resolve(__dirname, 'src/empty-module.js'),
-        'onnxruntime-web/webgpu': path.resolve(__dirname, 'src/empty-module.js'),
+        '@': fileURLToPath(new URL('./src', import.meta.url)),
+        'onnxruntime-web': fileURLToPath(new URL('./src/empty-module.js', import.meta.url)),
+        'onnxruntime-web/webgpu': fileURLToPath(new URL('./src/empty-module.js', import.meta.url)),
+        'process': 'process/browser'
       }
     },
     server: {
@@ -61,12 +59,7 @@ export default defineConfig(({ mode }) => {
       exclude: ['@ffmpeg/ffmpeg', '@ffmpeg/core', 'onnxruntime-web', 'onnxruntime-web/webgpu', '@imgly/background-removal']
     },
     worker: {
-      format: 'es',
-      plugins: [
-        nodePolyfills({
-          protocolImports: true,
-        }),
-      ] as PluginOption[],
+      format: 'es'
     }
   };
 });
