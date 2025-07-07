@@ -148,7 +148,7 @@ const AudioTranscriberPage: React.FC = () => {
       throw new Error("Gemini API key not configured. Cannot transcribe.");
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
     const audioPart = await fileToGenerativePart(file);
     const prompt = "Transcribe the following audio file. Provide only the transcribed text and nothing else.";
 
