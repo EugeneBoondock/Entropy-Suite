@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://www.entropysuite.co.za/sitemap.xml 
