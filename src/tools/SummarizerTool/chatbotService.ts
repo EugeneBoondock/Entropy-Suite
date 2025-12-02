@@ -5,7 +5,7 @@ const API_KEY = import.meta.env.GEMINI_API_KEY;
 let genAI: GoogleGenerativeAI | null = null;
 
 if (!API_KEY) {
-  console.warn("VITE_GEMINI_API_KEY is not set in the environment variables. Chatbot features will be disabled.");
+  console.warn("GEMINI_API_KEY is not set in the environment variables. Chatbot features will be disabled.");
 } else {
   genAI = new GoogleGenerativeAI(API_KEY);
 }
