@@ -91,7 +91,7 @@ export class AIProviderService {
     this.tools = tools;
     
     // Initialize with free Gemini access for gemini-2.0-flash-lite
-    this.freeGeminiKey = import.meta.env.VITE_GEMINI_API_KEY || null;
+    this.freeGeminiKey = import.meta.env.GEMINI_API_KEY || null;
     this.initializeGoogleProvider();
   }
 
@@ -380,7 +380,7 @@ Remember: You are the **Entropy AI Agent** - the most advanced coding assistant 
     let apiKey: string;
     if (this.currentModel === 'gemini-2.0-flash-lite') {
       // For free tier, we need a real API key but can use the env one
-      apiKey = this.freeGeminiKey || import.meta.env.VITE_GEMINI_API_KEY || '';
+      apiKey = this.freeGeminiKey || import.meta.env.GEMINI_API_KEY || '';
       if (!apiKey) {
         // Return a graceful error message instead of throwing
         return {

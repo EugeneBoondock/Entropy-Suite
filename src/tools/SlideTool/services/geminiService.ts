@@ -10,10 +10,10 @@ type SafetySetting = {
   threshold: HarmBlockThreshold;
 };
 
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+const API_KEY = import.meta.env.GEMINI_API_KEY;
 
 if (!API_KEY) {
-  console.warn("VITE_GEMINI_API_KEY environment variable not found. AI features will be disabled.");
+  console.warn("GEMINI_API_KEY environment variable not found. AI features will be disabled.");
 }
 
 const ai = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;

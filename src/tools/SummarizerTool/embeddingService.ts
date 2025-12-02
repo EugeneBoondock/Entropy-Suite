@@ -1,11 +1,11 @@
 import { supabase } from '../../utils/supabaseClient';
 import { GoogleGenerativeAI, TaskType } from "@google/generative-ai";
 
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+const GEMINI_API_KEY = import.meta.env.GEMINI_API_KEY;
 let genAI: GoogleGenerativeAI | null = null;
 
 if (!GEMINI_API_KEY) {
-  console.warn("VITE_GEMINI_API_KEY is not set in the environment variables. Embedding features will be disabled.");
+  console.warn("GEMINI_API_KEY is not set in the environment variables. Embedding features will be disabled.");
 } else {
   genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 }

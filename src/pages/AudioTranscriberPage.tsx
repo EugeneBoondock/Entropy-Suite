@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import Navbar from '../components/Navbar';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+const API_KEY = import.meta.env.GEMINI_API_KEY;
 
 interface TranscriptionResult {
   id: string;
@@ -23,7 +23,7 @@ const AudioTranscriberPage: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!API_KEY) {
-    const errorMsg = "VITE_GEMINI_API_KEY is not set. Please add it to your .env file to enable transcription.";
+    const errorMsg = "GEMINI_API_KEY is not set. Please add it to your .env file to enable transcription.";
     console.error(errorMsg);
     // Display error in the component if it hasn't been shown yet
     if (error !== errorMsg) {

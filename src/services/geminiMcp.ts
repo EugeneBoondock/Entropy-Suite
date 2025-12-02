@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY as string);
+const genAI = new GoogleGenerativeAI(import.meta.env.GEMINI_API_KEY as string);
 
 export async function generateInputSchema(name: string, description: string): Promise<string> {
   const systemPrompt = `
